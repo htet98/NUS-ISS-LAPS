@@ -1,0 +1,28 @@
+# Java standard ignores
+*.class
+*.jar
+*.war
+*.ear
+*.class
+*.java~
+*.swp
+*.swo
+
+# Spring Boot standard ignores
+/spring-boot-*.log
+/spring-boot-*.tmp
+/.mvn/
+/.idea/
+/.gradle/
+/.project
+/.settings/
+/.classpath
+/.checkstyle
+/.htaccess
+
+# Other ignores
+target/
+out/
+*.iml
+.DS_Store
+*.log

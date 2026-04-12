@@ -1,6 +1,5 @@
 package nus_iss.LAPS.model;
 
-import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -18,6 +17,13 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 
+/**
+ *  Represents a leave application submitted by an employee.
+ *  Contains details about the leave type, duration, reason, and approval status.
+ *
+ *  Author: Htet Nandar(Grace)
+ *  Created on: 11/04/2026
+ */
 @Entity
 @Table(name = "leave_application")
 public class LeaveApplication {
@@ -43,9 +49,31 @@ public class LeaveApplication {
 	
 	@Column(name = "duration_days", nullable = false)
 	private Double durationDays;
-	
+
+    /** Why the employee is taking leave (mandatory). */
 	@Column(name = "reason", nullable = false, columnDefinition = "TEXT")
 	private String reason;
+
+    /**
+     * Work dissemination — who will cover the employee's duties during absence.
+     * Optional, but encouraged for longer leave periods.
+     */
+    @Column(name = "work_dissemination", columnDefinition = "TEXT")
+    private String workDissemination;
+
+    /**
+     * Flag indicating whether the employee will be overseas during leave.
+     * When true, contactDetails is mandatory (enforced in service layer).
+     */
+    @Column(name = "is_overseas", nullable = false)
+    private Boolean isOverseas = false;
+
+    /**
+     * Contact details while on leave — required only for overseas trips.
+     * May contain phone number, address, or other reachable contact info.
+     */
+    @Column(name = "contact_details", columnDefinition = "TEXT")
+    private String contactDetails;
 	
 	@Enumerated(EnumType.STRING)
 	@Column(name = "status", nullable = false)
@@ -83,14 +111,21 @@ public class LeaveApplication {
     }
     
     public LeaveApplication() {}
-    
-    public LeaveApplication(Employee employee, LeaveType leaveType, LocalDate startDate, LocalDate endDate, Double durationDays, String reason) {
+
+    public LeaveApplication(Employee employee, LeaveType leaveType,
+                            LocalDate startDate, LocalDate endDate,
+                            Double durationDays, String reason,
+                            String workDissemination, Boolean isOverseas,
+                            String contactDetails) {
 		this.employee = employee;
 		this.leaveType = leaveType;
 		this.startDate = startDate;
 		this.endDate = endDate;
 		this.durationDays = durationDays;
 		this.reason = reason;
+        this.workDissemination = workDissemination;
+        this.isOverseas       = isOverseas != null ? isOverseas : false;
+        this.contactDetails   = contactDetails;
 		this.status = LeaveStatus.PENDING;
 	}
 
@@ -198,11 +233,41 @@ public class LeaveApplication {
 		this.updatedWhen = updatedWhen;
 	}
 
-	@Override
+    public String getWorkDissemination() {
+        return workDissemination;
+    }
+
+    public void setWorkDissemination(String workDissemination) {
+        this.workDissemination = workDissemination;
+    }
+
+    public String getContactDetails() {
+        return contactDetails;
+    }
+
+    public void setContactDetails(String contactDetails) {
+        this.contactDetails = contactDetails;
+    }
+
+    public Boolean getOverseas() {
+        return isOverseas;
+    }
+
+    public void setOverseas(Boolean overseas) {
+        isOverseas = overseas;
+    }
+
+    @Override
 	public String toString() {
-		return "LeaveApplication [leaveApplicationId=" + leaveApplicationId + ", employee=" + (employee != null ? employee.getEmpId() : null) + ", leaveType="
-				+ (leaveType != null ? leaveType.getLeaveTypeId() : null) + ", startDate=" + startDate + ", endDate=" + endDate + ", durationDays=" + durationDays
-				+ ", reason=" + reason + ", status=" + status + ", approvedBy=" + approvedBy + "]";
-	}
+        return "LeaveApplication{" +
+                "leaveApplicationId=" + leaveApplicationId +
+                ", employee=" + (employee != null ? employee.getEmpId() : null) +
+                ", leaveType=" + (leaveType != null ? leaveType.getLeaveTypeId() : null) +
+                ", startDate=" + startDate +
+                ", endDate=" + endDate +
+                ", durationDays=" + durationDays +
+                ", status=" + status +
+                '}';
+    }
     
 }

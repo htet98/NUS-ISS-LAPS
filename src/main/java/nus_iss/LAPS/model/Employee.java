@@ -1,4 +1,4 @@
-package sg.edu.nus.lms.model;
+package nus_iss.LAPS.model;
 
 import java.io.Serializable;
 import java.time.LocalDate;

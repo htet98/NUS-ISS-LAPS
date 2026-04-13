@@ -26,3 +26,4 @@ out/
 *.iml
 .DS_Store
 *.log
+bin/

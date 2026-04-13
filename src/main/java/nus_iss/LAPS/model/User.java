@@ -6,24 +6,28 @@ package nus_iss.LAPS.model;
 	import java.util.ArrayList;
 	import java.util.List;
 
+import javax.management.relation.Role;
+
 	/**
 	 * Registered user.
 	 *
 	 * Associations demonstrated:
-	 *   @OneToOne  → Employee         (a user owns exactly one role:Employee)
+	 *   @OneToOne  → Employee (a user owns exactly one role:Employee)
 	 *
 	 * Data types:
-	 *   Long          – id VARCHAR(50)
+	 *   Long          
+	 *   – user_id VARCHAR(50)
 	 *   String        
 	 *   – username VARCHAR(50)
-	 *   - email VARCHAR(100)
-	 *   - password VARCHAR(255), 
-	 *   - role ENUM('EMPLOYEE', 'MANAGER', 'ADMIN') NOT
-	 *   - createdby VARCHAR(50), 
+	 *   - email VARCHAR(255)
+	 *   - password VARCHAR(255)
+	 *   - role ENUM('EMPLOYEE', 'MANAGER', 'ADMIN') NOT NULL
+	 *   - createdby VARCHAR(50)
 	 *   - updatedby VARCHAR(50)
 	 *   
-	 *   LocalDateTime – createdwhen, updatedwhen  (java.sql.Timestamp equivalent)
-	 *   Boolean       – active
+	 *   LocalDateTime 
+	 *   – createdwhen VANCHARD FAULT CURRENT TIMESTAMP
+	 *   - updatedwhen TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON (java.sql.Timestamp equivalent)
 	 */
 	@Entity
 	@Table(name = "users")
@@ -31,48 +35,60 @@ package nus_iss.LAPS.model;
 
 	    @Id
 	    @GeneratedValue(strategy = GenerationType.IDENTITY)
-	    private Long id;
+	    private Long user_id;
 
 	    @Column(nullable = false, unique = true, length = 50)
 	    private String username;
 
-	    @Column(nullable = false, unique = true, length = 120)
+	    @Column(nullable = false, unique = true, length = 255)
 	    private String email;
 
-	    @Column(nullable = false, length = 120)
+	    @Column(nullable = false, length = 255)
 	    private String password;
+	    
+	    @Enumerated(EnumType.STRING) // IMPORTANT
+	    @Column(nullable = false)
+	    private Role role;
+	    
+	    @Column(nullable = false, length = 50)
+	    private String createdby;
+	    
+	    @Column(nullable = false, length = 50)
+	    private String updatedby;
 
-
-
-	    @Column(name = "last_name", length = 60)
-	    private String lastName;
-
-	    /** java.time.LocalDate → DATE column */
-	    @Column(name = "birth_date")
-	    private LocalDate birthDate;
 
 	    /** java.time.LocalDateTime → TIMESTAMP column */
-	    @Column(name = "created_at")
-	    private LocalDateTime createdAt;
+	    @Column(name = "created_when")
+	    private LocalDateTime createdwhen;
+	    
+	    @Column(name = "updated_when")
+	    private LocalDateTime updatedwhen;
 
-	    private Boolean active;
+	    // private Boolean active;
 
 	    //  Associations 
 
-	    /** @OneToOne – bidirectional; Cart holds the FK (user_id). */
+	    /** @OneToOne – bidirectional; Employee holds the FK (user_id). */
 	    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-	    private Cart cart;
+	    private Employee employee;
 
-	    /** @OneToMany – one user → many purchase orders. */
-	    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-	    private List<PurchaseOrder> orders = new ArrayList<>();
+		private Object active1;
+
+		private Object active;
+
 
 	    //  Lifecycle 
 
 	    @PrePersist
 	    protected void onCreate() {
-	        this.createdAt = LocalDateTime.now();
-	        if (this.active == null) this.active = true;
+	        this.createdwhen = LocalDateTime.now();
+	        if (this.active1 == null) this.active1 = true;
+	    }
+	    
+	    @PrePersist
+	    protected void onUpdate() {
+	        this.updatedwhen = LocalDateTime.now();
+	        if (this.active1 == null) this.active1 = true;
 	    }
 
 	    //  Constructors 
@@ -80,53 +96,87 @@ package nus_iss.LAPS.model;
 	    public User() {}
 
 	    public User(String username, String email, String password,
-	                String firstName, String lastName, LocalDate birthDate) {
+	                Role role, String createdby, String updatedby) {
 	        this.username  = username;
 	        this.email     = email;
 	        this.password  = password;
-	        this.firstName = firstName;
-	        this.lastName  = lastName;
-	        this.birthDate = birthDate;
+	        this.role = role;
+	        this.createdby  = createdby;
+	        this.updatedby = updatedby;
 	    }
 
-	    //  Getters & Setters 
+	//  Getters & Setters 
+		public Long getUser_id() {
+			return user_id;
+		}
 
-	    public Long getId()                       { return id; }
-	    public void setId(Long id)                { this.id = id; }
+		public void setUser_id(Long user_id) {
+			this.user_id = user_id;
+		}
 
-	    public String getUsername()               { return username; }
-	    public void setUsername(String username)  { this.username = username; }
+		public String getUsername() {
+			return username;
+		}
 
-	    public String getEmail()                  { return email; }
-	    public void setEmail(String email)        { this.email = email; }
+		public void setUsername(String username) {
+			this.username = username;
+		}
 
-	    public String getPassword()               { return password; }
-	    public void setPassword(String password)  { this.password = password; }
+		public String getEmail() {
+			return email;
+		}
 
-	    public String getFirstName()              { return firstName; }
-	    public void setFirstName(String fn)       { this.firstName = fn; }
+		public void setEmail(String email) {
+			this.email = email;
+		}
 
-	    public String getLastName()               { return lastName; }
-	    public void setLastName(String ln)        { this.lastName = ln; }
+		public String getPassword() {
+			return password;
+		}
 
-	    public LocalDate getBirthDate()           { return birthDate; }
-	    public void setBirthDate(LocalDate d)     { this.birthDate = d; }
+		public void setPassword(String password) {
+			this.password = password;
+		}
 
-	    public LocalDateTime getCreatedAt()       { return createdAt; }
-	    public void setCreatedAt(LocalDateTime t) { this.createdAt = t; }
+		public Role getRole() {
+			return role;
+		}
 
-	    public Boolean getActive()                { return active; }
-	    public void setActive(Boolean active)     { this.active = active; }
+		public void setRole(Role role) {
+			this.role = role;
+		}
 
-	    public Cart getCart()                     { return cart; }
-	    public void setCart(Cart cart)            { this.cart = cart; }
+		public String getCreatedby() {
+			return createdby;
+		}
 
-	    public List<PurchaseOrder> getOrders()    { return orders; }
-	    public void setOrders(List<PurchaseOrder> o) { this.orders = o; }
+		public void setCreatedby(String createdby) {
+			this.createdby = createdby;
+		}
 
-	    public String getFullName() {
-	        return firstName + " " + lastName;
-	    }
+		public String getUpdatedby() {
+			return updatedby;
+		}
+
+		public void setUpdatedby(String updatedby) {
+			this.updatedby = updatedby;
+		}
+
+		public LocalDateTime getCreatedwhen() {
+			return createdwhen;
+		}
+
+		public void setCreatedwhen(LocalDateTime createdwhen) {
+			this.createdwhen = createdwhen;
+		}
+
+		public Employee getEmployee() {
+			return employee;
+		}
+
+		public void setEmployee(Employee employee) {
+			this.employee = employee;
+		}
+
 	}
 
-}

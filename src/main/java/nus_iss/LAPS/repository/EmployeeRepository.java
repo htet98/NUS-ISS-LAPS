@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import nus_iss.LAPS.model.Employee;
+import nus_iss.LAPS.model.User;
 
 /**
 	* Author: Junior

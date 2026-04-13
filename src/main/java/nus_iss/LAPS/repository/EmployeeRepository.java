@@ -1,4 +1,4 @@
-package nus_iss.LAPS.repositories;
+package nus_iss.LAPS.repository;
 
 public class EmployeeRepository {
 

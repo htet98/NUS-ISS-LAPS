@@ -62,13 +62,16 @@ public class Employee implements Serializable {
 	@JoinColumn(name="user_id")
 	private User user;
 	
-	@OneToMany(mappedBy = "employee", cascade=CascadeType.ALL, fetch=FetchType.LAZY)
+	@OneToMany(mappedBy = "employees", cascade=CascadeType.ALL, fetch=FetchType.LAZY)
 	private List<LeaveBalance> LeaveBalances = new ArrayList<>();
 	
 	//Self-referenced
 	@ManyToOne(cascade=CascadeType.ALL, fetch=FetchType.LAZY)
-	@JoinColumn(name="supervisor_id")
+	@JoinColumn(name="approved_by")
 	private Employee supervisor;
+	
+	//@OneToMany(mappedBy = "supervisor")
+	//private List<Employee> subordinates;
 	
 	
 }

@@ -1,5 +1,3 @@
-User.java
-
 package nus_iss.LAPS.model;
 
 	import jakarta.persistence.*;
@@ -97,17 +95,16 @@ import javax.management.relation.Role;
 
 	    public User() {}
 
-	    public User(String username, String email, String password,
-	                Role role, String createdby, String updatedby) {
+	    public User(String username, String email, String password, String createdby, String updatedby) {
 	        this.username  = username;
 	        this.email     = email;
 	        this.password  = password;
-	        this.role = role;
 	        this.createdby  = createdby;
 	        this.updatedby = updatedby;
 	    }
 
-	//  Getters & Setters 
+		//  Getters & Setters 
+	    
 		public Long getUser_id() {
 			return user_id;
 		}
@@ -172,6 +169,14 @@ import javax.management.relation.Role;
 			this.createdwhen = createdwhen;
 		}
 
+		public LocalDateTime getUpdatedwhen() {
+			return updatedwhen;
+		}
+
+		public void setUpdatedwhen(LocalDateTime updatedwhen) {
+			this.updatedwhen = updatedwhen;
+		}
+
 		public Employee getEmployee() {
 			return employee;
 		}
@@ -180,5 +185,20 @@ import javax.management.relation.Role;
 			this.employee = employee;
 		}
 
+		public Object getActive1() {
+			return active1;
+		}
+
+		public void setActive1(Object active1) {
+			this.active1 = active1;
+		}
+
+		public Object getActive() {
+			return active;
+		}
+
+		public void setActive(Object active) {
+			this.active = active;
+		}
 	}
 

@@ -2,8 +2,10 @@ package nus_iss.LAPS.model;
 
 public enum LeaveStatus {
 
-	PENDING,
+	APPLIED,
+	UPDATED,
 	APPROVED,
 	REJECTED,
-	CANCELLED
+	CANCELLED,
+	DELETED
 }

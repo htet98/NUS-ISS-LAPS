@@ -1,9 +1,7 @@
 package nus_iss.LAPS.service;
 
-import nus_iss.LAPS.model.Employee;
 import nus_iss.LAPS.model.User;
 import nus_iss.LAPS.repository.UserRepository;
-import nus_iss.LAPS.repository.EmployeeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -12,131 +10,29 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
-/**
- * UserService – handles user registration and login authentication.
- *
- * Security note (important for students): Passwords are stored in PLAIN TEXT in
- * this demo so the code is easy to read and trace through. In any real
- * production application you MUST hash passwords before storing them, e.g.:
- *
- * BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
- * user.setPassword(encoder.encode(rawPassword));
- *
- * and then verify with: encoder.matches(rawPassword, storedHash)
- *
- * Spring Security provides BCryptPasswordEncoder out of the box.
- *
- * Transaction notes: register() – writes two rows (users + employee) in one
- * creation so they succeed or fail together. Uses REPEATABLE_READ to guard
- * against a race condition where two requests try to register the same username
- * at the exact same moment. login() – a pure read; no creation needed, but we
- * use SUPPORTS so it can participate in a surrounding one if ever needed.
- */
 @Service
 public class UserService {
 
-	// Spring injects these automatically.
-	@Autowired
-	private UserRepository userRepository; // manages User entities
-	@Autowired
-	private EmployeeRepository employeeRepository; // manages employee entities
+    @Autowired
+    private UserRepository userRepository;
 
-	// Registration
+    // Htet Nandar(Grace) - 12/04/2026
+    /**
+     * Plain-text password comparison (demo only — use BCrypt in production).
+     */
+    @Transactional(propagation = Propagation.SUPPORTS,
+                   isolation   = Isolation.READ_COMMITTED,
+                   readOnly    = true)
+    public Optional<User> login(String username, String password) {
+        return userRepository.findByUsername(username)
+                .filter(u -> u.getPassword().equals(password))
+                .filter(u -> Boolean.TRUE.equals(u.getActive()));
+    }
 
-	/**
-	 * Registers a new user and creates an emp_id for them.
-	 *
-	 * propagation = REQUIRED This method performs two inserts (users + employee)
-	 * that must both succeed or both fail. REQUIRED starts a new create (no outer
-	 * tx exists at controller level) to wrap both inserts in one atomic unit.
-	 *
-	 * isolation = REPEATABLE_READ The registration flow is: 1. Check whether the
-	 * username is already taken (SELECT). 2. Check whether the email is already
-	 * taken (SELECT). 3. Insert the new user row (INSERT). 4. Insert the new
-	 * employee row (INSERT).
-	 *
-	 * With READ_COMMITTED, another creation could INSERT the same username between
-	 * our check in step 1 and our INSERT in step 3 – a classic "check-then-act"
-	 * race condition resulting in duplicate usernames.
-	 *
-	 * REPEATABLE_READ prevents this: the database holds a shared lock on the
-	 * checked rows (or uses snapshot isolation) so no other creation can insert a
-	 * conflicting row until we commit.
-	 *
-	 * Note: the UNIQUE constraint on users.username / users.email is the final
-	 * safety net; REPEATABLE_READ just reduces the chance of wasted round-trips.
-	 *
-	 * rollbackFor = Exception.class Roll back on ANY exception (checked or
-	 * unchecked) so we never end up with a User row but employee row, or vice
-	 * versa.
-	 *
-	 * timeout = 20 Abort if the registration creation takes longer than 20 seconds.
-	 */
-	@Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.REPEATABLE_READ, rollbackFor = Exception.class, timeout = 20)
-	public User register(User user) {
-		// Prevent duplicate usernames (case-sensitive check against DB).
-		if (userRepository.existsByUsername(user.getUsername())) {
-			throw new IllegalArgumentException("Username already taken: " + user.getUsername());
-		}
-
-		// Prevent duplicate email addresses.
-		if (userRepository.existsByEmail(user.getEmail())) {
-			throw new IllegalArgumentException("Email already registered: " + user.getEmail());
-		}
-
-		// Persist the User entity. Spring Data generates:
-		// INSERT INTO users(username, email, password, role, createdby, updateedby,
-		// ...) VALUES (...)
-		User saved = userRepository.save(user);
-
-		// Every registered user gets their own emp_id immediately.
-		// This is the OneToOne relationship: one User → employee.
-		// We create the Employee here so EmployeeService never has to handle
-		// the "employee missing" case for a valid user.
-		Employee employee = new Employee(saved); // pass the saved User so the FK is set correctly
-		EmployeeRepository.save(employee); // INSERT INTO carts(user_id, created_at) VALUES (...)
-
-		return saved;
-	}
-
-	// Authentication
-
-	/**
-	 * Checks username + password and returns the matching User on success.
-	 *
-	 * Returns Optional.empty() (not an exception) if: • The username does not
-	 * exist. • The password does not match. • The account is inactive (active =
-	 * false).
-	 *
-	 * propagation = SUPPORTS A pure read method. If called within an existing
-	 * employee it joins it; if not, it runs without one. This is slightly cheaper
-	 * than REQUIRED which always guarantees a employee object is created.
-	 *
-	 * readOnly = true Signals to JPA that no entities will be modified, so it can
-	 * skip the expensive dirty-checking pass at the end of the method.
-	 *
-	 * isolation = READ_COMMITTED We just need to see committed user records; no
-	 * need for stricter isolation.
-	 */
-	@Transactional(propagation = Propagation.SUPPORTS, isolation = Isolation.READ_COMMITTED, readOnly = true, timeout = 10)
-	public Optional<User> login(String username, String password) {
-		// Step 1: look up the user by username.
-		// Step 2: check the password matches (plain-text comparison in this demo).
-		// Step 3: check the account is active (not banned / deactivated).
-		// filter() returns Optional.empty() if any condition is false.
-		return userRepository.findByUsername(username).filter(u -> u.getPassword().equals(password))
-				.filter(u -> Boolean.TRUE.equals(u.getActive()));
-	}
-
-	/**
-	 * Looks up a user by primary key. Used by controllers that need the full User
-	 * object (e.g., profile pages).
-	 *
-	 * readOnly = true – pure read, no modifications. propagation = SUPPORTS –
-	 * lightweight; join surrounding tx if one exists.
-	 */
-	@Transactional(propagation = Propagation.SUPPORTS, isolation = Isolation.READ_COMMITTED, readOnly = true, timeout = 10)
-	public Optional<User> findById(Long id) {
-		return userRepository.findById(id);
-	}
+    @Transactional(propagation = Propagation.SUPPORTS,
+                   isolation   = Isolation.READ_COMMITTED,
+                   readOnly    = true)
+    public Optional<User> findById(Long id) {
+        return userRepository.findById(id);
+    }
 }

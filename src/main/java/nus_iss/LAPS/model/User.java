@@ -1,204 +1,118 @@
 package nus_iss.LAPS.model;
 
-	import jakarta.persistence.*;
-	import java.time.LocalDate;
-	import java.time.LocalDateTime;
-	import java.util.ArrayList;
-	import java.util.List;
-
-import javax.management.relation.Role;
-
-	/**
-	 * Registered user.
-	 *
-	 * Associations demonstrated:
-	 *   @OneToOne  → Employee (a user owns exactly one role:Employee)
-	 *
-	 * Data types:
-	 *   Long          
-	 *   – user_id VARCHAR(50)
-	 *   String        
-	 *   – username VARCHAR(50)
-	 *   - email VARCHAR(255)
-	 *   - password VARCHAR(255)
-	 *   - role ENUM('EMPLOYEE', 'MANAGER', 'ADMIN') NOT NULL
-	 *   - createdby VARCHAR(50)
-	 *   - updatedby VARCHAR(50)
-	 *   
-	 *   LocalDateTime 
-	 *   – createdwhen VANCHARD FAULT CURRENT TIMESTAMP
-	 *   - updatedwhen TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON (java.sql.Timestamp equivalent)
-	 */
-	@Entity
-	@Table(name = "users")
-	public class User {
-
-	    @Id
-	    @GeneratedValue(strategy = GenerationType.IDENTITY)
-	    private Long user_id;
-
-	    @Column(nullable = false, unique = true, length = 50)
-	    private String username;
-
-	    @Column(nullable = false, unique = true, length = 255)
-	    private String email;
-
-	    @Column(nullable = false, length = 255)
-	    private String password;
-	    
-	    @Enumerated(EnumType.STRING) // IMPORTANT
-	    @Column(nullable = false)
-	    private Role role;
-	    
-	    @Column(nullable = false, length = 50)
-	    private String createdby;
-	    
-	    @Column(nullable = false, length = 50)
-	    private String updatedby;
+import jakarta.persistence.*;
+import java.time.LocalDateTime;
 
 
-	    /** java.time.LocalDateTime → TIMESTAMP column */
-	    @Column(name = "created_when")
-	    private LocalDateTime createdwhen;
-	    
-	    @Column(name = "updated_when")
-	    private LocalDateTime updatedwhen;
+@Entity
+@Table(name = "users")
+public class User {
 
-	    // private Boolean active;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long user_id;
 
-	    //  Associations 
+    @Column(nullable = false, unique = true, length = 50)
+    private String username;
 
-	    /** @OneToOne – bidirectional; Employee holds the FK (user_id). */
-	    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-	    private Employee employee;
+    @Column(nullable = false, unique = true, length = 255)
+    private String email;
 
-		private Object active1;
+    @Column(nullable = false, length = 255)
+    private String password;
 
-		private Object active;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private Role role;
 
+    @Column(name ="created_by", nullable = false, length = 50)
+    private String createdby;
 
-	    //  Lifecycle 
+    @Column(name = "created_when")
+    private LocalDateTime createdwhen;
 
-	    @PrePersist
-	    protected void onCreate() {
-	        this.createdwhen = LocalDateTime.now();
-	        if (this.active1 == null) this.active1 = true;
-	    }
-	    
-	    @PrePersist
-	    protected void onUpdate() {
-	        this.updatedwhen = LocalDateTime.now();
-	        if (this.active1 == null) this.active1 = true;
-	    }
+    @Column(name = "updated_by", nullable = false, length = 50)
+    private String updatedby;
 
-	    //  Constructors 
+    @Column(name = "updated_when")
+    private LocalDateTime updatedwhen;
 
-	    public User() {}
+    @Column(name = "active", nullable = false)
+    private Boolean active = true;
 
-	    public User(String username, String email, String password, String createdby, String updatedby) {
-	        this.username  = username;
-	        this.email     = email;
-	        this.password  = password;
-	        this.createdby  = createdby;
-	        this.updatedby = updatedby;
-	    }
+    // ── Associations ──────────────────────────────────────────────────────────
 
-		//  Getters & Setters 
-	    
-		public Long getUser_id() {
-			return user_id;
-		}
+    /** Bidirectional — Employee holds the FK (user_id). */
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Employee employee;
 
-		public void setUser_id(Long user_id) {
-			this.user_id = user_id;
-		}
+    // ── Lifecycle ─────────────────────────────────────────────────────────────
 
-		public String getUsername() {
-			return username;
-		}
+    @PrePersist
+    protected void onCreate() {
+        this.createdwhen = LocalDateTime.now();
+        this.updatedwhen = LocalDateTime.now();
+        if (this.active == null) this.active = true;
+    }
 
-		public void setUsername(String username) {
-			this.username = username;
-		}
+    /**
+     * Author: Htet Nandar(Grace)
+     */
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedwhen = LocalDateTime.now();
+    }
 
-		public String getEmail() {
-			return email;
-		}
+    // ── Constructors ──────────────────────────────────────────────────────────
 
-		public void setEmail(String email) {
-			this.email = email;
-		}
+    public User() {}
 
-		public String getPassword() {
-			return password;
-		}
+    public User(String username, String email, String password,
+                String createdby, String updatedby) {
+        this.username  = username;
+        this.email     = email;
+        this.password  = password;
+        this.createdby = createdby;
+        this.updatedby = updatedby;
+    }
 
-		public void setPassword(String password) {
-			this.password = password;
-		}
+    // ── Getters & Setters ─────────────────────────────────────────────────────
 
-		public Role getRole() {
-			return role;
-		}
+    public Long getUser_id()                  { return user_id; }
+    public void setUser_id(Long user_id)      { this.user_id = user_id; }
 
-		public void setRole(Role role) {
-			this.role = role;
-		}
+    public String getUsername()               { return username; }
+    public void setUsername(String username)  { this.username = username; }
 
-		public String getCreatedby() {
-			return createdby;
-		}
+    public String getEmail()                  { return email; }
+    public void setEmail(String email)        { this.email = email; }
 
-		public void setCreatedby(String createdby) {
-			this.createdby = createdby;
-		}
+    public String getPassword()               { return password; }
+    public void setPassword(String password)  { this.password = password; }
 
-		public String getUpdatedby() {
-			return updatedby;
-		}
+    public Role getRole()                     { return role; }
+    public void setRole(Role role)            { this.role = role; }
 
-		public void setUpdatedby(String updatedby) {
-			this.updatedby = updatedby;
-		}
+    public String getCreatedby()              { return createdby; }
+    public void setCreatedby(String createdby){ this.createdby = createdby; }
 
-		public LocalDateTime getCreatedwhen() {
-			return createdwhen;
-		}
+    public String getUpdatedby()              { return updatedby; }
+    public void setUpdatedby(String updatedby){ this.updatedby = updatedby; }
 
-		public void setCreatedwhen(LocalDateTime createdwhen) {
-			this.createdwhen = createdwhen;
-		}
+    public LocalDateTime getCreatedwhen()     { return createdwhen; }
+    public void setCreatedwhen(LocalDateTime v){ this.createdwhen = v; }
 
-		public LocalDateTime getUpdatedwhen() {
-			return updatedwhen;
-		}
+    public LocalDateTime getUpdatedwhen()     { return updatedwhen; }
+    public void setUpdatedwhen(LocalDateTime v){ this.updatedwhen = v; }
 
-		public void setUpdatedwhen(LocalDateTime updatedwhen) {
-			this.updatedwhen = updatedwhen;
-		}
+    public Boolean getActive()                { return active; }
+    public void setActive(Boolean active)     { this.active = active; }
 
-		public Employee getEmployee() {
-			return employee;
-		}
+    public Employee getEmployee()             { return employee; }
+    public void setEmployee(Employee employee){ this.employee = employee; }
 
-		public void setEmployee(Employee employee) {
-			this.employee = employee;
-		}
-
-		public Object getActive1() {
-			return active1;
-		}
-
-		public void setActive1(Object active1) {
-			this.active1 = active1;
-		}
-
-		public Object getActive() {
-			return active;
-		}
-
-		public void setActive(Object active) {
-			this.active = active;
-		}
-	}
-
+    @Override
+    public String toString() {
+        return "User{id=" + user_id + ", username='" + username + "', role=" + role + '}';
+    }
+}

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Pending Applications – LAPS Manager</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+
+<div th:replace="~{fragments/header :: header}"></div>
+
+<main class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Pending Leave Applications</h2>
+        <a th:href="@{/leave/manager/all}" class="btn btn-outline-secondary btn-sm">View Full Team History</a>
+    </div>
+
+    <!-- Flash messages -->
+    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <span th:text="${successMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <span th:text="${errorMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div th:if="${#lists.isEmpty(applications)}" class="text-center text-muted py-5">
+        <p class="fs-5">No pending applications at this time.</p>
+    </div>
+
+    <!-- Pending applications cards -->
+    <div th:unless="${#lists.isEmpty(applications)}" class="row g-3">
+        <div th:each="app : ${applications}" class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong th:text="${app.employee.first_name + ' ' + app.employee.last_name}">Employee Name</strong>
+                        <span class="text-muted ms-2 small"
+                              th:text="${app.employee.designation + ' – ' + app.employee.department}">Designation</span>
+                    </div>
+                    <span class="badge bg-warning text-dark" th:text="${app.status.name()}">APPLIED</span>
+                </div>
+                <div class="card-body">
+                    <div class="row g-2">
+                        <div class="col-md-3">
+                            <div class="text-muted small">Leave Type</div>
+                            <div class="fw-semibold" th:text="${app.leaveType.name}">Annual Leave</div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-muted small">Duration</div>
+                            <div class="fw-semibold" th:text="${app.getDurationDisplay()}">3.0 days</div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-muted small">Start Date</div>
+                            <div class="fw-semibold"
+                                 th:text="${#temporals.format(app.startDate, 'dd MMM yyyy')}">01 Jan 2026</div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-muted small">End Date</div>
+                            <div class="fw-semibold"
+                                 th:text="${#temporals.format(app.endDate, 'dd MMM yyyy')}">05 Jan 2026</div>
+                        </div>
+                    </div>
+
+                    <div class="mt-2 text-muted">
+                        <strong>Reason:</strong>
+                        <span th:text="${app.reason}">–</span>
+                    </div>
+
+                    <div th:if="${app.workDissemination != null and !app.workDissemination.isBlank()}"
+                         class="mt-1 text-muted small">
+                        <strong>Work Cover:</strong>
+                        <span th:text="${app.workDissemination}">–</span>
+                    </div>
+
+                    <div th:if="${app.isOverseas}" class="mt-1 text-muted small">
+                        <strong>Overseas Contact:</strong>
+                        <span th:text="${app.contactDetails}">–</span>
+                    </div>
+                </div>
+
+                <div class="card-footer d-flex gap-2 align-items-end">
+                    <!-- Approve -->
+                    <form th:action="@{/leave/{id}/approve(id=${app.leaveApplicationId})}"
+                          method="post" class="d-inline"
+                          onsubmit="return confirm('Approve this leave application?')">
+                        <button type="submit" class="btn btn-success btn-sm">✓ Approve</button>
+                    </form>
+
+                    <!-- Reject with comment modal trigger -->
+                    <button type="button" class="btn btn-danger btn-sm"
+                            data-bs-toggle="modal"
+                            th:data-bs-target="'#rejectModal' + ${app.leaveApplicationId}">
+                        ✗ Reject
+                    </button>
+
+                    <!-- View detail -->
+                    <a th:href="@{/leave/{id}(id=${app.leaveApplicationId})}"
+                       class="btn btn-outline-primary btn-sm ms-auto">View Details</a>
+                </div>
+            </div>
+
+            <!-- Reject Modal -->
+            <div class="modal fade" th:id="'rejectModal' + ${app.leaveApplicationId}"
+                 tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Reject Leave Application</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <form th:action="@{/leave/{id}/reject(id=${app.leaveApplicationId})}"
+                              method="post">
+                            <div class="modal-body">
+                                <p class="text-muted small">
+                                    Rejecting application for
+                                    <strong th:text="${app.employee.first_name + ' ' + app.employee.last_name}">Employee</strong>
+                                    (<span th:text="${app.leaveType.name}">Leave</span>,
+                                     <span th:text="${app.getDurationDisplay()}">3 days</span>).
+                                </p>
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">
+                                        Rejection Reason <span class="text-danger">*</span>
+                                    </label>
+                                    <textarea name="comment" class="form-control" rows="3"
+                                              maxlength="500" required
+                                              placeholder="Provide a clear reason for rejection..."></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-outline-secondary"
+                                        data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-danger">Confirm Rejection</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

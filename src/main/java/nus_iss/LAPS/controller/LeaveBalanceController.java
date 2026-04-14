@@ -18,7 +18,7 @@ import nus_iss.LAPS.service.LeaveBalanceService;
 @RequestMapping("/leave-balances")
 public class LeaveBalanceController {
 
-	private LeaveBalanceService leaveBalanceService;
+	private final LeaveBalanceService leaveBalanceService;
 
 	public LeaveBalanceController(LeaveBalanceService leaveBalanceService) {
 		this.leaveBalanceService = leaveBalanceService;

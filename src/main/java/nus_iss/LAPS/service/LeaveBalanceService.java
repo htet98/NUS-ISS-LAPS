@@ -1,17 +1,17 @@
 package nus_iss.LAPS.service;
 
-import java.util.List;
-import java.util.Optional;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import nus_iss.LAPS.model.Employee;
+import nus_iss.LAPS.model.LeaveApplication;
 import nus_iss.LAPS.model.LeaveBalance;
 import nus_iss.LAPS.model.LeaveType;
 import nus_iss.LAPS.repository.EmployeeRepository;
 import nus_iss.LAPS.repository.LeaveBalanceRepository;
 import nus_iss.LAPS.repository.LeaveTypeRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
 
 @Service
 public class LeaveBalanceService {
@@ -161,6 +161,50 @@ public class LeaveBalanceService {
 				.orElseThrow(() -> new RuntimeException("Leave balance not found"));
 
 		leaveBalanceRepo.delete(balance);
+	}
+
+    // Htet Nandar(Grace) - 12/04/2026
+	// ── Helpers used by LeaveApplicationValidator and LeaveApplicationService ──
+
+	/**
+	 * Returns the remaining balance (totalDays - usedDays) for an employee + leave type.
+	 * Returns 0.0 if no balance record exists.
+	 */
+	public double getAvailableBalance(Employee employee, LeaveType leaveType) {
+		return leaveBalanceRepo
+				.findByEmployeeIdAndLeaveTypeId(employee.getEmp_id(), leaveType.getLeaveTypeId())
+				.map(lb -> lb.getTotalDays() - lb.getUsedDays())
+				.orElse(0.0);
+	}
+
+	/**
+	 * Deducts leave days when a leave application is APPROVED.
+	 * Delegates to incrementUsedDays via the balance record ID.
+	 */
+	public void deductBalance(LeaveApplication application) {
+		LeaveBalance balance = leaveBalanceRepo
+				.findByEmployeeIdAndLeaveTypeId(
+						application.getEmployee().getEmp_id(),
+						application.getLeaveType().getLeaveTypeId())
+				.orElseThrow(() -> new RuntimeException(
+						"No leave balance found for employee " + application.getEmployee().getEmp_id()
+						+ " and leave type " + application.getLeaveType().getName()));
+		incrementUsedDays(balance.getLeaveBalanceId(), application.getDurationDays());
+	}
+
+	/**
+	 * Restores leave days when an APPROVED application is CANCELLED or REJECTED.
+	 * Delegates to decrementUsedDays via the balance record ID.
+	 */
+	public void restoreBalance(LeaveApplication application) {
+		LeaveBalance balance = leaveBalanceRepo
+				.findByEmployeeIdAndLeaveTypeId(
+						application.getEmployee().getEmp_id(),
+						application.getLeaveType().getLeaveTypeId())
+				.orElseThrow(() -> new RuntimeException(
+						"No leave balance found for employee " + application.getEmployee().getEmp_id()
+						+ " and leave type " + application.getLeaveType().getName()));
+		decrementUsedDays(balance.getLeaveBalanceId(), application.getDurationDays());
 	}
 
 }

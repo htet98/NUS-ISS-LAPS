@@ -39,7 +39,7 @@ public class UserController {
 
         return userService.login(username, password)
                 .map(user -> {
-                    session.setAttribute("userID",   user.getId());
+                    session.setAttribute("userID",   user.getUser_id());
                     session.setAttribute("username", user.getUsername());
                     return "redirect:/";
                 })
@@ -71,9 +71,9 @@ public class UserController {
                            HttpSession session,
                            RedirectAttributes ra) {
         try {
-            User user = new User(username, email, password, role, createdby, updatedby);
+            User user = new User(username, email, password, role, createdby);
             User saved = userService.register(user);
-            session.setAttribute("user_id",   saved.getId());
+            session.setAttribute("user_id",   saved.getUser_id());
             session.setAttribute("username", saved.getUsername());
             return "redirect:/";
         } catch (IllegalArgumentException ex) {

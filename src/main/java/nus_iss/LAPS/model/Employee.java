@@ -20,8 +20,6 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 
@@ -52,10 +50,9 @@ public class Employee {
 	private String email;
 	
 	@NotNull(message = "Phone Number is required")
-	@Column(name = "Phone_number")
+	@Column(name = "phone_number", length = 15)
 	@Pattern(regexp="^[689]\\d{7}$") //Not include Toll-free
-	@Max(8)
-	private int phoneNumber;
+	private String phoneNumber;
 	
 	@Column(name="department", nullable=false)
 	private String department;
@@ -63,32 +60,30 @@ public class Employee {
 	@Column(name="designation", nullable=false)
 	private String designation;
 	
-	@Min(value=2020, message= "hire date should not be lesser than 2020")
-	@Max(value=2099, message= "hire date must be 2099 or earlier")
 	@Column(name="hire_date", nullable=false)
 	private LocalDate hire_date;
 	
-	@Column(name="EmployeeStatus")
 	@Enumerated(EnumType.STRING)
+	@Column(name="employee_status")
 	private EmployeeStatus employeeStatus;
-	
-	@Column(name="createdBy", nullable=false)
+
+	@Column(name="created_by", nullable=false)
 	private String createdBy;
-	
-	@Column(name="createdWhen", nullable=false)
+
+	@Column(name="created_when", nullable=false)
 	private LocalDateTime createdWhen;
-	
-	@Column(name="updatedBy")
+
+	@Column(name="updated_by")
 	private String updatedBy;
-	
-	@Column(name="updatedWhen")
+
+	@Column(name="updated_when")
 	private LocalDateTime updatedWhen;
 	
 	@OneToOne(cascade=CascadeType.ALL, fetch=FetchType.LAZY)
 	@JoinColumn(name="user_id", nullable=false, unique=true)
 	private User user;
 	
-	@OneToMany(mappedBy = "employees", cascade=CascadeType.ALL, fetch=FetchType.LAZY)
+	@OneToMany(mappedBy = "employee", cascade=CascadeType.ALL, fetch=FetchType.LAZY)
 	private List<LeaveBalance> LeaveBalances = new ArrayList<>();
 	
 	//Self-referenced
@@ -131,11 +126,13 @@ public class Employee {
 		this.email = email;
 	}
 
-	public int getPhoneNumber() {
+    // Htet Nandar (Grace) - 14/04/2026
+    // Bug fix: Phone number should be stored without dashes for easier validation and querying.
+	public String getPhoneNumber() {
 		return phoneNumber;
 	}
 
-	public void setPhoneNumber(int phoneNumber) {
+	public void setPhoneNumber(String phoneNumber) {
 		this.phoneNumber = phoneNumber;
 	}
 
@@ -237,9 +234,8 @@ public class Employee {
 
 	public Employee(Long emp_id, String first_name, @NotNull(message = "Last_name is required") String last_name,
 			@NotNull(message = "Email Address is required") @Email String email,
-			@NotNull(message = "Phone Number is required") @Max(11) int phoneNumber, String department,
-			String designation,
-			@Min(value = 2020, message = "hire date should not be lesser than 2020") @Max(value = 2099, message = "hire date must be 2099 or earlier") LocalDate hire_date,
+			@NotNull(message = "Phone Number is required") String phoneNumber, String department,
+			String designation, LocalDate hire_date,
 			EmployeeStatus employeeStatus, String createdBy, LocalDateTime createdWhen, String updatedBy,
 			LocalDateTime updatedWhen, User user, List<LeaveBalance> leaveBalances, Employee supervisor,
 			List<Employee> subordinates) {

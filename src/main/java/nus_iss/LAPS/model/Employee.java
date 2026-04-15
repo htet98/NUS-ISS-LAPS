@@ -22,6 +22,7 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.groups.Default;
 
 /**
 	* Author: Junior
@@ -51,7 +52,7 @@ public class Employee {
 	
 	@NotNull(message = "Phone Number is required")
 	@Column(name = "phone_number", length = 15)
-	@Pattern(regexp="^[689]\\d{7}$") //Not include Toll-free
+	@Pattern(regexp="^[689]\\d{7}$", message = "Phone number must start with 6, 8, or 9 followed by 7 digits")
 	private String phoneNumber;
 	
 	@Column(name="department", nullable=false)

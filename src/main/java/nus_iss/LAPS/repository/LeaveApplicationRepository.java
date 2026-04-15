@@ -3,6 +3,8 @@ package nus_iss.LAPS.repository;
 import nus_iss.LAPS.model.Employee;
 import nus_iss.LAPS.model.LeaveApplication;
 import nus_iss.LAPS.model.LeaveStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -18,11 +20,7 @@ import java.util.List;
  */
 public interface LeaveApplicationRepository extends JpaRepository<LeaveApplication, Long> {
 
-    // ── Employee: all applications by employee (no year filter) ─────────────
-    List<LeaveApplication> findLeaveApplicationsByEmployee(Employee employee);
-
-    // ── Employee: all applications by leave type ─────────────────────────────
-    List<LeaveApplication> findLeaveApplicationsByLeaveTypeLeaveTypeId(Long leaveTypeId);
+    Page<LeaveApplication> findLeaveApplicationsByEmployee(Employee employee, Pageable pageable);
 
     // ── Employee: personal history for current year (excludes DELETED) ───────
     @Query("SELECT la FROM LeaveApplication la " +
@@ -40,28 +38,27 @@ public interface LeaveApplicationRepository extends JpaRepository<LeaveApplicati
             "AND YEAR(la.startDate) = :year " +
             "AND (:status IS NULL OR la.status = :status) " +
             "AND (:leaveTypeId IS NULL OR la.leaveType.leaveTypeId = :leaveTypeId) " +
-            "AND la.status != 'DELETED' " +
-            "ORDER BY la.startDate DESC")
-    List<LeaveApplication> findByEmployeeYearStatusAndType(
+            "AND la.status != 'DELETED'")
+    Page<LeaveApplication> findByEmployeeYearStatusAndType(
             @Param("employee") Employee employee,
             @Param("year") int year,
             @Param("status") LeaveStatus status,
-            @Param("leaveTypeId") Long leaveTypeId);
+            @Param("leaveTypeId") Long leaveTypeId,
+            Pageable pageable);
 
     // ── Manager: pending applications (APPLIED or UPDATED) from subordinates ──
     @Query("SELECT la FROM LeaveApplication la " +
             "WHERE la.employee.supervisor = :manager " +
-            "AND la.status IN ('APPLIED', 'UPDATED') " +
-            "ORDER BY la.createdWhen ASC")
-    List<LeaveApplication> findPendingLeaveApplicationsByManager(
-            @Param("manager") Employee manager);
+            "AND la.status IN ('APPLIED', 'UPDATED')")
+    Page<LeaveApplication> findPendingLeaveApplicationsByManager(
+            @Param("manager") Employee manager,
+            Pageable pageable);
 
     // ── Manager: all applications from direct subordinates ────────────────────
     @Query("SELECT la FROM LeaveApplication la " +
             "WHERE la.employee.supervisor = :manager " +
-            "AND la.status != 'DELETED' " +
-            "ORDER BY la.employee.last_name, la.startDate DESC")
-    List<LeaveApplication> findAllByManager(@Param("manager") Employee manager);
+            "AND la.status != 'DELETED'")
+    Page<LeaveApplication> findAllByManager(@Param("manager") Employee manager, Pageable pageable);
 
     // ── Medical leave: total approved days in a calendar year ─────────────────
     @Query("SELECT COALESCE(SUM(la.durationDays), 0) FROM LeaveApplication la " +
@@ -72,15 +69,6 @@ public interface LeaveApplicationRepository extends JpaRepository<LeaveApplicati
     double sumApprovedMedicalLeaveByEmployeeAndYear(
             @Param("employee") Employee employee,
             @Param("year") int year);
-
-    // ── Overlapping approved leave check ─────────────────────────────────────
-    @Query("SELECT la FROM LeaveApplication la " +
-            "WHERE la.status = 'APPROVED' " +
-            "AND la.startDate <= :endDate " +
-            "AND la.endDate >= :startDate")
-    List<LeaveApplication> findApprovedInRange(
-            @Param("startDate") LocalDate startDate,
-            @Param("endDate") LocalDate endDate);
 
     // ── Manager: overlapping approved leave from same team ────────────────────
     @Query("SELECT la FROM LeaveApplication la " +

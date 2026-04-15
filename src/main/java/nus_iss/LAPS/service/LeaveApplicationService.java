@@ -7,6 +7,8 @@ import nus_iss.LAPS.repository.LeaveApplicationRepository;
 import nus_iss.LAPS.validators.LeaveApplicationValidator;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BeanPropertyBindingResult;
@@ -36,7 +38,17 @@ public class LeaveApplicationService {
     public LeaveApplication submitLeaveApplication(LeaveApplication application) {
         runValidator(application);
         application.setDurationDays(leaveValidator.computeDuration(application));
-        application.setStatus(LeaveStatus.APPLIED);
+        
+        // If employee has no supervisor (e.g. top manager), auto-approve
+        if (application.getEmployee().getSupervisor() == null) {
+            application.setStatus(LeaveStatus.APPROVED);
+            // Self-approved or system approved? Usually we just set it to APPROVED
+            // and leaveBalanceService.deductBalance(application); should be called
+            leaveBalanceService.deductBalance(application);
+        } else {
+            application.setStatus(LeaveStatus.APPLIED);
+        }
+
         String actor = resolveActor(application.getEmployee());
         application.setCreatedBy(actor);
         application.setUpdatedBy(actor);
@@ -189,27 +201,48 @@ public class LeaveApplicationService {
                 employee, LocalDate.now().getYear());
     }
 
+    public Page<LeaveApplication> getPersonalLeaveHistoryPaginated(Employee employee, Pageable pageable) {
+        return leaveApplicationRepo.findLeaveApplicationsByEmployee(employee, pageable);
+    }
+
     /** Filter by status only (null status → all non-deleted). */
     public List<LeaveApplication> getPersonalLeaveHistoryByStatus(Employee employee, LeaveStatus status) {
         if (status == null) {
             return getPersonalLeaveHistory(employee);
         }
         return leaveApplicationRepo.findByEmployeeYearStatusAndType(
-                employee, LocalDate.now().getYear(), status, null);
+                employee, LocalDate.now().getYear(), status, null, Pageable.unpaged()).getContent();
+    }
+
+    public Page<LeaveApplication> getPersonalLeaveHistoryByStatusPaginated(Employee employee, LeaveStatus status, Pageable pageable) {
+        return leaveApplicationRepo.findByEmployeeYearStatusAndType(
+                employee, LocalDate.now().getYear(), status, null, pageable);
     }
 
     /** Filter by leave type only (all statuses). */
     public List<LeaveApplication> getPersonalLeaveHistoryByType(
             Employee employee, Long leaveTypeId) {
         return leaveApplicationRepo.findByEmployeeYearStatusAndType(
-                employee, LocalDate.now().getYear(), null, leaveTypeId);
+                employee, LocalDate.now().getYear(), null, leaveTypeId, Pageable.unpaged()).getContent();
+    }
+
+    public Page<LeaveApplication> getPersonalLeaveHistoryByTypePaginated(
+            Employee employee, Long leaveTypeId, Pageable pageable) {
+        return leaveApplicationRepo.findByEmployeeYearStatusAndType(
+                employee, LocalDate.now().getYear(), null, leaveTypeId, pageable);
     }
 
     /** Filter by status and/or leave type. */
     public List<LeaveApplication> getPersonalLeaveHistoryByStatusAndType(
             Employee employee, LeaveStatus status, Long leaveTypeId) {
         return leaveApplicationRepo.findByEmployeeYearStatusAndType(
-                employee, LocalDate.now().getYear(), status, leaveTypeId);
+                employee, LocalDate.now().getYear(), status, leaveTypeId, Pageable.unpaged()).getContent();
+    }
+
+    public Page<LeaveApplication> getPersonalLeaveHistoryByStatusAndTypePaginated(
+            Employee employee, LeaveStatus status, Long leaveTypeId, Pageable pageable) {
+        return leaveApplicationRepo.findByEmployeeYearStatusAndType(
+                employee, LocalDate.now().getYear(), status, leaveTypeId, pageable);
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -218,12 +251,20 @@ public class LeaveApplicationService {
 
     /** Pending applications (APPLIED or UPDATED) from direct subordinates. */
     public List<LeaveApplication> getPendingApplicationsForManager(Employee manager) {
-        return leaveApplicationRepo.findPendingLeaveApplicationsByManager(manager);
+        return leaveApplicationRepo.findPendingLeaveApplicationsByManager(manager, Pageable.unpaged()).getContent();
+    }
+
+    public Page<LeaveApplication> getPendingApplicationsForManagerPaginated(Employee manager, Pageable pageable) {
+        return leaveApplicationRepo.findPendingLeaveApplicationsByManager(manager, pageable);
     }
 
     /** All leave from direct subordinates (excludes DELETED). */
     public List<LeaveApplication> getAllApplicationsForManager(Employee manager) {
-        return leaveApplicationRepo.findAllByManager(manager);
+        return leaveApplicationRepo.findAllByManager(manager, Pageable.unpaged()).getContent();
+    }
+
+    public Page<LeaveApplication> getAllApplicationsForManagerPaginated(Employee manager, Pageable pageable) {
+        return leaveApplicationRepo.findAllByManager(manager, pageable);
     }
 
     /** Last 10 approved/rejected decisions made by this manager. */

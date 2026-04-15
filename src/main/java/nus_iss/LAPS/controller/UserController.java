@@ -19,7 +19,6 @@ import java.util.List; //CRUD
 
 import java.util.Optional;
 
-@RestController //CRUD
 @Controller
 @RequestMapping("/users") //CRUD
 public class UserController {

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LAPS | My Leave History</title>
+    <style>
+        :root {
+            --bg-page: #f5f6fa;
+            --bg-card: #ffffff;
+            --text-primary: #1d1d1f;
+            --text-secondary: #6e6e73;
+            --nus-blue: #003d7c;
+            --border-radius: 12px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        body {
+            background-color: var(--bg-page);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            color: var(--text-primary);
+            padding: 30px;
+            margin: 0;
+        }
+
+        .container { width: 100%; max-width: 1200px; margin: 0 auto; }
+
+        /* Shared Header Style */
+        .page-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 25px; background: var(--bg-card);
+            padding: 20px 30px; border-radius: var(--border-radius); box-shadow: var(--shadow);
+        }
+
+        /* History Table Card */
+        .history-card {
+            background: var(--bg-card);
+            padding: 30px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th {
+            text-align: left;
+            padding: 15px;
+            background-color: #f8f9fa;
+            color: var(--text-secondary);
+            font-weight: 600;
+            border-bottom: 2px solid #edf2f7;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #edf2f7;
+            font-size: 0.95rem;
+            vertical-align: middle;
+        }
+
+        tr:hover { background-color: #fcfcfd; }
+
+        /* Status Badge Styling */
+        .badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .status-applied { background: #eef2ff; color: #4338ca; }
+        .status-approved { background: #ecfdf5; color: #059669; }
+        .status-rejected { background: #fef2f2; color: #dc2626; }
+        .status-updated { background: #fffbeb; color: #d97706; }
+
+        /* View Detail Button */
+        .btn-view {
+            background: #f3f4f6;
+            color: var(--text-primary);
+            padding: 8px 16px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            border: 1px solid #e5e7eb;
+            transition: all 0.2s;
+        }
+        .btn-view:hover { background: #e5e7eb; }
+
+        .btn-back {
+            margin-top: 20px;
+            display: inline-block;
+            color: var(--nus-blue);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header class="page-header">
+        <div>
+            <h1 style="margin:0; font-size: 1.5rem;">Leave History</h1>
+            <p style="margin:5px 0 0; color: var(--text-secondary);">Review your past and current leave requests</p>
+        </div>
+        <div th:if="${employee != null}" style="text-align: right;">
+            <div th:text="${employee.name}" style="font-weight:600;">Employee Name</div>
+            <div th:text="${employee.role}" style="font-size:0.8rem; color:var(--text-secondary);">ID</div>
+			<div style="font-size:0.8rem; color:var(--text-secondary);"> <a th:href="@{/logout)}">Log Out</a> </div>
+        </div>
+    </header>
+
+    <section class="history-card">
+        <div th:if="${#lists.isEmpty(leaveHistory)}">
+            <p style="text-align: center; color: var(--text-secondary); padding: 40px;">No leave records found.</p>
+        </div>
+
+        <table th:if="${not #lists.isEmpty(leaveHistory)}">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Leave Type</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                    <th>Status</th>
+                    <th>Submitted Date</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="leave : ${leaveHistory}">
+                    <td th:text="${leave.applicationId}">101</td>
+                    <td th:text="${leave.leaveType.name}">Annual</td>
+                    <td th:text="${#temporals.format(leave.fromDate, 'dd MMM yyyy')}">01 Jan 2026</td>
+                    <td th:text="${#temporals.format(leave.toDate, 'dd MMM yyyy')}">05 Jan 2026</td>
+                    <td>
+                        <span class="badge" 
+                              th:classappend="${'status-' + #strings.toLowerCase(leave.status)}"
+                              th:text="${leave.status}">APPLIED</span>
+                    </td>
+                    <td th:text="${#temporals.format(leave.submittedDate, 'dd MMM yyyy HH:mm')}">20 Dec 2025</td>
+                    <td>
+                        <a th:href="@{/leave/details/{id}(id=${leave.applicationId})}" class="btn-view">View Detail</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <a th:href="@{/leave/apply}" class="btn-back">← Back to Application Form</a>
+    </section>
+</div>
+
+</body>
+</html>

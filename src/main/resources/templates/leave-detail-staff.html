@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LAPS | Leave Detail View</title>
+    <style>
+        :root {
+            --bg-page: #f5f6fa;
+            --bg-card: #ffffff;
+            --text-primary: #1d1d1f;
+            --text-secondary: #6e6e73;
+            --nus-blue: #003d7c;
+            --border-radius: 12px;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        body {
+            background-color: var(--bg-page);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            color: var(--text-primary);
+            padding: 40px 20px;
+            margin: 0;
+        }
+
+        .container { width: 100%; max-width: 900px; margin: 0 auto; }
+
+        /* Top Header Area */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 30px;
+        }
+
+        .header-left h1 { margin: 0; font-size: 1.6rem; color: var(--nus-blue); }
+        
+        .user-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--bg-card);
+            padding: 12px 20px;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+        }
+
+        .user-avatar {
+            width: 42px; height: 42px; border-radius: 50%;
+            background: var(--nus-blue); color: white;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; font-size: 1.1rem;
+        }
+
+        /* Detail Card */
+        .detail-card {
+            background: var(--bg-card);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            padding: 40px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+        }
+
+        .info-item { display: flex; flex-direction: column; }
+        .info-item.full-width { grid-column: span 2; }
+
+        .label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .value { font-size: 1rem; font-weight: 500; color: #333; }
+
+        /* Status Badge */
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .status-applied { background: #e0e7ff; color: #4338ca; }
+        .status-approved { background: #dcfce7; color: #15803d; }
+        .status-rejected { background: #fee2e2; color: #b91c1c; }
+
+        .section-divider {
+            height: 1px;
+            background: #eee;
+            margin: 30px 0;
+        }
+
+        /* Action Bar */
+        .action-container {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8fafc;
+            border: 1px dashed #cbd5e1;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .action-form { display: flex; align-items: center; gap: 15px; }
+		
+		.action-select { padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1; width: 120px; }
+        
+        select {
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #cbd5e1;
+            background: white;
+            font-size: 0.9rem;
+            min-width: 160px;
+        }
+
+        .btn-submit {
+            background: var(--nus-blue);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .btn-submit:hover { opacity: 0.9; }
+        
+        .btn-back {
+            display: inline-block;
+            margin-top: 20px;
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+		
+		.btn-action-submit { 
+			background: var(--nus-blue); 
+			color: white; 
+			border: none; 
+			padding: 10px 20px; 
+			border-radius: 6px; 
+			font-weight: 600; 
+			cursor: pointer; 
+		}
+		
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header class="page-header">
+        <div class="header-left">
+            <h1>Leave Record Details</h1>
+            <p style="color: var(--text-secondary); margin: 5px 0;">Viewing application details for record #<span th:text="${leave.applicationId}">101</span></p>
+        </div>
+		
+		<div class="user-card" th:if="${employee != null}">
+            <div class="user-avatar" th:text="${#strings.substring(employee.name,0,1)}">U</div>
+            <div class="user-info">
+                <div th:text="${employee.name}" style="font-weight:600;">User Name</div>
+                <div th:text="${'EMP-' + employee.employeeId}" style="font-size:0.8rem; color:var(--text-secondary);">ID</div>
+				<div style="font-size:0.8rem; color:var(--text-secondary);"> <a th:href="@{/logout)}">Log Out</a> </div>
+            </div>
+        </div>
+		
+    </header>
+
+    <div class="detail-card">
+        <div class="info-grid">
+            <div class="info-item">
+                <span class="label">Record ID</span>
+                <span class="value" th:text="${leave.applicationId}">LAPS-1001</span>
+            </div>
+            <div class="info-item">
+                <span class="label">Status</span>
+                <div>
+                    <span class="badge" 
+                          th:classappend="${'status-' + #strings.toLowerCase(leave.status)}" 
+                          th:text="${leave.status}">APPLIED</span>
+                </div>
+            </div>
+
+            <div class="info-item">
+                <span class="label">Leave Type</span>
+                <span class="value" th:text="${leave.leaveType.name}">Annual Leave</span>
+            </div>
+            <div class="info-item">
+                <span class="label">Submitted Date</span>
+                <span class="value" th:text="${#temporals.format(leave.submittedDate, 'dd MMM yyyy, HH:mm')}">15 Apr 2026, 09:30</span>
+            </div>
+
+            <div class="section-divider full-width"></div>
+
+            <div class="info-item">
+                <span class="label">Start Date</span>
+                <span class="value" th:text="${#temporals.format(leave.fromDate, 'dd MMM yyyy')}">20 Apr 2026</span>
+            </div>
+            <div class="info-item">
+                <span class="label">End Date</span>
+                <span class="value" th:text="${#temporals.format(leave.toDate, 'dd MMM yyyy')}">24 Apr 2026</span>
+            </div>
+            <div class="info-item">
+                <span class="label">Duration (Days)</span>
+                <span class="value" th:text="${duration + ' working days'}">5 working days</span>
+            </div>
+            <div class="info-item">
+                <span class="label">Approved By</span>
+                <span class="value" th:text="${leave.approvedBy != null ? leave.approvedBy : 'Pending Approval'}">N/A</span>
+            </div>
+
+            <div class="section-divider full-width"></div>
+
+            <div class="info-item full-width">
+                <span class="label">Reason</span>
+                <span class="value" th:text="${leave.reason}">Family trip to Malaysia.</span>
+            </div>
+            <div class="info-item">
+                <span class="label">Work Dissemination</span>
+                <span class="value" th:text="${leave.workDissemination}">Email handled by team lead.</span>
+            </div>
+            <div class="info-item">
+                <span class="label">Contact Detail</span>
+                <span class="value" th:text="${leave.contactDetails}">+65 8888 9999</span>
+            </div>
+        </div>
+
+        <div class="action-container" th:if="${leave.status.toString() == 'APPLIED'}">
+            <span style="font-size: 0.9rem; font-weight: 600; color: var(--nus-blue);">Manage this pending request:</span>
+            <form th:action="@{
+			
+			<div class="action-bar" th:if="${leave.status.toString() == 'APPLIED'}">
+				<form th:action="@{/leave/manage/{id}(id=${leave.applicationId})}" method="post" style="display:flex; align-items:center; gap:15px; width:100%;">
+					<label style="font-weight:600; font-size:0.9rem;">Request Action:</label>
+					<select name="decision" class="action-select">
+						<option value="UPDATE">Update</option>
+						<option value="CANCEL">Cancel</option>
+						<option value="DELETE">Delete</option>
+					</select>
+					<button type="submit" class="btn-action-submit">Submit</button>
+				</form>
+			</div>
+			
+		</div>
+	</div>

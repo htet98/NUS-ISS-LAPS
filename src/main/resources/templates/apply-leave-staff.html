@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LAPS | Apply for Leave</title>
+    <style>
+        :root {
+            --bg-page: #f5f6fa;
+            --bg-card: #ffffff;
+            --text-primary: #1d1d1f;
+            --text-secondary: #6e6e73;
+            --button-primary: #000000;
+            --button-secondary: #f0f0f5;
+            --border-field: #e2e8f0;
+            --field-bg: #f1f3f6;
+            --nus-blue: #003d7c;
+            --border-radius: 12px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        body {
+            background-color: var(--bg-page);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            color: var(--text-primary);
+            padding: 30px;
+            margin: 0;
+        }
+
+        .container { width: 100%; max-width: 1200px; margin: 0 auto; }
+
+        /* Header Styles */
+        .page-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 25px; background: var(--bg-card);
+            padding: 20px 30px; border-radius: var(--border-radius); box-shadow: var(--shadow);
+        }
+
+        .user-card { display: flex; align-items: center; gap: 12px; background: var(--field-bg); padding: 10px 15px; border-radius: 8px; }
+        .user-avatar-circle { width: 40px; height: 40px; border-radius: 50%; background: #d1d5db; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; }
+
+        /* Card Styles */
+        .summary-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .summary-card { background: var(--bg-card); padding: 25px; border-radius: var(--border-radius); box-shadow: var(--shadow); }
+        .card-data-row { display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.95rem; }
+        .data-label { color: var(--text-secondary); }
+        .card-divider { border-bottom: 1px solid var(--border-field); margin: 15px 0; }
+
+        /* Form Styles */
+        .application-form-card { background: var(--bg-card); padding: 40px; border-radius: var(--border-radius); box-shadow: var(--shadow); }
+        .form-row { margin-bottom: 20px; }
+        .form-row.inline { display: flex; gap: 30px; }
+        .form-group { flex: 1; }
+        .duration-group { display: flex; gap: 15px; }
+
+        label { display: block; font-weight: 600; font-size: 0.9rem; margin-bottom: 8px; }
+        select, input, textarea {
+            width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border-field);
+            background: var(--field-bg); font-family: inherit;
+        }
+
+        /* Button Styles */
+        .form-actions { display: flex; justify-content: space-between; margin-top: 30px; }
+        .btn { padding: 12px 25px; border-radius: 8px; font-weight: 600; cursor: pointer; text-decoration: none; border: none; font-size: 0.95rem; }
+        .btn-submit { background: var(--button-primary); color: white; }
+        .btn-history { background: var(--button-secondary); color: var(--text-primary); border: 1px solid #ccc; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header class="page-header">
+        <div>
+            <h1 style="margin:0; font-size: 1.5rem;">Leave Application</h1>
+            <p style="margin:5px 0 0; color: var(--text-secondary);">Apply for leave and track your requests</p>
+        </div>
+        <div class="user-card" th:if="${employee != null}">
+            <div class="user-avatar-circle" th:text="${#strings.substring(employee.name,0,1)}">U</div>
+            <div class="user-info">
+                <div th:text="${employee.name}" style="font-weight:600;">User Name</div>
+                <div th:text="${'EMP-' + employee.employeeId}" style="font-size:0.8rem; color:var(--text-secondary);">ID</div>
+				<div style="font-size:0.8rem; color:var(--text-secondary);"> <a th:href="@{/logout)}">Log Out</a> </div>
+            </div>
+        </div>
+    </header>
+
+    <section class="summary-cards">
+        <div class="summary-card">
+            <div style="font-weight:bold; margin-bottom:15px;">Annual Leave</div>
+            <div class="card-data-row"><span class="data-label">Total</span> <span th:text="${employee.annualLeaveEntitlement + ' days'}">14 days</span></div>
+            <div class="card-data-row"><span class="data-label">Used</span> <span th:text="${annualUsed + ' days'}">0 days</span></div>
+            <div class="card-divider"></div>
+            <div class="card-data-row"><strong>Remaining</strong> <strong th:text="${(employee.annualLeaveEntitlement - annualUsed) + ' days'}">14 days</strong></div>
+        </div>
+
+        <div class="summary-card">
+            <div style="font-weight:bold; margin-bottom:15px;">Medical Leave</div>
+            <div class="card-data-row"><span class="data-label">Total</span> <span th:text="${employee.medicalLeaveEntitlement + ' days'}">14 days</span></div>
+            <div class="card-data-row"><span class="data-label">Used</span> <span th:text="${medicalUsed + ' days'}">0 days</span></div>
+            <div class="card-divider"></div>
+            <div class="card-data-row"><strong>Remaining</strong> <strong th:text="${(employee.medicalLeaveEntitlement - medicalUsed) + ' days'}">14 days</strong></div>
+        </div>
+
+        <div class="summary-card" th:if="${employee.compensationLedger != null}">
+            <div style="font-weight:bold; margin-bottom:15px;">Compensation Leave</div>
+            <div class="card-data-row"><span class="data-label">Balance</span> <span th:text="${employee.compensationLedger.compensationBalance + ' days'}">0 days</span></div>
+            <div class="card-data-row"><span class="data-label">Used</span> <span th:text="${compUsed + ' days'}">0 days</span></div>
+            <div class="card-divider"></div>
+            <div class="card-data-row"><strong>Remaining</strong> <strong th:text="${(employee.compensationLedger.compensationBalance - compUsed) + ' days'}">0 days</strong></div>
+        </div>
+    </section>
+
+    <section class="application-form-card">
+        <h2 style="margin-top:0; margin-bottom:25px;">Apply for Leave</h2>
+        
+        <form th:action="@{/leave/apply}" th:object="${leaveApplication}" method="post">
+            <div class="form-row inline">
+                <div class="form-group">
+                    <label>Leave Type</label>
+                    <select th:field="*{leaveType}" required>
+                        <option value="" disabled selected>Select leave type</option>
+                        <option th:each="type : ${T(com.nus.iss.laps.model.LeaveTypeEnum).values()}" 
+                                th:value="${type}" th:text="${type}">Type</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Duration</label>
+                    <div class="duration-group">
+                        <input type="date" th:field="*{fromDate}" required>
+                        <input type="date" th:field="*{toDate}" required>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <label>Reason for Leave</label>
+                <textarea th:field="*{reason}" rows="4" placeholder="Brief explanation..."></textarea>
+            </div>
+
+            <div class="form-row">
+                <label>Work Dissemination</label>
+                <input type="text" th:field="*{workDissemination}" placeholder="Handover details...">
+            </div>
+
+            <div class="form-row">
+                <label>Contact Details</label>
+                <input type="text" th:field="*{contactDetails}" placeholder="Emergency contact info...">
+            </div>
+
+            <div class="form-actions">
+                <a th:href="@{/leave/history}" class="btn btn-history">View History</a>
+                <button type="submit" class="btn btn-submit">Submit Request</button>
+            </div>
+        </form>
+    </section>
+</div>
+
+</body>
+</html>

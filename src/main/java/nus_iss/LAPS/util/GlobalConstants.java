@@ -31,7 +31,7 @@ public final class GlobalConstants {
     public static final String REDIRECT_ADMIN_HIERARCHY = "redirect:/admin/hierarchy";
     public static final String REDIRECT_ADMIN_HIERARCHY_EDIT = "redirect:/admin/hierarchy/edit/";
     public static final String REDIRECT_LEAVE_HISTORY = "redirect:/leave/history";
-    public static final String REDIRECT_MANAGER_PENDING = "redirect:/leave/manager/pending";
+    public static final String REDIRECT_MANAGER_PENDING = "redirect:/leave/manager/history/pending";
 
     // Controller Mapping Routes
     public static final String ROUTE_ADMIN = "/admin";

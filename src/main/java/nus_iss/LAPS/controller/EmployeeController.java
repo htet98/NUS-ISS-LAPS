@@ -1,7 +1,6 @@
 package nus_iss.LAPS.controller;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -27,7 +26,7 @@ import nus_iss.LAPS.service.EmployeeService;
 import nus_iss.LAPS.validators.EmployeeValidator;
 
 @Controller
-@RequestMapping("/employees")
+@RequestMapping("/admin")
 @RequiredArgsConstructor
 @Slf4j
 public class EmployeeController {
@@ -48,12 +47,12 @@ public class EmployeeController {
 		
 		//session
 		private boolean isLoggedIn(HttpSession session) {
-	        return session.getAttribute("user") != null;
+	        return session.getAttribute("userId") != null;
 	    }
 
 	    private boolean isAdmin(HttpSession session) {
-	        User user = (User) session.getAttribute("user");
-	        return user != null && user.getRole() == Role.ADMIN;
+	        Role role = (Role) session.getAttribute("role");
+	        return role != null && role == Role.ADMIN;
 	    }
 	    
 	    private String getActor(HttpSession session) {
@@ -65,17 +64,17 @@ public class EmployeeController {
 	    }
 	    
 	    //Test
-	    @GetMapping
+	    /*@GetMapping
 	    public String listEmployees(HttpSession session, Model model, RedirectAttributes ra) {
 	        List<Employee> employees = eService.findAllEmployees();
 	        System.out.println("Employee size = " + employees.size());
 	        model.addAttribute("employeeList", employees);
 	        return "employee-list";
-	    }
+	    }*/
 	    
 	    //List employees
 	    // check admin or not. If not, error redirect back to login.
-	    /*@GetMapping
+	    @GetMapping("/employee-list")
 	    public String listEmployees(HttpSession session, Model model, RedirectAttributes ra) {
 	        if (!isLoggedIn(session)) {
 	            return "redirect:/login";
@@ -88,11 +87,11 @@ public class EmployeeController {
 
 	        model.addAttribute("employeeList", eService.findAllEmployees());
 	        return "employee-list";
-	    }*/
+	    }
 
 	    //CRUD
 	    //Create
-		@GetMapping("/create")
+		@GetMapping("/employee-add")
 		public ModelAndView newEmployeePage(HttpSession session, 
 											RedirectAttributes redirect) {
 			if (!isLoggedIn(session)) {
@@ -110,7 +109,7 @@ public class EmployeeController {
 			return mav;
 		}
 		
-		@PostMapping("/create")
+		@PostMapping("/employee-add")
 		public ModelAndView createNewEmployee(@ModelAttribute 
 												@Valid Employee employee,
 												BindingResult result,
@@ -141,7 +140,7 @@ public class EmployeeController {
 		}
 		
 		//edit
-		@GetMapping("/edit/{id}")
+		@GetMapping("/employee-edit/{id}")
 		public ModelAndView editEmployeePage(@PathVariable Long id,
 	            								HttpSession session,
 	            								RedirectAttributes redirect) {
@@ -161,8 +160,8 @@ public class EmployeeController {
 			return mav;
 		}
 		
-		@PostMapping("/edit/{id}")
-		public ModelAndView editEmployee(@ModelAttribute("employee") 
+		@PostMapping("/employee-edit/{id}")
+		public ModelAndView editEmployee(@ModelAttribute
 										@Valid Employee employee,
 	            						BindingResult result,
 	            						@PathVariable Long id,
@@ -194,7 +193,7 @@ public class EmployeeController {
 			return new ModelAndView("redirect:/employees");
 		}
 		
-		@GetMapping("/delete/{id}")
+		@GetMapping("/employee-delete/{id}")
 		public ModelAndView deleteEmployee(@PathVariable Long id,
 	            							HttpSession session,
 	            							RedirectAttributes redirect) {

@@ -1,21 +1,24 @@
 package nus_iss.LAPS.config;
 
-import org.springframework.context.annotation.Configuration;
-import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
+import nus_iss.LAPS.repository.LeaveTypeRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.FormatterRegistry;
+import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
- * MVC configuration.
- * Enables static resources from /static and configures the view layer.
+ * Web configuration for Spring MVC.
+ * Registers custom formatters for model binding.
  */
-@Configuration
+@Component
 public class WebConfig implements WebMvcConfigurer {
 
-
+    @Autowired
+    private LeaveTypeRepository leaveTypeRepository;
 
     @Override
-    public void addViewControllers(ViewControllerRegistry registry) {
-        // Convenience: /home redirects to /
-        registry.addRedirectViewController("/home", "/");
+    public void addFormatters(FormatterRegistry registry) {
+        registry.addFormatter(new LeaveTypeFormatter(leaveTypeRepository));
     }
 }
+

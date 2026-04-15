@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/header :: head('Team Leave History – LAPS')}"></head>
+<body>
+
+<div th:replace="~{fragments/layout :: navbar}"></div>
+
+<main class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Team Leave History</h2>
+        <a th:href="@{__${ROUTE_MANAGER_PENDING}__}" class="btn btn-warning btn-sm">
+            View Pending Approvals
+        </a>
+    </div>
+
+    <div th:if="${__${FLASH_SUCCESS}__}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <span th:text="${__${FLASH_SUCCESS}__}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${__${FLASH_ERROR}__}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <span th:text="${__${FLASH_ERROR}__}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- My Leave Balance Summary (Manager) -->
+    <div class="row g-3 mb-4">
+        <div th:each="balance : ${leaveBalances}" class="col-md-4">
+            <div class="card text-center border-0 shadow-sm">
+                <div class="card-body py-3">
+                    <div class="fw-semibold text-secondary small" th:text="${balance.leaveType.name}">Leave Type</div>
+                    <div class="fs-4 fw-bold text-primary"
+                         th:text="${#numbers.formatDecimal(balance.totalDays - balance.usedDays, 1, 'POINT', 1, 'COMMA')}"></div>
+                    <div class="text-muted small">days remaining</div>
+                    <div class="progress mt-2" style="height:6px;">
+                        <div class="progress-bar"
+                             th:style="'width:' + ${balance.totalDays > 0 ? (balance.usedDays / balance.totalDays * 100) : 0} + '%'"></div>
+                    </div>
+                    <div class="text-muted small mt-1">
+                        <span th:text="${#numbers.formatDecimal(balance.usedDays, 1, 'POINT', 1, 'COMMA')}"></span> used /
+                        <span th:text="${#numbers.formatDecimal(balance.totalDays, 1, 'POINT', 1, 'COMMA')}"></span> total
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:if="${#lists.isEmpty(applications)}" class="text-center text-muted py-5">
+        <p class="fs-5">No leave applications found for your team.</p>
+    </div>
+
+    <div th:unless="${#lists.isEmpty(applications)}" class="card">
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Employee</th>
+                        <th>Leave Type</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                        <th>Duration</th>
+                        <th>Status</th>
+                        <th>Actioned By</th>
+                        <th>Detail</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="app, iterStat : ${applications}">
+                        <td th:text="${currentPage * size + iterStat.index + 1}">1</td>
+                        <td>
+                            <div class="fw-semibold"
+                                 th:text="${app.employeeName}">Name</div>
+                            <div class="text-muted small" th:text="${app.employeeDesignation}">Role</div>
+                        </td>
+                        <td th:text="${app.leaveType}">Annual Leave</td>
+                        <td th:text="${#temporals.format(app.startDate, DATE_DISPLAY_FORMAT)}">–</td>
+                        <td th:text="${#temporals.format(app.endDate, DATE_DISPLAY_FORMAT)}">–</td>
+                        <td th:text="${app.durationDisplay}">–</td>
+                        <td>
+                            <span class="badge"
+                                  th:classappend="${app.status == STATUS_APPROVED} ? 'bg-success'
+                                               : (${app.status == STATUS_REJECTED} ? 'bg-danger'
+                                               : (${app.status == STATUS_CANCELLED} ? 'bg-secondary'
+                                               : 'bg-warning text-dark'))"
+                                  th:text="${app.status}">STATUS</span>
+                        </td>
+                        <td th:text="${app.actionedByName != null ? app.actionedByName : '–'}">–</td>
+                        <td>
+                            <a th:href="@{__${ROUTE_LEAVE_BASE}__/{id}(id=${app.leaveApplicationId})}"
+                               class="btn btn-sm btn-outline-primary">View</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    <div th:replace="~{fragments/layout :: pagination(${ROUTE_MANAGER_ALL}, ${currentPage}, ${totalPages}, ${totalItems})}"></div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>
+

@@ -8,10 +8,10 @@
 <main class="container py-4" style="max-width:780px;">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Edit Leave Application</h2>
-        <a th:href="@{/leave/history}" class="btn btn-outline-secondary btn-sm">← Back to History</a>
+        <a th:href="@{__${ROUTE_LEAVE_HISTORY}__}" class="btn btn-outline-secondary btn-sm">← Back to History</a>
     </div>
 
-    <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+    <div th:if="${__${FLASH_ERROR}__}" class="alert alert-danger" th:text="${__${FLASH_ERROR}__}"></div>
 
     <!-- Leave Balance Summary -->
     <div class="card mb-4">
@@ -33,13 +33,13 @@
     <div class="card">
         <div class="card-header bg-warning fw-semibold">Update Application</div>
         <div class="card-body">
-            <form th:action="@{/leave/{id}/edit(id=${leaveApplication.leaveApplicationId})}"
+            <form th:action="@{__${ROUTE_LEAVE_BASE}__/{id}/edit(id=${leaveApplication.leaveApplicationId})}"
                   th:object="${leaveApplication}" method="post" novalidate>
 
                 <!-- Leave Type -->
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Leave Type <span class="text-danger">*</span></label>
-                    <select th:field="*{leaveType.leaveTypeId}" class="form-select"
+                    <select th:field="*{leaveType}" class="form-select"
                             th:classappend="${#fields.hasErrors('leaveType')} ? 'is-invalid'">
                         <option value="">-- Select Leave Type --</option>
                         <option th:each="leaveType : ${leaveTypes}"
@@ -58,7 +58,7 @@
                     <div class="col-md-6">
                         <label class="form-label fw-semibold">Start Date <span class="text-danger">*</span></label>
                         <input type="date" id="startDate" name="startDate" class="form-control"
-                               th:value="${leaveApplication.startDate != null ? #temporals.format(leaveApplication.startDate, 'yyyy-MM-dd') : ''}"
+                               th:value="${leaveApplication.startDate != null ? #temporals.format(leaveApplication.startDate, DATE_FORMAT) : ''}"
                                th:classappend="${#fields.hasErrors('startDate')} ? 'is-invalid'"/>
                         <div class="invalid-feedback" th:if="${#fields.hasErrors('startDate')}"
                              th:errors="*{startDate}"></div>
@@ -66,7 +66,7 @@
                     <div class="col-md-6">
                         <label class="form-label fw-semibold">End Date <span class="text-danger">*</span></label>
                         <input type="date" id="endDate" name="endDate" class="form-control"
-                               th:value="${leaveApplication.endDate != null ? #temporals.format(leaveApplication.endDate, 'yyyy-MM-dd') : ''}"
+                               th:value="${leaveApplication.endDate != null ? #temporals.format(leaveApplication.endDate, DATE_FORMAT) : ''}"
                                th:classappend="${#fields.hasErrors('endDate')} ? 'is-invalid'"/>
                         <div class="invalid-feedback" th:if="${#fields.hasErrors('endDate')}"
                              th:errors="*{endDate}"></div>
@@ -113,7 +113,7 @@
 
                 <div class="d-flex gap-2 mt-4">
                     <button type="submit" class="btn btn-warning">Update Application</button>
-                    <a th:href="@{/leave/history}" class="btn btn-outline-secondary">Cancel</a>
+                    <a th:href="@{__${ROUTE_LEAVE_HISTORY}__}" class="btn btn-outline-secondary">Cancel</a>
                 </div>
             </form>
         </div>

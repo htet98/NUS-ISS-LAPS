@@ -7,6 +7,7 @@ import nus_iss.LAPS.model.Role;
 import nus_iss.LAPS.model.User;
 import nus_iss.LAPS.repository.EmployeeRepository;
 import nus_iss.LAPS.service.UserService;
+import nus_iss.LAPS.util.GlobalConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,7 +26,7 @@ public class UserController {
     // ── Show login form ───────────────────────────────────────────────────────
     @GetMapping("/login")
     public String loginForm() {
-        return "login";
+        return GlobalConstants.VIEW_LOGIN;
     }
 
     // ── Process login ─────────────────────────────────────────────────────────
@@ -39,7 +40,7 @@ public class UserController {
 
         if (userOpt.isEmpty()) {
             ra.addFlashAttribute("error", "Invalid username or password.");
-            return "redirect:/login";
+            return GlobalConstants.REDIRECT_LOGIN;
         }
 
         User user = userOpt.get();
@@ -67,19 +68,22 @@ public class UserController {
     @GetMapping("/")
     public String home(HttpSession session) {
         if (session.getAttribute("userId") == null) {
-            return "redirect:/login";
+            return GlobalConstants.REDIRECT_LOGIN;
         }
         Role role = (Role) session.getAttribute("role");
         if (Role.MANAGER.equals(role)) {
-            return "redirect:/leave/manager/pending";
+            return "redirect:/" + GlobalConstants.VIEW_MANAGER_PENDING;
         }
-        return "redirect:/leave/history";
+        if (Role.ADMIN.equals(role)) {
+            return GlobalConstants.REDIRECT_ADMIN_HIERARCHY;
+        }
+        return "redirect:/" + GlobalConstants.VIEW_LEAVE_HISTORY;
     }
 
     // ── Logout ────────────────────────────────────────────────────────────────
     @GetMapping("/logout")
     public String logout(HttpSession session, HttpServletResponse response) {
         session.invalidate();
-        return "redirect:/login";
+        return GlobalConstants.REDIRECT_LOGIN;
     }
 }

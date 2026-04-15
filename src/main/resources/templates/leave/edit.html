@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/header :: head('Edit Leave Application – LAPS')}"></head>
+<body>
+
+<div th:replace="~{fragments/layout :: navbar}"></div>
+
+<main class="container py-4" style="max-width:780px;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Edit Leave Application</h2>
+        <a th:href="@{/leave/history}" class="btn btn-outline-secondary btn-sm">← Back to History</a>
+    </div>
+
+    <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+
+    <!-- Leave Balance Summary -->
+    <div class="card mb-4">
+        <div class="card-header bg-light fw-semibold">Your Current Leave Balances</div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div th:each="balance : ${leaveBalances}" class="col-md-4">
+                    <div class="border rounded p-3 text-center">
+                        <div class="fw-semibold" th:text="${balance.leaveType.name}">Leave Type</div>
+                        <div class="text-muted small">
+                            <span th:text="${balance.totalDays - balance.usedDays}">0</span> days remaining
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-warning fw-semibold">Update Application</div>
+        <div class="card-body">
+            <form th:action="@{/leave/{id}/edit(id=${leaveApplication.leaveApplicationId})}"
+                  th:object="${leaveApplication}" method="post" novalidate>
+
+                <!-- Leave Type -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Leave Type <span class="text-danger">*</span></label>
+                    <select th:field="*{leaveType.leaveTypeId}" class="form-select"
+                            th:classappend="${#fields.hasErrors('leaveType')} ? 'is-invalid'">
+                        <option value="">-- Select Leave Type --</option>
+                        <option th:each="leaveType : ${leaveTypes}"
+                                th:value="${leaveType.leaveTypeId}"
+                                th:text="${leaveType.name}"
+                                th:selected="${leaveApplication.leaveType != null and leaveType.leaveTypeId == leaveApplication.leaveType.leaveTypeId}">
+                            Annual Leave
+                        </option>
+                    </select>
+                    <div class="invalid-feedback" th:if="${#fields.hasErrors('leaveType')}"
+                         th:errors="*{leaveType}"></div>
+                </div>
+
+                <!-- Date range -->
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Start Date <span class="text-danger">*</span></label>
+                        <input type="date" id="startDate" name="startDate" class="form-control"
+                               th:value="${leaveApplication.startDate != null ? #temporals.format(leaveApplication.startDate, 'yyyy-MM-dd') : ''}"
+                               th:classappend="${#fields.hasErrors('startDate')} ? 'is-invalid'"/>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('startDate')}"
+                             th:errors="*{startDate}"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">End Date <span class="text-danger">*</span></label>
+                        <input type="date" id="endDate" name="endDate" class="form-control"
+                               th:value="${leaveApplication.endDate != null ? #temporals.format(leaveApplication.endDate, 'yyyy-MM-dd') : ''}"
+                               th:classappend="${#fields.hasErrors('endDate')} ? 'is-invalid'"/>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('endDate')}"
+                             th:errors="*{endDate}"></div>
+                    </div>
+                </div>
+
+                <!-- Reason -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Reason <span class="text-danger">*</span></label>
+                    <textarea th:field="*{reason}" class="form-control" rows="3"
+                              maxlength="1000"
+                              th:classappend="${#fields.hasErrors('reason')} ? 'is-invalid'"></textarea>
+                    <div class="invalid-feedback" th:if="${#fields.hasErrors('reason')}"
+                         th:errors="*{reason}"></div>
+                </div>
+
+                <!-- Work Dissemination -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Work Dissemination (optional)</label>
+                    <textarea th:field="*{workDissemination}" class="form-control" rows="2"
+                              maxlength="1000"></textarea>
+                </div>
+
+                <!-- Overseas -->
+                <div class="mb-3">
+                    <div class="form-check form-switch">
+                        <input type="checkbox" th:field="*{isOverseas}" class="form-check-input"
+                               id="isOverseasCheck" onchange="toggleContactDetails()"/>
+                        <label class="form-check-label" for="isOverseasCheck">
+                            I will be travelling overseas during this leave
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mb-3" id="contactDetailsSection"
+                     th:style="${leaveApplication.isOverseas} ? '' : 'display:none'">
+                    <label class="form-label fw-semibold">Contact Details</label>
+                    <textarea th:field="*{contactDetails}" class="form-control" rows="2"
+                              maxlength="500"
+                              th:classappend="${#fields.hasErrors('contactDetails')} ? 'is-invalid'"></textarea>
+                    <div class="invalid-feedback" th:if="${#fields.hasErrors('contactDetails')}"
+                         th:errors="*{contactDetails}"></div>
+                </div>
+
+                <div class="d-flex gap-2 mt-4">
+                    <button type="submit" class="btn btn-warning">Update Application</button>
+                    <a th:href="@{/leave/history}" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    function toggleContactDetails() {
+        const cb = document.getElementById('isOverseasCheck');
+        document.getElementById('contactDetailsSection').style.display = cb.checked ? '' : 'none';
+    }
+</script>
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>

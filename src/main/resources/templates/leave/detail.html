@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/header :: head('Leave Application Detail – LAPS')}"></head>
+<body>
+
+<div th:replace="~{fragments/layout :: navbar}"></div>
+
+<main class="container py-4" style="max-width:780px;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Leave Application Detail</h2>
+        <a th:if="${employee.getUser().getRole().toString().equals('EMPLOYEE')}" th:href="@{/leave/history}" class="btn btn-outline-secondary btn-sm">← Back to History</a>
+    </div>
+
+    <!-- Status badge -->
+    <div class="mb-4 text-center">
+        <span class="badge fs-5 px-4 py-2"
+              th:classappend="${leaveApp.status?.name() == 'APPROVED'} ? 'bg-success'
+                               : (${leaveApp.status?.name() == 'APPLIED'} ? 'bg-primary'
+                               : (${leaveApp.status?.name() == 'UPDATED'} ? 'bg-info text-dark'
+                               : (${leaveApp.status?.name() == 'REJECTED'} ? 'bg-danger'
+                               : (${leaveApp.status?.name() == 'CANCELLED'} ? 'bg-secondary'
+                               : 'bg-dark'))))"
+              th:text="${leaveApp.status?.name()}">APPLIED</span>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header bg-light fw-semibold">Application Details</div>
+        <div class="card-body">
+            <dl class="row mb-0">
+                <dt class="col-sm-4">Application ID</dt>
+                <dd class="col-sm-8" th:text="${leaveApp.leaveApplicationId}">–</dd>
+
+                <dt class="col-sm-4">Employee</dt>
+                <dd class="col-sm-8"
+                    th:text="${leaveApp.employee != null ? (leaveApp.employee.first_name + ' ' + leaveApp.employee.last_name) : '–'}">–</dd>
+
+                <dt class="col-sm-4">Leave Type</dt>
+                <dd class="col-sm-8" th:text="${leaveApp.leaveType?.name}">–</dd>
+
+                <dt class="col-sm-4">Start Date</dt>
+                <dd class="col-sm-8" th:text="${leaveApp.startDate != null ? #temporals.format(leaveApp.startDate, 'dd MMM yyyy') : '–'}">–</dd>
+
+                <dt class="col-sm-4">End Date</dt>
+                <dd class="col-sm-8" th:text="${leaveApp.endDate != null ? #temporals.format(leaveApp.endDate, 'dd MMM yyyy') : '–'}">–</dd>
+
+                <dt class="col-sm-4">Duration</dt>
+                <dd class="col-sm-8" th:text="${leaveApp.durationDays}">–</dd>
+
+                <dt class="col-sm-4">Reason</dt>
+                <dd class="col-sm-8" th:text="${leaveApp.reason}">–</dd>
+
+                <dt class="col-sm-4">Work Dissemination</dt>
+                <dd class="col-sm-8"
+                    th:text="${leaveApp.workDissemination != null && !leaveApp.workDissemination.isBlank() ? leaveApp.workDissemination : '(not provided)'}">–</dd>
+
+                <dt class="col-sm-4">Overseas</dt>
+                <dd class="col-sm-8" th:text="${leaveApp.isOverseas ? 'Yes' : 'No'}">No</dd>
+
+                <dt class="col-sm-4"
+                    th:if="${leaveApp.isOverseas}">Contact Details</dt>
+                <dd class="col-sm-8"
+                    th:if="${leaveApp.isOverseas}"
+                    th:text="${leaveApp.contactDetails}">–</dd>
+
+                <dt class="col-sm-4" th:if="${leaveApp.isHalfDay}">Half-Day Period</dt>
+                <dd class="col-sm-8" th:if="${leaveApp.isHalfDay}"
+                    th:text="${leaveApp.halfDayPeriod}">–</dd>
+
+                <dt class="col-sm-4">Submitted</dt>
+                <dd class="col-sm-8"
+                    th:text="${leaveApp.createdWhen != null ? #temporals.format(leaveApp.createdWhen, 'dd MMM yyyy HH:mm') : '–'}">–</dd>
+
+                <dt class="col-sm-4" th:if="${leaveApp.updatedWhen != null}">Last Updated</dt>
+                <dd class="col-sm-8" th:if="${leaveApp.updatedWhen != null}"
+                    th:text="${#temporals.format(leaveApp.updatedWhen, 'dd MMM yyyy HH:mm')}">–</dd>
+            </dl>
+        </div>
+    </div>
+
+    <!-- Manager decision (if applicable) -->
+    <div class="card mb-4"
+         th:if="${leaveApp.approvedBy != null || leaveApp.managerComment != null}">
+        <div class="card-header bg-light fw-semibold">Manager Decision</div>
+        <div class="card-body">
+            <dl class="row mb-0">
+                <dt class="col-sm-4" th:if="${leaveApp.approvedBy != null}">Actioned By</dt>
+                <dd class="col-sm-8" th:if="${leaveApp.approvedBy != null}"
+                    th:text="${leaveApp.approvedBy.first_name + ' ' + leaveApp.approvedBy.last_name}">–</dd>
+
+                <dt class="col-sm-4" th:if="${leaveApp.managerComment != null}">Comment</dt>
+                <dd class="col-sm-8" th:if="${leaveApp.managerComment != null}"
+                    th:text="${leaveApp.managerComment}">–</dd>
+            </dl>
+        </div>
+    </div>
+
+    <!-- Action buttons -->
+    <div class="d-flex gap-2">
+        <a th:if="${leaveApp.editable && leaveApp.employee?.emp_id == employee.emp_id}"
+           th:href="@{/leave/{id}/edit(id=${leaveApp.leaveApplicationId})}"
+           class="btn btn-warning">Edit Application</a>
+
+        <form th:if="${(leaveApp.status?.name() == 'APPLIED' || leaveApp.status?.name() == 'UPDATED') && leaveApp.employee?.emp_id == employee.emp_id}"
+              th:action="@{/leave/{id}/delete(id=${leaveApp.leaveApplicationId})}"
+              method="post"
+              onsubmit="return confirm('Are you sure you want to delete this application?')">
+            <button type="submit" class="btn btn-danger">Delete</button>
+        </form>
+
+        <form th:if="${leaveApp.cancellable && leaveApp.employee?.emp_id == employee.emp_id}"
+              th:action="@{/leave/{id}/cancel(id=${leaveApp.leaveApplicationId})}"
+              method="post"
+              onsubmit="return confirm('Are you sure you want to cancel this approved leave?')">
+            <button type="submit" class="btn btn-outline-secondary">Cancel Leave</button>
+        </form>
+    </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>

@@ -3,6 +3,8 @@ package nus_iss.LAPS.model;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+import org.springframework.format.annotation.DateTimeFormat;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -45,10 +47,12 @@ public class LeaveApplication {
  private LeaveType leaveType;
 
  /** The first day of the requested leave period (required). */
+ @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
  @Column(name = "start_date", nullable = false)
  private LocalDate startDate;
 
  /** The last day of the requested leave period (required). */
+ @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
  @Column(name = "end_date", nullable = false)
  private LocalDate endDate;
 
@@ -81,15 +85,33 @@ public class LeaveApplication {
     @Column(name = "contact_details", columnDefinition = "TEXT")
     private String contactDetails;
 
- /** Current status of this leave application (PENDING, APPROVED, REJECTED, CANCELLED). */
+ /** Current status of this leave application (APPLIED,
+  UPDATED,
+  APPROVED,
+  REJECTED,
+  CANCELLED,
+  DELETED). */
  @Enumerated(EnumType.STRING)
  @Column(name = "status", nullable = false)
- private LeaveStatus status = LeaveStatus.PENDING;
+ private LeaveStatus status = LeaveStatus.APPLIED;
 
  /** The manager or approver who processed this leave application. Null until approved/rejected. */
  @ManyToOne(fetch = FetchType.LAZY)
- @JoinColumn(name = "approver_by", referencedColumnName = "emp_id")
+ @JoinColumn(name = "approved_by", referencedColumnName = "emp_id")
  private Employee approvedBy;
+
+    /** Comment from the manager when approving or rejecting the leave application. */
+    @Column(name = "manager_comment", columnDefinition = "TEXT")
+    private String managerComment;
+
+    /** Whether the leave is to be taken as a half-day (Compensation Leave only). */
+    @Column(name = "is_half_day", nullable = false)
+    private Boolean isHalfDay = false;
+
+    /** Which half of the day (MORNING or AFTERNOON) when isHalfDay is true. */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "half_day_period", length = 20)
+    private HalfDayPeriod halfDayPeriod;
 
  /** Employee ID (emp_id) of the user who created this application. */
  @Column(name = "created_by")
@@ -117,7 +139,7 @@ public class LeaveApplication {
         this.createdWhen = LocalDateTime.now();
         this.updatedWhen = LocalDateTime.now();
         if (this.status == null) {
-            this.status = LeaveStatus.PENDING;
+            this.status = LeaveStatus.APPLIED;
         }
     }
 
@@ -160,7 +182,7 @@ public class LeaveApplication {
         this.workDissemination = workDissemination;
         this.isOverseas       = isOverseas != null ? isOverseas : false;
         this.contactDetails   = contactDetails;
-  this.status = LeaveStatus.PENDING;
+  this.status = LeaveStatus.APPLIED;
  }
 
     /**
@@ -411,12 +433,71 @@ public class LeaveApplication {
         return isOverseas;
     }
 
+    /** Standard boolean getter for Thymeleaf / Spring MVC binding */
+    public boolean isOverseas() {
+        return Boolean.TRUE.equals(isOverseas);
+    }
+
+    /** Standard boolean getter for Thymeleaf / Spring MVC binding */
+    public boolean isHalfDay() {
+        return Boolean.TRUE.equals(isHalfDay);
+    }
+
     /**
      * Sets whether the employee will be overseas during this leave.
      * @param overseas true if the employee will be overseas, false otherwise
      */
+    public void setIsOverseas(Boolean overseas) {
+        isOverseas = overseas;
+    }
+
+    /** @deprecated use setIsOverseas instead */
     public void setOverseas(Boolean overseas) {
         isOverseas = overseas;
+    }
+
+    public String getManagerComment() { return managerComment; }
+    public void setManagerComment(String managerComment) { this.managerComment = managerComment; }
+
+    public Boolean getIsHalfDay() { return isHalfDay; }
+    public void setIsHalfDay(Boolean isHalfDay) { this.isHalfDay = isHalfDay != null ? isHalfDay : false; }
+
+    public HalfDayPeriod getHalfDayPeriod() { return halfDayPeriod; }
+    public void setHalfDayPeriod(HalfDayPeriod halfDayPeriod) { this.halfDayPeriod = halfDayPeriod; }
+
+    // ── Business logic helpers used by Thymeleaf templates ────────────────────
+
+    /**
+     * An application is editable when it has not yet been acted on by a manager.
+     * Only APPLIED and UPDATED statuses allow edits.
+     */
+    public boolean isEditable() {
+        return status == LeaveStatus.APPLIED || status == LeaveStatus.UPDATED;
+    }
+
+    /**
+     * An application can be deleted only when it has not yet been acted on.
+     */
+    public boolean isDeletable() {
+        return status == LeaveStatus.APPLIED || status == LeaveStatus.UPDATED;
+    }
+
+    /**
+     * An approved leave can be cancelled by the employee before it starts.
+     */
+    public boolean isCancellable() {
+        return status == LeaveStatus.APPROVED;
+    }
+
+    /**
+     * Human-readable duration string, e.g. "3.0 days" or "0.5 days".
+     */
+    public String getDurationDisplay() {
+        if (durationDays == null) return "–";
+        if (durationDays % 1 == 0) {
+            return String.format("%.0f day%s", durationDays, durationDays == 1 ? "" : "s");
+        }
+        return String.format("%.1f days", durationDays);
     }
 
     /**
@@ -432,7 +513,7 @@ public class LeaveApplication {
  public String toString() {
         return "LeaveApplication{" +
                 "leaveApplicationId=" + leaveApplicationId +
-               // ", employee=" + (employee != null ? employee.getEmpId() : null) +
+                ", employee=" + (employee != null ? employee.getEmp_id() : null) +
                 ", leaveType=" + (leaveType != null ? leaveType.getLeaveTypeId() : null) +
                 ", startDate=" + startDate +
                 ", endDate=" + endDate +

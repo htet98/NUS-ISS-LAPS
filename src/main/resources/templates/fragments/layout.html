@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+
+<!--
+  Reusable navigation bar fragment.
+  Usage in any page:
+      <div th:replace="~{fragments/layout :: navbar}"></div>
+
+  Reads from session:
+    ${session.username}  – logged-in user's name
+    ${session.role}      – Role enum (EMPLOYEE / MANAGER / ADMIN)
+-->
+<nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+    <div class="container">
+
+        <!-- Brand -->
+        <a class="navbar-brand fw-bold" th:href="@{/}">
+            📋 LAPS
+        </a>
+
+        <!-- Mobile toggle -->
+        <button class="navbar-toggler" type="button"
+                data-bs-toggle="collapse" data-bs-target="#navbarMain">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarMain">
+
+            <!-- Left nav links — shown when logged in -->
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0" th:if="${session.userId != null}">
+
+                <!-- EMPLOYEE links -->
+                <li class="nav-item" th:if="${session.role != null and session.role.name() != 'MANAGER'}">
+                    <a class="nav-link" th:href="@{/leave/apply}">Apply for Leave</a>
+                </li>
+                <li class="nav-item" th:if="${session.role != null and session.role.name() != 'MANAGER'}">
+                    <a class="nav-link" th:href="@{/leave/history}">My Leave History</a>
+                </li>
+
+                <!-- MANAGER links -->
+                <li class="nav-item" th:if="${session.role != null and session.role.name() == 'MANAGER'}">
+                    <a class="nav-link" th:href="@{/leave/manager/pending}">
+                        ⏳ Pending Approvals
+                    </a>
+                </li>
+                <li class="nav-item" th:if="${session.role != null and session.role.name() == 'MANAGER'}">
+                    <a class="nav-link" th:href="@{/leave/manager/all}">Team History</a>
+                </li>
+
+            </ul>
+
+            <!-- Right side: username + role badge + logout -->
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0" th:if="${session.userId != null}">
+                <li class="nav-item d-flex align-items-center me-3">
+                    <span class="badge rounded-pill"
+                          th:classappend="${session.role != null and session.role.name() == 'MANAGER'} ? 'bg-warning text-dark' : 'bg-light text-dark'"
+                          th:text="${session.role != null ? session.role.name() : ''}">ROLE</span>
+                    <span class="text-white ms-2 small"
+                          th:text="${session.username}">username</span>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white-50" th:href="@{/logout}" onclick="return confirm('Are you sure you want to log out?');">Logout</a>
+                </li>
+            </ul>
+
+        </div>
+    </div>
+</nav>
+
+</body>
+</html>

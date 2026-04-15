@@ -1,0 +1,23 @@
+package nus_iss.LAPS.repository;
+
+import nus_iss.LAPS.model.LeaveBalance;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.util.List;
+import java.util.Optional;
+
+public interface LeaveBalanceRepository extends JpaRepository<LeaveBalance, Long>{
+
+	@Query("SELECT lb FROM LeaveBalance lb WHERE lb.employee.emp_id = :employeeId")
+	List<LeaveBalance> findByEmployeeId(@Param("employeeId") Long employeeId);
+
+    // Htet Nandar(Grace) - 12/04/2026
+	// Used by LeaveBalanceService.getAvailableBalance / deductBalance / restoreBalance
+	@Query("SELECT lb FROM LeaveBalance lb " +
+		   "WHERE lb.employee.emp_id = :empId " +
+		   "AND lb.leaveType.leaveTypeId = :leaveTypeId")
+	Optional<LeaveBalance> findByEmployeeIdAndLeaveTypeId(@Param("empId") Long empId,
+														  @Param("leaveTypeId") Long leaveTypeId);
+}

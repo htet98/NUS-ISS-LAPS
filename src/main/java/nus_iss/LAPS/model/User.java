@@ -1,11 +1,19 @@
 package nus_iss.LAPS.model;
 
 import jakarta.persistence.*;
+import lombok.*;
+
 import java.time.LocalDateTime;
 
 
 @Entity
+@Data //For CRUD
+@NoArgsConstructor //For CRUD
+@AllArgsConstructor //FOR CRUD
+@Builder //For CRUD
+
 @Table(name = "users")
+
 public class User {
 
     @Id
@@ -64,8 +72,6 @@ public class User {
     }
 
     // ── Constructors ──────────────────────────────────────────────────────────
-
-    public User() {}
 
     public User(String username, String email, String password,
                 String createdby, String updatedby) {

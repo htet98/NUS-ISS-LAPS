@@ -120,4 +120,5 @@ public class UserController {
         userService.deleteUser(id);
         return "User deleted successfully";
     }
+    
 }

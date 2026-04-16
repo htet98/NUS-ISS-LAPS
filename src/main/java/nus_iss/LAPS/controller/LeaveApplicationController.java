@@ -1,14 +1,24 @@
 package nus_iss.LAPS.controller;
 
+import nus_iss.LAPS.api.LeaveApplicationRestController;
+import nus_iss.LAPS.dto.*;
 import nus_iss.LAPS.model.Employee;
+import nus_iss.LAPS.model.HalfDayPeriod;
 import nus_iss.LAPS.model.LeaveApplication;
 import nus_iss.LAPS.model.LeaveStatus;
 import nus_iss.LAPS.model.LeaveType;
 import nus_iss.LAPS.repository.LeaveTypeRepository;
 import nus_iss.LAPS.service.LeaveApplicationService;
 import nus_iss.LAPS.service.LeaveBalanceService;
+import nus_iss.LAPS.util.GlobalConstants;
 import jakarta.servlet.http.HttpSession;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -16,14 +26,17 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
+@Slf4j
 @Controller
-@RequestMapping("/leave")
+@RequestMapping(GlobalConstants.ROUTE_LEAVE)
 public class LeaveApplicationController {
 
     @Autowired private LeaveApplicationService leaveApplicationService;
     @Autowired private LeaveBalanceService     leaveBalanceService;
     @Autowired private LeaveTypeRepository     leaveTypeRepo;
+    @Autowired private LeaveApplicationRestController restController;
 
     // ─────────────────────────────────────────────────────────────────────────
     // Helper: retrieve logged-in employee from session, redirect if not set
@@ -40,9 +53,9 @@ public class LeaveApplicationController {
     // EMPLOYEE — Apply for leave
     // ─────────────────────────────────────────────────────────────────────────
 
-    @GetMapping("/apply")
+    @GetMapping(GlobalConstants.ROUTE_LEAVE_APPLY)
     public String applyForm(HttpSession session, Model model) {
-        if (!isLoggedIn(session)) return "redirect:/login";
+        if (!isLoggedIn(session)) return GlobalConstants.REDIRECT_LOGIN;
 
         Employee emp = getSessionEmployee(session);
         List<LeaveType> leaveTypes = leaveTypeRepo.findAll();
@@ -51,42 +64,60 @@ public class LeaveApplicationController {
         model.addAttribute("leaveTypes", leaveTypes);
         model.addAttribute("leaveBalances",
                 leaveBalanceService.getLeaveBalancesByEmployeeId(emp.getEmp_id()));
-        return "leave/apply";
+        return GlobalConstants.VIEW_LEAVE_APPLY;
     }
 
-    @PostMapping("/apply")
+    @PostMapping(GlobalConstants.ROUTE_LEAVE_APPLY)
     public String applySubmit(
             @ModelAttribute LeaveApplication leaveApplication,
             HttpSession session,
             RedirectAttributes ra,
             Model model) {
 
-        if (!isLoggedIn(session)) return "redirect:/login";
+        if (!isLoggedIn(session)) return GlobalConstants.REDIRECT_LOGIN;
         Employee emp = getSessionEmployee(session);
 
         try {
-            leaveApplication.setEmployee(emp);
-            leaveApplication.setStatus(LeaveStatus.APPLIED);
+            log.info("Employee {} submitting leave application from {} to {}", 
+                emp.getEmp_id(), leaveApplication.getStartDate(), leaveApplication.getEndDate());
+            
+            // Build LeaveRequest from form data and call REST controller
+            LeaveRequest req = new LeaveRequest(
+                    emp.getEmp_id(),
+                    leaveApplication.getLeaveType() != null ? leaveApplication.getLeaveType().getLeaveTypeId() : null,
+                    leaveApplication.getStartDate(),
+                    leaveApplication.getEndDate(),
+                    leaveApplication.getReason(),
+                    leaveApplication.getWorkDissemination(),
+                    leaveApplication.getIsOverseas(),
+                    leaveApplication.getContactDetails(),
+                    leaveApplication.getIsHalfDay(),
+                    leaveApplication.getHalfDayPeriod() != null ? leaveApplication.getHalfDayPeriod().toString() : null
+            );
 
-            // Resolve LeaveType entity from the ID sent by the form
-            if (leaveApplication.getLeaveType() != null
-                    && leaveApplication.getLeaveType().getLeaveTypeId() != null) {
-                LeaveType lt = leaveTypeRepo
-                        .findById(leaveApplication.getLeaveType().getLeaveTypeId())
-                        .orElseThrow(() -> new IllegalArgumentException("Invalid leave type."));
-                leaveApplication.setLeaveType(lt);
+            ResponseEntity<?> response = restController.submitLeave(req);
+            if (response.getStatusCode().is2xxSuccessful()) {
+                log.info("Leave application submitted successfully for employee {}", emp.getEmp_id());
+                ra.addFlashAttribute(GlobalConstants.FLASH_SUCCESS, "Leave application submitted successfully.");
+                return GlobalConstants.REDIRECT_LEAVE_HISTORY;
+            } else {
+                log.error("REST controller returned error for employee {}: {}", emp.getEmp_id(), response.getBody());
+                model.addAttribute(GlobalConstants.FLASH_ERROR, "Error submitting leave application.");
+                model.addAttribute("leaveTypes", leaveTypeRepo.findAll());
+                model.addAttribute("leaveBalances",
+                        leaveBalanceService.getLeaveBalancesByEmployeeId(emp.getEmp_id()));
+                model.addAttribute("leaveApplication", leaveApplication);
+                return GlobalConstants.VIEW_LEAVE_APPLY;
             }
 
-            leaveApplicationService.submitLeaveApplication(leaveApplication);
-            ra.addFlashAttribute("successMessage", "Leave application submitted successfully.");
-            return "redirect:/leave/history";
-
         } catch (IllegalArgumentException e) {
-            model.addAttribute("errorMessage", e.getMessage());
+            log.error("Error submitting leave application for employee {}: {}", emp.getEmp_id(), e.getMessage());
+            model.addAttribute(GlobalConstants.FLASH_ERROR, e.getMessage());
             model.addAttribute("leaveTypes", leaveTypeRepo.findAll());
             model.addAttribute("leaveBalances",
                     leaveBalanceService.getLeaveBalancesByEmployeeId(emp.getEmp_id()));
-            return "leave/apply";
+            model.addAttribute("leaveApplication", leaveApplication);
+            return GlobalConstants.VIEW_LEAVE_APPLY;
         }
     }
 
@@ -94,59 +125,69 @@ public class LeaveApplicationController {
     // EMPLOYEE — Personal leave history
     // ─────────────────────────────────────────────────────────────────────────
 
-    @GetMapping("/history")
+    @GetMapping(GlobalConstants.ROUTE_LEAVE_HISTORY)
     public String history(
             @RequestParam(required = false) String status,
             @RequestParam(required = false) Long leaveTypeId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = GlobalConstants.DEFAULT_PAGE_SIZE) int size,
             HttpSession session, Model model) {
 
-        if (!isLoggedIn(session)) return "redirect:/login";
+        if (!isLoggedIn(session)) return GlobalConstants.REDIRECT_LOGIN;
         Employee emp = getSessionEmployee(session);
 
+        Pageable pageable = PageRequest.of(page, size, Sort.by("startDate").descending());
+
         // Apply filters if provided
-        List<LeaveApplication> applications;
+        Page<LeaveApplication> applicationPage;
         if (status != null && !status.isBlank() && leaveTypeId != null) {
             LeaveStatus leaveStatus = LeaveStatus.valueOf(status);
-            applications = leaveApplicationService
-                    .getPersonalLeaveHistoryByStatusAndType(emp, leaveStatus, leaveTypeId);
+            applicationPage = leaveApplicationService
+                    .getPersonalLeaveHistoryByStatusAndTypePaginated(emp, leaveStatus, leaveTypeId, pageable);
         } else if (status != null && !status.isBlank()) {
             LeaveStatus leaveStatus = LeaveStatus.valueOf(status);
-            applications = leaveApplicationService
-                    .getPersonalLeaveHistoryByStatus(emp, leaveStatus);
+            applicationPage = leaveApplicationService
+                    .getPersonalLeaveHistoryByStatusPaginated(emp, leaveStatus, pageable);
         } else if (leaveTypeId != null) {
-            applications = leaveApplicationService
-                    .getPersonalLeaveHistoryByType(emp, leaveTypeId);
+            applicationPage = leaveApplicationService
+                    .getPersonalLeaveHistoryByTypePaginated(emp, leaveTypeId, pageable);
         } else {
-            applications = leaveApplicationService.getPersonalLeaveHistory(emp);
+            applicationPage = leaveApplicationService.getPersonalLeaveHistoryPaginated(emp, pageable);
         }
 
-        model.addAttribute("applications", applications);
+        model.addAttribute("applications", applicationPage.getContent().stream()
+                .map(LeaveResponse::fromEntity).collect(Collectors.toList()));
+        model.addAttribute("currentPage", page);
+        model.addAttribute("size", size);
+        model.addAttribute("totalPages", applicationPage.getTotalPages());
+        model.addAttribute("totalItems", applicationPage.getTotalElements());
+
         model.addAttribute("leaveBalances",
                 leaveBalanceService.getLeaveBalancesByEmployeeId(emp.getEmp_id()));
         model.addAttribute("leaveStatuses", Arrays.asList(LeaveStatus.values()));
         model.addAttribute("leaveTypes", leaveTypeRepo.findAll());
         model.addAttribute("selectedStatus", status != null ? status : "");
         model.addAttribute("selectedLeaveTypeId", leaveTypeId);
-        return "leave/history";
+        return GlobalConstants.VIEW_LEAVE_HISTORY;
     }
 
     // ─────────────────────────────────────────────────────────────────────────
     // EMPLOYEE — View single application detail
     // ─────────────────────────────────────────────────────────────────────────
 
-    @GetMapping("/{id}")
+    @GetMapping(GlobalConstants.ROUTE_LEAVE_DETAIL)
     public String detail(@PathVariable Long id, HttpSession session, Model model,
                          RedirectAttributes ra) {
-        if (!isLoggedIn(session)) return "redirect:/login";
+        if (!isLoggedIn(session)) return GlobalConstants.REDIRECT_LOGIN;
 
         Employee emp = getSessionEmployee(session);
         return leaveApplicationService.findById(id).map(leaveApplication -> {
-            model.addAttribute("leaveApp", leaveApplication);
+            model.addAttribute("leaveApp", LeaveResponse.fromEntity(leaveApplication));
             model.addAttribute("employee", emp);
-            return "leave/detail";
+            return GlobalConstants.VIEW_LEAVE_DETAIL;
         }).orElseGet(() -> {
-            ra.addFlashAttribute("errorMessage", "Leave application not found.");
-            return "redirect:/leave/history";
+            ra.addFlashAttribute(GlobalConstants.FLASH_ERROR, "Leave application not found.");
+            return GlobalConstants.REDIRECT_LEAVE_HISTORY;
         });
     }
 
@@ -154,34 +195,34 @@ public class LeaveApplicationController {
     // EMPLOYEE — Edit leave application
     // ─────────────────────────────────────────────────────────────────────────
 
-    @GetMapping("/{id}/edit")
+    @GetMapping(GlobalConstants.ROUTE_LEAVE_EDIT)
     public String editForm(@PathVariable Long id, HttpSession session, Model model,
                            RedirectAttributes ra) {
-        if (!isLoggedIn(session)) return "redirect:/login";
+        if (!isLoggedIn(session)) return GlobalConstants.REDIRECT_LOGIN;
         Employee emp = getSessionEmployee(session);
 
         return leaveApplicationService.findById(id).map(la -> {
             if (!la.isEditable()) {
-                ra.addFlashAttribute("errorMessage",
+                ra.addFlashAttribute(GlobalConstants.FLASH_ERROR,
                         "This application cannot be edited (status: " + la.getStatus() + ").");
-                return "redirect:/leave/history";
+                return GlobalConstants.REDIRECT_LEAVE_HISTORY;
             }
             if (!la.getEmployee().getEmp_id().equals(emp.getEmp_id())) {
-                ra.addFlashAttribute("errorMessage", "Not authorised.");
-                return "redirect:/leave/history";
+                ra.addFlashAttribute(GlobalConstants.FLASH_ERROR, "Not authorised.");
+                return GlobalConstants.REDIRECT_LEAVE_HISTORY;
             }
             model.addAttribute("leaveApplication", la);
             model.addAttribute("leaveTypes", leaveTypeRepo.findAll());
             model.addAttribute("leaveBalances",
                     leaveBalanceService.getLeaveBalancesByEmployeeId(emp.getEmp_id()));
-            return "leave/edit";
+            return GlobalConstants.VIEW_LEAVE_EDIT;
         }).orElseGet(() -> {
-            ra.addFlashAttribute("errorMessage", "Leave application not found.");
-            return "redirect:/leave/history";
+            ra.addFlashAttribute(GlobalConstants.FLASH_ERROR, "Leave application not found.");
+            return GlobalConstants.REDIRECT_LEAVE_HISTORY;
         });
     }
 
-    @PostMapping("/{id}/edit")
+    @PostMapping(GlobalConstants.ROUTE_LEAVE_EDIT)
     public String editSubmit(
             @PathVariable Long id,
             @ModelAttribute LeaveApplication leaveApplication,
@@ -189,27 +230,40 @@ public class LeaveApplicationController {
             RedirectAttributes ra,
             Model model) {
 
-        if (!isLoggedIn(session)) return "redirect:/login";
+        if (!isLoggedIn(session)) return GlobalConstants.REDIRECT_LOGIN;
         Employee emp = getSessionEmployee(session);
 
         try {
-            leaveApplication.setLeaveApplicationId(id);
-            leaveApplication.setEmployee(emp);
+            log.info("Employee {} updating leave application {}", emp.getEmp_id(), id);
+            
+            // Build LeaveRequest from form data and call REST controller
+            LeaveRequest req = new LeaveRequest(
+                    emp.getEmp_id(),
+                    leaveApplication.getLeaveType() != null ? leaveApplication.getLeaveType().getLeaveTypeId() : null,
+                    leaveApplication.getStartDate(),
+                    leaveApplication.getEndDate(),
+                    leaveApplication.getReason(),
+                    leaveApplication.getWorkDissemination(),
+                    leaveApplication.getIsOverseas(),
+                    leaveApplication.getContactDetails(),
+                    leaveApplication.getIsHalfDay(),
+                    leaveApplication.getHalfDayPeriod() != null ? leaveApplication.getHalfDayPeriod().toString() : null
+            );
 
-            if (leaveApplication.getLeaveType() != null
-                    && leaveApplication.getLeaveType().getLeaveTypeId() != null) {
-                LeaveType lt = leaveTypeRepo
-                        .findById(leaveApplication.getLeaveType().getLeaveTypeId())
-                        .orElseThrow(() -> new IllegalArgumentException("Invalid leave type."));
-                leaveApplication.setLeaveType(lt);
+            ResponseEntity<?> response = restController.updateLeave(id, req);
+            if (response.getStatusCode().is2xxSuccessful()) {
+                log.info("Leave application {} updated successfully by employee {}", id, emp.getEmp_id());
+                ra.addFlashAttribute(GlobalConstants.FLASH_SUCCESS, "Leave application updated successfully.");
+                return GlobalConstants.REDIRECT_LEAVE_HISTORY;
+            } else {
+                log.error("REST controller returned error for employee {}: {}", emp.getEmp_id(), response.getBody());
+                ra.addFlashAttribute(GlobalConstants.FLASH_ERROR, "Error updating leave application.");
+                return GlobalConstants.REDIRECT_LEAVE_HISTORY;
             }
 
-            leaveApplicationService.updateLeaveApplication(leaveApplication);
-            ra.addFlashAttribute("successMessage", "Leave application updated successfully.");
-            return "redirect:/leave/history";
-
         } catch (IllegalArgumentException | IllegalStateException | SecurityException e) {
-            ra.addFlashAttribute("errorMessage", e.getMessage());
+            log.error("Error updating leave application {} for employee {}: {}", id, emp.getEmp_id(), e.getMessage());
+            ra.addFlashAttribute(GlobalConstants.FLASH_ERROR, e.getMessage());
             return "redirect:/leave/" + id + "/edit";
         }
     }
@@ -218,104 +272,171 @@ public class LeaveApplicationController {
     // EMPLOYEE — Delete leave application (soft delete)
     // ─────────────────────────────────────────────────────────────────────────
 
-    @PostMapping("/{id}/delete")
+    @PostMapping(GlobalConstants.ROUTE_LEAVE_DELETE)
     public String delete(@PathVariable Long id, HttpSession session, RedirectAttributes ra) {
-        if (!isLoggedIn(session)) return "redirect:/login";
+        if (!isLoggedIn(session)) return GlobalConstants.REDIRECT_LOGIN;
         Employee emp = getSessionEmployee(session);
 
         try {
-            leaveApplicationService.deleteLeave(id, emp);
-            ra.addFlashAttribute("successMessage", "Leave application deleted.");
+            log.info("Employee {} deleting leave application {}", emp.getEmp_id(), id);
+            ResponseEntity<?> response = restController.deleteLeave(id, emp.getEmp_id());
+            if (response.getStatusCode().is2xxSuccessful()) {
+                log.info("Leave application {} deleted successfully by employee {}", id, emp.getEmp_id());
+                ra.addFlashAttribute(GlobalConstants.FLASH_SUCCESS, "Leave application deleted.");
+            } else {
+                log.error("REST controller returned error for employee {}: {}", emp.getEmp_id(), response.getBody());
+                ra.addFlashAttribute(GlobalConstants.FLASH_ERROR, "Error deleting leave application.");
+            }
         } catch (Exception e) {
-            ra.addFlashAttribute("errorMessage", e.getMessage());
+            log.error("Error deleting leave application {} for employee {}: {}", id, emp.getEmp_id(), e.getMessage());
+            ra.addFlashAttribute(GlobalConstants.FLASH_ERROR, e.getMessage());
         }
-        return "redirect:/leave/history";
+        return GlobalConstants.REDIRECT_LEAVE_HISTORY;
     }
 
     // ─────────────────────────────────────────────────────────────────────────
     // EMPLOYEE — Cancel approved leave
     // ─────────────────────────────────────────────────────────────────────────
 
-    @PostMapping("/{id}/cancel")
+    @PostMapping(GlobalConstants.ROUTE_LEAVE_CANCEL)
     public String cancel(@PathVariable Long id, HttpSession session, RedirectAttributes ra) {
-        if (!isLoggedIn(session)) return "redirect:/login";
+        if (!isLoggedIn(session)) return GlobalConstants.REDIRECT_LOGIN;
         Employee emp = getSessionEmployee(session);
 
         try {
-            leaveApplicationService.cancelLeave(id, emp);
-            ra.addFlashAttribute("successMessage", "Leave application cancelled and balance restored.");
+            log.info("Employee {} cancelling leave application {}", emp.getEmp_id(), id);
+            ResponseEntity<?> response = restController.cancelLeave(id, emp.getEmp_id());
+            if (response.getStatusCode().is2xxSuccessful()) {
+                log.info("Leave application {} cancelled successfully by employee {}", id, emp.getEmp_id());
+                ra.addFlashAttribute(GlobalConstants.FLASH_SUCCESS, "Leave application cancelled and balance restored.");
+            } else {
+                log.error("REST controller returned error for employee {}: {}", emp.getEmp_id(), response.getBody());
+                ra.addFlashAttribute(GlobalConstants.FLASH_ERROR, "Error cancelling leave application.");
+            }
         } catch (Exception e) {
-            ra.addFlashAttribute("errorMessage", e.getMessage());
+            log.error("Error cancelling leave application {} for employee {}: {}", id, emp.getEmp_id(), e.getMessage());
+            ra.addFlashAttribute(GlobalConstants.FLASH_ERROR, e.getMessage());
         }
-        return "redirect:/leave/history";
+        return GlobalConstants.REDIRECT_LEAVE_HISTORY;
     }
 
     // ─────────────────────────────────────────────────────────────────────────
     // MANAGER — Pending applications awaiting approval
     // ─────────────────────────────────────────────────────────────────────────
 
-    @GetMapping("/manager/pending")
-    public String managerPending(HttpSession session, Model model) {
-        if (!isLoggedIn(session)) return "redirect:/login";
+    @GetMapping(GlobalConstants.ROUTE_MANAGER_PENDING)
+    public String managerPending(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = GlobalConstants.DEFAULT_PAGE_SIZE) int size,
+            HttpSession session, Model model) {
+        if (!isLoggedIn(session)) return GlobalConstants.REDIRECT_LOGIN;
         Employee mgr = getSessionEmployee(session);
 
+        Pageable pageable = PageRequest.of(page, size, Sort.by("startDate").descending());
+        Page<LeaveApplication> applicationPage = leaveApplicationService.getPendingApplicationsForManagerPaginated(mgr, pageable);
+
         model.addAttribute("applications",
-                leaveApplicationService.getPendingApplicationsForManager(mgr));
-        return "leave/manager-pending";
+                applicationPage.getContent().stream().map(LeaveResponse::fromEntity).collect(Collectors.toList()));
+        model.addAttribute("currentPage", page);
+        model.addAttribute("size", size);
+        model.addAttribute("totalPages", applicationPage.getTotalPages());
+        model.addAttribute("totalItems", applicationPage.getTotalElements());
+
+        model.addAttribute("leaveBalances",
+                leaveBalanceService.getLeaveBalancesByEmployeeId(mgr.getEmp_id()));
+
+        return GlobalConstants.VIEW_MANAGER_PENDING;
     }
 
     // ─────────────────────────────────────────────────────────────────────────
     // MANAGER — All subordinate leave history
     // ─────────────────────────────────────────────────────────────────────────
 
-    @GetMapping("/manager/all")
-    public String managerAll(HttpSession session, Model model) {
-        if (!isLoggedIn(session)) return "redirect:/login";
+    @GetMapping(GlobalConstants.ROUTE_MANAGER_ALL)
+    public String managerAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = GlobalConstants.DEFAULT_PAGE_SIZE) int size,
+            HttpSession session, Model model) {
+        if (!isLoggedIn(session)) return GlobalConstants.REDIRECT_LOGIN;
         Employee mgr = getSessionEmployee(session);
 
+        Pageable pageable = PageRequest.of(page, size, Sort.by("startDate").descending());
+        Page<LeaveApplication> applicationPage = leaveApplicationService.getAllApplicationsForManagerPaginated(mgr, pageable);
+
         model.addAttribute("applications",
-                leaveApplicationService.getAllApplicationsForManager(mgr));
-        return "leave/manager-all";
+                applicationPage.getContent().stream().map(LeaveResponse::fromEntity).collect(Collectors.toList()));
+        model.addAttribute("currentPage", page);
+        model.addAttribute("size", size);
+        model.addAttribute("totalPages", applicationPage.getTotalPages());
+        model.addAttribute("totalItems", applicationPage.getTotalElements());
+
+        model.addAttribute("leaveBalances",
+                leaveBalanceService.getLeaveBalancesByEmployeeId(mgr.getEmp_id()));
+
+        return GlobalConstants.VIEW_MANAGER_ALL;
     }
 
     // ─────────────────────────────────────────────────────────────────────────
     // MANAGER — Approve
     // ─────────────────────────────────────────────────────────────────────────
 
-    @PostMapping("/{id}/approve")
+    @PostMapping(GlobalConstants.ROUTE_MANAGER_APPROVE)
     public String approve(@PathVariable Long id, HttpSession session, RedirectAttributes ra) {
-        if (!isLoggedIn(session)) return "redirect:/login";
+        if (!isLoggedIn(session)) return GlobalConstants.REDIRECT_LOGIN;
         Employee mgr = getSessionEmployee(session);
 
         try {
-            leaveApplicationService.approveLeave(id, mgr);
-            ra.addFlashAttribute("successMessage", "Leave application approved.");
+            log.info("Manager {} approving leave application {}", mgr.getEmp_id(), id);
+            ResponseEntity<?> response = restController.approveLeave(id, mgr.getEmp_id());
+            if (response.getStatusCode().is2xxSuccessful()) {
+                log.info("Leave application {} approved successfully by manager {}", id, mgr.getEmp_id());
+                ra.addFlashAttribute(GlobalConstants.FLASH_SUCCESS, "Leave application approved.");
+            } else {
+                log.error("REST controller returned error for manager {}: {}", mgr.getEmp_id(), response.getBody());
+                ra.addFlashAttribute(GlobalConstants.FLASH_ERROR, "Error approving leave application.");
+            }
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            log.error("Error approving leave application {} by manager {}: {}", id, mgr.getEmp_id(), e.getMessage());
+            ra.addFlashAttribute(GlobalConstants.FLASH_ERROR, e.getMessage());
         } catch (Exception e) {
-            ra.addFlashAttribute("errorMessage", e.getMessage());
+            log.error("Unexpected error approving leave application {} by manager {}: {}", id, mgr.getEmp_id(), e.getMessage());
+            ra.addFlashAttribute(GlobalConstants.FLASH_ERROR, "An error occurred: " + e.getMessage());
         }
-        return "redirect:/leave/manager/pending";
+        return GlobalConstants.REDIRECT_MANAGER_PENDING;
     }
 
     // ─────────────────────────────────────────────────────────────────────────
     // MANAGER — Reject
     // ─────────────────────────────────────────────────────────────────────────
 
-    @PostMapping("/{id}/reject")
+    @PostMapping(GlobalConstants.ROUTE_MANAGER_REJECT)
     public String reject(
             @PathVariable Long id,
             @RequestParam String managerComment,
             HttpSession session,
             RedirectAttributes ra) {
 
-        if (!isLoggedIn(session)) return "redirect:/login";
+        if (!isLoggedIn(session)) return GlobalConstants.REDIRECT_LOGIN;
         Employee mgr = getSessionEmployee(session);
 
         try {
-            leaveApplicationService.rejectLeave(id, mgr, managerComment);
-            ra.addFlashAttribute("successMessage", "Leave application rejected.");
+            log.info("Manager {} rejecting leave application {} with comment", mgr.getEmp_id(), id);
+            ManagerActionRequest req = new ManagerActionRequest(managerComment);
+            ResponseEntity<?> response = restController.rejectLeave(id, mgr.getEmp_id(), req);
+            if (response.getStatusCode().is2xxSuccessful()) {
+                log.info("Leave application {} rejected successfully by manager {}", id, mgr.getEmp_id());
+                ra.addFlashAttribute(GlobalConstants.FLASH_SUCCESS, "Leave application rejected.");
+            } else {
+                log.error("REST controller returned error for manager {}: {}", mgr.getEmp_id(), response.getBody());
+                ra.addFlashAttribute(GlobalConstants.FLASH_ERROR, "Error rejecting leave application.");
+            }
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            log.error("Error rejecting leave application {} by manager {}: {}", id, mgr.getEmp_id(), e.getMessage());
+            ra.addFlashAttribute(GlobalConstants.FLASH_ERROR, e.getMessage());
         } catch (Exception e) {
-            ra.addFlashAttribute("errorMessage", e.getMessage());
+            log.error("Unexpected error rejecting leave application {} by manager {}: {}", id, mgr.getEmp_id(), e.getMessage());
+            ra.addFlashAttribute(GlobalConstants.FLASH_ERROR, "An error occurred: " + e.getMessage());
         }
-        return "redirect:/leave/manager/pending";
+        return GlobalConstants.REDIRECT_MANAGER_PENDING;
     }
 }

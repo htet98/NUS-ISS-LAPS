@@ -10,7 +10,7 @@
     <h2 class="mb-4">Apply for Leave</h2>
 
     <!-- Flash / inline error messages -->
-    <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+    <div th:if="${__${FLASH_ERROR}__}" class="alert alert-danger" th:text="${__${FLASH_ERROR}__}"></div>
 
     <!-- Leave Balance Summary -->
     <div class="card mb-4">
@@ -35,12 +35,11 @@
     <div class="card">
         <div class="card-header bg-primary text-white fw-semibold">New Leave Application</div>
         <div class="card-body">
-            <form th:action="@{/leave/apply}" th:object="${leaveApplication}" method="post" novalidate>
-
+            <form th:action="@{__${ROUTE_LEAVE_APPLY}__}" th:object="${leaveApplication}" method="post" novalidate>
                 <!-- Leave Type -->
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Leave Type <span class="text-danger">*</span></label>
-                    <select th:field="*{leaveType.leaveTypeId}" class="form-select"
+                    <select th:field="*{leaveType}" class="form-select"
                             th:classappend="${#fields.hasErrors('leaveType')} ? 'is-invalid'">
                         <option value="">-- Select Leave Type --</option>
                         <option th:each="leaveType : ${leaveTypes}"
@@ -138,7 +137,7 @@
                 <!-- Action buttons -->
                 <div class="d-flex gap-2 mt-4">
                     <button type="submit" class="btn btn-primary">Submit Application</button>
-                    <a th:href="@{/leave/history}" class="btn btn-outline-secondary">Cancel</a>
+                    <a th:href="@{__${ROUTE_LEAVE_HISTORY}__}" class="btn btn-outline-secondary">Cancel</a>
                 </div>
             </form>
         </div>
@@ -158,7 +157,7 @@
     }
 
     // Show half-day section only for Compensation Leave
-    document.querySelector('select[name="leaveType.leaveTypeId"]').addEventListener('change', function () {
+    document.querySelector('select[name="leaveType"]').addEventListener('change', function () {
         const selectedText = this.options[this.selectedIndex].text;
         const halfDaySection = document.getElementById('halfDaySection');
         halfDaySection.style.display = selectedText.toLowerCase().includes('compensation') ? '' : 'none';

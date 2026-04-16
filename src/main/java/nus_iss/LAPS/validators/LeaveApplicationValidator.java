@@ -181,7 +181,12 @@ public class LeaveApplicationValidator implements Validator {
                     ? countWorkingDays(start, end)
                     : calendarDays;
         }
-        // Medical and Compensation: always calendar days
+
+        if (NameTypeEnum.COMPENSATION.equals(type) && Boolean.TRUE.equals(app.getIsHalfDay())) {
+            return 0.5;
+        }
+
+        // Medical and Compensation (non-half-day): always calendar days
         return ChronoUnit.DAYS.between(start, end) + 1;
     }
 

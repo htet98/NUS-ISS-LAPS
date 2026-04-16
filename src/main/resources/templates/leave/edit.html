@@ -8,10 +8,10 @@
 <main class="container py-4" style="max-width:780px;">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Edit Leave Application</h2>
-        <a th:href="@{/leave/history}" class="btn btn-outline-secondary btn-sm">← Back to History</a>
+        <a th:href="@{__${ROUTE_LEAVE_HISTORY}__}" class="btn btn-outline-secondary btn-sm">← Back to History</a>
     </div>
 
-    <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+    <div th:if="${__${FLASH_ERROR}__}" class="alert alert-danger" th:text="${__${FLASH_ERROR}__}"></div>
 
     <!-- Leave Balance Summary -->
     <div class="card mb-4">
@@ -23,6 +23,8 @@
                         <div class="fw-semibold" th:text="${balance.leaveType.name}">Leave Type</div>
                         <div class="text-muted small">
                             <span th:text="${balance.totalDays - balance.usedDays}">0</span> days remaining
+                            (<span th:text="${balance.usedDays}">0</span> used of
+                            <span th:text="${balance.totalDays}">0</span>)
                         </div>
                     </div>
                 </div>
@@ -33,13 +35,13 @@
     <div class="card">
         <div class="card-header bg-warning fw-semibold">Update Application</div>
         <div class="card-body">
-            <form th:action="@{/leave/{id}/edit(id=${leaveApplication.leaveApplicationId})}"
+            <form th:action="@{__${ROUTE_LEAVE_BASE}__/{id}/edit(id=${leaveApplication.leaveApplicationId})}"
                   th:object="${leaveApplication}" method="post" novalidate>
 
                 <!-- Leave Type -->
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Leave Type <span class="text-danger">*</span></label>
-                    <select th:field="*{leaveType.leaveTypeId}" class="form-select"
+                    <select th:field="*{leaveType}" class="form-select"
                             th:classappend="${#fields.hasErrors('leaveType')} ? 'is-invalid'">
                         <option value="">-- Select Leave Type --</option>
                         <option th:each="leaveType : ${leaveTypes}"
@@ -58,7 +60,7 @@
                     <div class="col-md-6">
                         <label class="form-label fw-semibold">Start Date <span class="text-danger">*</span></label>
                         <input type="date" id="startDate" name="startDate" class="form-control"
-                               th:value="${leaveApplication.startDate != null ? #temporals.format(leaveApplication.startDate, 'yyyy-MM-dd') : ''}"
+                               th:value="${leaveApplication.startDate != null ? #temporals.format(leaveApplication.startDate, DATE_FORMAT) : ''}"
                                th:classappend="${#fields.hasErrors('startDate')} ? 'is-invalid'"/>
                         <div class="invalid-feedback" th:if="${#fields.hasErrors('startDate')}"
                              th:errors="*{startDate}"></div>
@@ -66,7 +68,7 @@
                     <div class="col-md-6">
                         <label class="form-label fw-semibold">End Date <span class="text-danger">*</span></label>
                         <input type="date" id="endDate" name="endDate" class="form-control"
-                               th:value="${leaveApplication.endDate != null ? #temporals.format(leaveApplication.endDate, 'yyyy-MM-dd') : ''}"
+                               th:value="${leaveApplication.endDate != null ? #temporals.format(leaveApplication.endDate, DATE_FORMAT) : ''}"
                                th:classappend="${#fields.hasErrors('endDate')} ? 'is-invalid'"/>
                         <div class="invalid-feedback" th:if="${#fields.hasErrors('endDate')}"
                              th:errors="*{endDate}"></div>
@@ -110,10 +112,29 @@
                     <div class="invalid-feedback" th:if="${#fields.hasErrors('contactDetails')}"
                          th:errors="*{contactDetails}"></div>
                 </div>
+                <!-- Half-day (Compensation Leave only) -->
+                <div class="mb-3" id="halfDaySection" th:if="*{leaveType != null}">
+                    <div class="form-check form-switch">
+                        <input type="checkbox" th:field="*{isHalfDay}" class="form-check-input"
+                               id="isHalfDayCheck" onchange="toggleHalfDayPeriod()"/>
+                        <label class="form-check-label" for="isHalfDayCheck">
+                            Take as a half-day
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mb-3" id="halfDayPeriodSection" style="display:none">
+                    <label class="form-label fw-semibold">Half-Day Period</label>
+                    <select th:field="*{halfDayPeriod}" class="form-select">
+                        <option value="">-- Select Period --</option>
+                        <option value="MORNING">Morning (AM)</option>
+                        <option value="AFTERNOON">Afternoon (PM)</option>
+                    </select>
+                </div>
 
                 <div class="d-flex gap-2 mt-4">
                     <button type="submit" class="btn btn-warning">Update Application</button>
-                    <a th:href="@{/leave/history}" class="btn btn-outline-secondary">Cancel</a>
+                    <a th:href="@{__${ROUTE_LEAVE_HISTORY}__}" class="btn btn-outline-secondary">Cancel</a>
                 </div>
             </form>
         </div>
@@ -123,9 +144,21 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     function toggleContactDetails() {
-        const cb = document.getElementById('isOverseasCheck');
-        document.getElementById('contactDetailsSection').style.display = cb.checked ? '' : 'none';
+        const overseaCheck = document.getElementById('isOverseasCheck');
+        document.getElementById('contactDetailsSection').style.display = overseaCheck.checked ? '' : 'none';
     }
+
+    function toggleHalfDayPeriod() {
+        const halfdayCheck = document.getElementById('isHalfDayCheck');
+        document.getElementById('halfDayPeriodSection').style.display = halfdayCheck.checked ? '' : 'none';
+    }
+    // if the page is loaded with half-day already checked, show the period section
+    document.addEventListener('DOMContentLoaded', function() {
+        const halfdayCheck = document.getElementById('isHalfDayCheck');
+        if (halfdayCheck.checked) {
+            document.getElementById('halfDayPeriodSection').style.display = '';
+        }
+    });
 </script>
 <footer th:replace="~{fragments/footer :: footer}"></footer>
 </body>

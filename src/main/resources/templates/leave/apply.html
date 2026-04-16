@@ -157,7 +157,7 @@
     }
 
     // Show half-day section only for Compensation Leave
-    document.querySelector('select[name="leaveType.leaveTypeId"]').addEventListener('change', function () {
+    document.querySelector('select[name="leaveType"]').addEventListener('change', function () {
         const selectedText = this.options[this.selectedIndex].text;
         const halfDaySection = document.getElementById('halfDaySection');
         halfDaySection.style.display = selectedText.toLowerCase().includes('compensation') ? '' : 'none';

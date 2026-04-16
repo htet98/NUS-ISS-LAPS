@@ -12,6 +12,7 @@ import nus_iss.LAPS.service.LeaveApplicationService;
 import nus_iss.LAPS.service.LeaveBalanceService;
 import nus_iss.LAPS.util.GlobalConstants;
 import jakarta.servlet.http.HttpSession;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -27,6 +28,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Controller
 @RequestMapping(GlobalConstants.ROUTE_LEAVE)
 public class LeaveApplicationController {
@@ -76,7 +78,10 @@ public class LeaveApplicationController {
         Employee emp = getSessionEmployee(session);
 
         try {
-            // Convert LeaveApplication to LeaveRequest for API call
+            log.info("Employee {} submitting leave application from {} to {}", 
+                emp.getEmp_id(), leaveApplication.getStartDate(), leaveApplication.getEndDate());
+            
+            // Build LeaveRequest from form data and call REST controller
             LeaveRequest req = new LeaveRequest(
                     emp.getEmp_id(),
                     leaveApplication.getLeaveType() != null ? leaveApplication.getLeaveType().getLeaveTypeId() : null,
@@ -92,15 +97,21 @@ public class LeaveApplicationController {
 
             ResponseEntity<?> response = restController.submitLeave(req);
             if (response.getStatusCode().is2xxSuccessful()) {
+                log.info("Leave application submitted successfully for employee {}", emp.getEmp_id());
                 ra.addFlashAttribute(GlobalConstants.FLASH_SUCCESS, "Leave application submitted successfully.");
                 return GlobalConstants.REDIRECT_LEAVE_HISTORY;
             } else {
-                ApiResponse apiResp = (ApiResponse) response.getBody();
-                String msg = (apiResp != null) ? apiResp.message() : "Submission failed";
-                throw new IllegalArgumentException(msg);
+                log.error("REST controller returned error for employee {}: {}", emp.getEmp_id(), response.getBody());
+                model.addAttribute(GlobalConstants.FLASH_ERROR, "Error submitting leave application.");
+                model.addAttribute("leaveTypes", leaveTypeRepo.findAll());
+                model.addAttribute("leaveBalances",
+                        leaveBalanceService.getLeaveBalancesByEmployeeId(emp.getEmp_id()));
+                model.addAttribute("leaveApplication", leaveApplication);
+                return GlobalConstants.VIEW_LEAVE_APPLY;
             }
 
         } catch (IllegalArgumentException e) {
+            log.error("Error submitting leave application for employee {}: {}", emp.getEmp_id(), e.getMessage());
             model.addAttribute(GlobalConstants.FLASH_ERROR, e.getMessage());
             model.addAttribute("leaveTypes", leaveTypeRepo.findAll());
             model.addAttribute("leaveBalances",
@@ -223,7 +234,9 @@ public class LeaveApplicationController {
         Employee emp = getSessionEmployee(session);
 
         try {
-            // Convert LeaveApplication to LeaveRequest for API call
+            log.info("Employee {} updating leave application {}", emp.getEmp_id(), id);
+            
+            // Build LeaveRequest from form data and call REST controller
             LeaveRequest req = new LeaveRequest(
                     emp.getEmp_id(),
                     leaveApplication.getLeaveType() != null ? leaveApplication.getLeaveType().getLeaveTypeId() : null,
@@ -239,15 +252,17 @@ public class LeaveApplicationController {
 
             ResponseEntity<?> response = restController.updateLeave(id, req);
             if (response.getStatusCode().is2xxSuccessful()) {
+                log.info("Leave application {} updated successfully by employee {}", id, emp.getEmp_id());
                 ra.addFlashAttribute(GlobalConstants.FLASH_SUCCESS, "Leave application updated successfully.");
                 return GlobalConstants.REDIRECT_LEAVE_HISTORY;
             } else {
-                ApiResponse apiResp = (ApiResponse) response.getBody();
-                String msg = (apiResp != null) ? apiResp.message() : "Update failed";
-                throw new IllegalArgumentException(msg);
+                log.error("REST controller returned error for employee {}: {}", emp.getEmp_id(), response.getBody());
+                ra.addFlashAttribute(GlobalConstants.FLASH_ERROR, "Error updating leave application.");
+                return GlobalConstants.REDIRECT_LEAVE_HISTORY;
             }
 
         } catch (IllegalArgumentException | IllegalStateException | SecurityException e) {
+            log.error("Error updating leave application {} for employee {}: {}", id, emp.getEmp_id(), e.getMessage());
             ra.addFlashAttribute(GlobalConstants.FLASH_ERROR, e.getMessage());
             return "redirect:/leave/" + id + "/edit";
         }
@@ -263,15 +278,17 @@ public class LeaveApplicationController {
         Employee emp = getSessionEmployee(session);
 
         try {
+            log.info("Employee {} deleting leave application {}", emp.getEmp_id(), id);
             ResponseEntity<?> response = restController.deleteLeave(id, emp.getEmp_id());
             if (response.getStatusCode().is2xxSuccessful()) {
+                log.info("Leave application {} deleted successfully by employee {}", id, emp.getEmp_id());
                 ra.addFlashAttribute(GlobalConstants.FLASH_SUCCESS, "Leave application deleted.");
             } else {
-                ApiResponse apiResp = (ApiResponse) response.getBody();
-                String msg = (apiResp != null) ? apiResp.message() : "Delete failed";
-                throw new IllegalArgumentException(msg);
+                log.error("REST controller returned error for employee {}: {}", emp.getEmp_id(), response.getBody());
+                ra.addFlashAttribute(GlobalConstants.FLASH_ERROR, "Error deleting leave application.");
             }
         } catch (Exception e) {
+            log.error("Error deleting leave application {} for employee {}: {}", id, emp.getEmp_id(), e.getMessage());
             ra.addFlashAttribute(GlobalConstants.FLASH_ERROR, e.getMessage());
         }
         return GlobalConstants.REDIRECT_LEAVE_HISTORY;
@@ -287,15 +304,17 @@ public class LeaveApplicationController {
         Employee emp = getSessionEmployee(session);
 
         try {
+            log.info("Employee {} cancelling leave application {}", emp.getEmp_id(), id);
             ResponseEntity<?> response = restController.cancelLeave(id, emp.getEmp_id());
             if (response.getStatusCode().is2xxSuccessful()) {
+                log.info("Leave application {} cancelled successfully by employee {}", id, emp.getEmp_id());
                 ra.addFlashAttribute(GlobalConstants.FLASH_SUCCESS, "Leave application cancelled and balance restored.");
             } else {
-                ApiResponse apiResp = (ApiResponse) response.getBody();
-                String msg = (apiResp != null) ? apiResp.message() : "Cancel failed";
-                throw new IllegalArgumentException(msg);
+                log.error("REST controller returned error for employee {}: {}", emp.getEmp_id(), response.getBody());
+                ra.addFlashAttribute(GlobalConstants.FLASH_ERROR, "Error cancelling leave application.");
             }
         } catch (Exception e) {
+            log.error("Error cancelling leave application {} for employee {}: {}", id, emp.getEmp_id(), e.getMessage());
             ra.addFlashAttribute(GlobalConstants.FLASH_ERROR, e.getMessage());
         }
         return GlobalConstants.REDIRECT_LEAVE_HISTORY;
@@ -367,16 +386,21 @@ public class LeaveApplicationController {
         Employee mgr = getSessionEmployee(session);
 
         try {
+            log.info("Manager {} approving leave application {}", mgr.getEmp_id(), id);
             ResponseEntity<?> response = restController.approveLeave(id, mgr.getEmp_id());
             if (response.getStatusCode().is2xxSuccessful()) {
+                log.info("Leave application {} approved successfully by manager {}", id, mgr.getEmp_id());
                 ra.addFlashAttribute(GlobalConstants.FLASH_SUCCESS, "Leave application approved.");
             } else {
-                ApiResponse apiResp = (ApiResponse) response.getBody();
-                String msg = (apiResp != null) ? apiResp.message() : "Approval failed";
-                throw new IllegalArgumentException(msg);
+                log.error("REST controller returned error for manager {}: {}", mgr.getEmp_id(), response.getBody());
+                ra.addFlashAttribute(GlobalConstants.FLASH_ERROR, "Error approving leave application.");
             }
-        } catch (Exception e) {
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            log.error("Error approving leave application {} by manager {}: {}", id, mgr.getEmp_id(), e.getMessage());
             ra.addFlashAttribute(GlobalConstants.FLASH_ERROR, e.getMessage());
+        } catch (Exception e) {
+            log.error("Unexpected error approving leave application {} by manager {}: {}", id, mgr.getEmp_id(), e.getMessage());
+            ra.addFlashAttribute(GlobalConstants.FLASH_ERROR, "An error occurred: " + e.getMessage());
         }
         return GlobalConstants.REDIRECT_MANAGER_PENDING;
     }
@@ -396,17 +420,22 @@ public class LeaveApplicationController {
         Employee mgr = getSessionEmployee(session);
 
         try {
+            log.info("Manager {} rejecting leave application {} with comment", mgr.getEmp_id(), id);
             ManagerActionRequest req = new ManagerActionRequest(managerComment);
             ResponseEntity<?> response = restController.rejectLeave(id, mgr.getEmp_id(), req);
             if (response.getStatusCode().is2xxSuccessful()) {
+                log.info("Leave application {} rejected successfully by manager {}", id, mgr.getEmp_id());
                 ra.addFlashAttribute(GlobalConstants.FLASH_SUCCESS, "Leave application rejected.");
             } else {
-                ApiResponse apiResp = (ApiResponse) response.getBody();
-                String msg = (apiResp != null) ? apiResp.message() : "Rejection failed";
-                throw new IllegalArgumentException(msg);
+                log.error("REST controller returned error for manager {}: {}", mgr.getEmp_id(), response.getBody());
+                ra.addFlashAttribute(GlobalConstants.FLASH_ERROR, "Error rejecting leave application.");
             }
-        } catch (Exception e) {
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            log.error("Error rejecting leave application {} by manager {}: {}", id, mgr.getEmp_id(), e.getMessage());
             ra.addFlashAttribute(GlobalConstants.FLASH_ERROR, e.getMessage());
+        } catch (Exception e) {
+            log.error("Unexpected error rejecting leave application {} by manager {}: {}", id, mgr.getEmp_id(), e.getMessage());
+            ra.addFlashAttribute(GlobalConstants.FLASH_ERROR, "An error occurred: " + e.getMessage());
         }
         return GlobalConstants.REDIRECT_MANAGER_PENDING;
     }

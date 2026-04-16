@@ -132,11 +132,11 @@ INSERT INTO leave_application (
 -- Status: APPLIED (Pending approval from James Tan)
 INSERT INTO leave_application (
     emp_id, leavetype_id, start_date, end_date,
-    duration_days, reason, is_overseas, status,
+    duration_days, reason, is_overseas, is_half_day, half_day_period, status,
     created_by, created_when
 ) VALUES (
              2, 3, '2026-04-15', '2026-04-15',
-             0.5, 'Family matters in the afternoon', false, 'APPLIED',
+             0.5, 'Family matters in the afternoon', false,  true, 'AFTERNOON', 'APPLIED',
              'alice', '2026-04-14 14:00:00'
          );
 
@@ -190,10 +190,10 @@ INSERT INTO leave_application (
 -- Status: APPROVED, Actioned by James Tan (emp_id 1)
 INSERT INTO leave_application (
     emp_id, leavetype_id, start_date, end_date,
-    duration_days, reason, is_overseas, status, approved_by, created_by, created_when
+    duration_days, reason, is_overseas, is_half_day, half_day_period, status, approved_by, created_by, created_when
 ) VALUES (
              3, 3, '2026-04-20', '2026-04-20',
-             0.5, 'Personal errands', false, 'APPROVED', 1, 'bob', '2026-04-17 10:00:00'
+             0.5, 'Personal errands', false, true,  'MORNING','APPROVED', 1, 'bob', '2026-04-17 10:00:00'
          );
 
 

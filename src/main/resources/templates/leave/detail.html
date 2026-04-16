@@ -8,8 +8,8 @@
 <main class="container py-4" style="max-width:780px;">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Leave Application Detail</h2>
-        <a th:if="${employee.getUser().getRole().toString().equals(ROLE_EMPLOYEE)}" th:href="@{__${ROUTE_LEAVE_HISTORY}__}" class="btn btn-outline-secondary btn-sm">← Back to History</a>
-        <a th:unless="${employee.getUser().getRole().toString().equals(ROLE_EMPLOYEE)}" th:href="@{__${ROUTE_MANAGER_ALL}__}" class="btn btn-outline-secondary btn-sm">← Back to History</a>
+        <a  class="btn btn-outline-secondary btn-sm" onclick="history.back()">← Back to History</a>
+<!--        <a th:unless="${employee.getUser().getRole().toString().equals(ROLE_EMPLOYEE)}" th:href="@{__${ROUTE_MANAGER_ALL}__}" class="btn btn-outline-secondary btn-sm">← Back to History</a>-->
     </div>
 
     <!-- Status badge -->
@@ -118,6 +118,8 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+
 <footer th:replace="~{fragments/footer :: footer}"></footer>
 </body>
 </html>

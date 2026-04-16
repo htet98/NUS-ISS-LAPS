@@ -29,7 +29,6 @@
 
             <!-- Left nav links — shown when logged in -->
             <ul class="navbar-nav me-auto mb-2 mb-lg-0" th:if="${session.userId != null}">
-
                 <!-- Common Links (Employee or Manager) -->
                 <li class="nav-item">
                     <a class="nav-link" th:href="@{__${ROUTE_LEAVE_APPLY}__}" th:unless="${session.role != null and session.role.name() == ROLE_ADMIN}">Apply for Leave</a>

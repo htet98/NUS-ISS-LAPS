@@ -35,8 +35,8 @@
                              th:style="'width:' + ${balance.totalDays > 0 ? (balance.usedDays / balance.totalDays * 100) : 0} + '%'"></div>
                     </div>
                     <div class="text-muted small mt-1">
-                        <span th:text="${#numbers.formatDecimal(balance.usedDays, 1, 'POINT', 1, 'COMMA')}"></span> used /
-                        <span th:text="${#numbers.formatDecimal(balance.totalDays, 1, 'POINT', 1, 'COMMA')}"></span> total
+                        <span th:text="${#numbers.formatDecimal(balance.usedDays, 1, 'POINT', 1, 'POINT')}"></span> used /
+                        <span th:text="${#numbers.formatDecimal(balance.totalDays, 1, 'POINT', 1, 'POINT')}"></span> total
                     </div>
                 </div>
             </div>

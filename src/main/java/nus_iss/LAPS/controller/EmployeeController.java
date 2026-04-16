@@ -1,15 +1,11 @@
 package nus_iss.LAPS.controller;
 
-<<<<<<< HEAD
-<<<<<<< HEAD
 import java.time.LocalDateTime;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -28,8 +24,7 @@ import nus_iss.LAPS.service.EmployeeService;
 import nus_iss.LAPS.validators.EmployeeValidator;
 
 @Controller
-@RequestMapping("/admin/employee")
-//@SessionAttributes(value="usession", types= UserSession.class)
+@RequestMapping("admin/employee")
 @RequiredArgsConstructor
 @Slf4j
 public class EmployeeController {
@@ -37,25 +32,10 @@ public class EmployeeController {
 	private final EmployeeService eService;
 	private final EmployeeValidator eValidator;
 	
-	@InitBinder("employee")
-	private void initEmployeeBinder(WebDataBinder binder) {
-		binder.addValidators(eValidator);
-	}
-	
-	//check admin
-	private ModelAndView checkAdmin(HttpSession session, RedirectAttributes redirect) {
-    if (session.getAttribute("user") == null) {
-        return new ModelAndView("redirect:/login");
+	private boolean isAdmin(HttpSession session) {
+        Role role = (Role) session.getAttribute("role");
+        return Role.ADMIN.equals(role);
     }
-
-    User user = (User) session.getAttribute("user");
-    if (user.getRole() != Role.ADMIN) {
-        redirect.addFlashAttribute("errorMessage", "Only Admin can manage employee records.");
-        return new ModelAndView("redirect:/login");
-    }
-
-	    return null;
-	}
 	
 	//getActor for createdBy   
     private String getActor(HttpSession session) {
@@ -70,9 +50,8 @@ public class EmployeeController {
 	@GetMapping("/create")
 	public ModelAndView newEmployeePage(HttpSession session, 
 										RedirectAttributes redirect) {
-		ModelAndView guard = checkAdmin(session, redirect);
-	    if (guard != null) return guard;
-        
+		
+		
 		var mav = new ModelAndView("employee-new", "employee", new Employee());
 		mav.addObject("eidlist", eService.findAllEmployeeIDs());
 		mav.addObject("supervisorList", eService.findAllSupervisors());
@@ -85,8 +64,11 @@ public class EmployeeController {
 											BindingResult result,
 											HttpSession session,
 											RedirectAttributes redirect) {
-		ModelAndView guard = checkAdmin(session, redirect);
-	    if (guard != null) return guard;
+		
+		if (!isAdmin(session)) {
+            redirect.addFlashAttribute("errorMessage", "Access denied.");
+            return new ModelAndView("redirect:/login");
+        }
         
 		if(result.hasErrors())
 		{
@@ -110,9 +92,13 @@ public class EmployeeController {
     @RequestMapping("/list")
     public ModelAndView listEmployeePage(HttpSession session, 
     								Model model, RedirectAttributes redirect) {
-    	ModelAndView guard = checkAdmin(session, redirect);
-        if (guard != null) return guard;
-        
+
+    	
+    	if (!isAdmin(session)) {
+            redirect.addFlashAttribute("errorMessage", "Access denied.");
+            return new ModelAndView("redirect:/login");
+        }
+    	
     	var mav = new ModelAndView("employee-list");
     	mav.addObject("employeeList", eService.findAllEmployees());
         return mav;
@@ -123,8 +109,11 @@ public class EmployeeController {
 	public ModelAndView editEmployeePage(@PathVariable Long id,
             								HttpSession session,
             								RedirectAttributes redirect) {
-		ModelAndView guard = checkAdmin(session, redirect);
-	    if (guard != null) return guard;
+		
+		if (!isAdmin(session)) {
+            redirect.addFlashAttribute("errorMessage", "Access denied.");
+            return new ModelAndView("redirect:/login");
+        }
         
 		var mav = new ModelAndView("employee-edit");
 		eService.findEmployee(id).ifPresent(emp -> mav.addObject("employee", emp));
@@ -141,8 +130,10 @@ public class EmployeeController {
             						HttpSession session,
             						RedirectAttributes redirect) {
 		
-		ModelAndView guard = checkAdmin(session, redirect);
-	    if (guard != null) return guard;
+		if (!isAdmin(session)) {
+            redirect.addFlashAttribute("errorMessage", "Access denied.");
+            return new ModelAndView("redirect:/login");
+        }
 	     
 		if(result.hasErrors()) {
 			return new ModelAndView("employee-edit");
@@ -167,8 +158,10 @@ public class EmployeeController {
             							HttpSession session,
             							RedirectAttributes redirect) {
 		
-		ModelAndView guard = checkAdmin(session, redirect);
-	    if (guard != null) return guard;
+		if (!isAdmin(session)) {
+            redirect.addFlashAttribute("errorMessage", "Access denied.");
+            return new ModelAndView("redirect:/login");
+        }
 	      
 		eService.findEmployee(id).ifPresent(employee -> {
 		eService.removeEmployee(employee);
@@ -178,13 +171,3 @@ public class EmployeeController {
 		return new ModelAndView("forward:/admin/employee/list");
 	}
 }
-=======
-public class EmployeeController {
-	
-}
->>>>>>> parent of 6ebfb44 (Added RestController, Controller and Service. Updated Model with LOMBOK, ENUM changed.)
-=======
-public class EmployeeController {
-	
-}
->>>>>>> parent of 6ebfb44 (Added RestController, Controller and Service. Updated Model with LOMBOK, ENUM changed.)

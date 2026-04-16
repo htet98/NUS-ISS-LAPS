@@ -18,7 +18,7 @@ public class EmployeeService {
 
     @Transactional(readOnly = true)
     public List<Employee> findAllEmployees() {
-        return employeeRepo.findAllWithSupervisor();
+        return employeeRepo.findAll();
     }
    
     @Transactional(readOnly = true)

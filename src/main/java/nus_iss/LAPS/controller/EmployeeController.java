@@ -1,5 +1,6 @@
 package nus_iss.LAPS.controller;
 
+<<<<<<< HEAD
 import java.time.LocalDateTime;
 
 import org.springframework.stereotype.Controller;
@@ -176,3 +177,8 @@ public class EmployeeController {
 		return new ModelAndView("forward:/admin/employee/list");
 	}
 }
+=======
+public class EmployeeController {
+	
+}
+>>>>>>> parent of 6ebfb44 (Added RestController, Controller and Service. Updated Model with LOMBOK, ENUM changed.)

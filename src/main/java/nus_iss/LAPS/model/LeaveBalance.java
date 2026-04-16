@@ -8,9 +8,15 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
 
 @Entity
-@Table(name = "leave_balances")
+// constraints prevent duplicate leave type for 1 employee
+@Table(name = "leave_balances", uniqueConstraints = @UniqueConstraint(columnNames = { "emp_id",
+		"leavetype_id" }))
 public class LeaveBalance {
 
 	@Id
@@ -18,16 +24,17 @@ public class LeaveBalance {
 	@Column(name = "leavebalance_id")
 	private Long leaveBalanceId;
 
-	// DataType Double or BigDecimal
-	// They are annual leave, medical leave, and compensation leave.
-	// An employee must take full day leave for all entitlement except compensation
-	// leave.
-	// However For compensation leave the granularity is 0.5 day.
+	// DataType double or BigDecimal
+	// Cater For compensation leave the granularity is 0.5 day.
 
 	@Column(name = "total_days", nullable = false)
+	@NotNull(message = "Total days is required")
+	@PositiveOrZero(message = "Total days must be >= 0")
 	private double totalDays;
 
 	@Column(name = "used_days", nullable = false)
+	@NotNull(message = "Used days is required")
+	@PositiveOrZero(message = "Used days must be >= 0")
 	private double usedDays;
 
 	// Mapping relation - LeaveBalance - LeaveType
@@ -79,8 +86,8 @@ public class LeaveBalance {
 	@Override
 	public String toString() {
 		return "LeaveBalance [id=" + leaveBalanceId + ", totalDays=" + totalDays + ", usedDays="
-				+ usedDays +
-//	           ", leaveTypeId=" + (leaveType != null ? leaveType.getId() : null) +
+				+ usedDays + ", leaveTypeId="
+				+ (leaveType != null ? leaveType.getLeaveTypeId() : null) +
 //	           ", employeeId=" + (employee != null ? employee.getId() : null) +
 				"]";
 	}

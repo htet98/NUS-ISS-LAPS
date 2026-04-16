@@ -32,6 +32,7 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 	List<String> findAllSupervisorNames();
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     @Query("SELECT DISTINCT e FROM Employee e " +
            "WHERE e.emp_id IN (" +
            "SELECT DISTINCT emp.supervisor.emp_id FROM Employee emp WHERE emp.supervisor IS NOT NULL)")
@@ -53,6 +54,8 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 
     Optional<Employee> findByUser(User user);
 =======
+=======
+>>>>>>> parent of 6ebfb44 (Added RestController, Controller and Service. Updated Model with LOMBOK, ENUM changed.)
     // Htet Nandar (Grace) - 14/04/2026
 	// Bug fix: 'supervisor_id' is a DB column, not an entity path. Use supervisor.emp_id.
 	@Query("SELECT e FROM Employee e WHERE e.supervisor.emp_id = :emp_id")
@@ -62,5 +65,8 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 	List<String> findAllEmployeeIDs();
 	
 	Optional<Employee> findByUser(User user);
+<<<<<<< HEAD
+>>>>>>> parent of 6ebfb44 (Added RestController, Controller and Service. Updated Model with LOMBOK, ENUM changed.)
+=======
 >>>>>>> parent of 6ebfb44 (Added RestController, Controller and Service. Updated Model with LOMBOK, ENUM changed.)
 }

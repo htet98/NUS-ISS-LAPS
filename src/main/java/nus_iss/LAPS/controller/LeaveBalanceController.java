@@ -15,7 +15,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import nus_iss.LAPS.model.Employee;
 import nus_iss.LAPS.model.LeaveBalance;
-import nus_iss.LAPS.repository.EmployeeRepository;
 import nus_iss.LAPS.service.LeaveBalanceService;
 
 @Controller

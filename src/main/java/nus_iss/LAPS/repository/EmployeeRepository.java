@@ -27,8 +27,10 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
            "WHERE e.emp_id IN (" +
            "SELECT DISTINCT emp.supervisor.emp_id FROM Employee emp WHERE emp.supervisor IS NOT NULL)")
     List<Employee> findAllSupervisors();
+    
+    @Query("SELECT e FROM Employee e LEFT JOIN FETCH e.supervisor")
+    List<Employee> findAllWithSupervisor();
 
-    // Grace added CONCAT
     @Query("SELECT DISTINCT CONCAT(e.first_name, ' ', e.last_name) FROM Employee e " +
            "WHERE e.emp_id IN (" +
            "SELECT DISTINCT emp.supervisor.emp_id FROM Employee emp WHERE emp.supervisor IS NOT NULL)")

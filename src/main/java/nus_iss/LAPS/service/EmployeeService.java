@@ -4,8 +4,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
-
 import org.springframework.transaction.annotation.Transactional;
+
 import lombok.RequiredArgsConstructor;
 import nus_iss.LAPS.model.Employee;
 import nus_iss.LAPS.repository.EmployeeRepository;
@@ -13,29 +13,14 @@ import nus_iss.LAPS.repository.EmployeeRepository;
 @Service
 @RequiredArgsConstructor
 public class EmployeeService {
-	
-	/**
-	 * Author: Junior
-	 * Created on: 14/04/2026
-	 **/
-	
-	private final EmployeeRepository employeeRepo;
 
-    @Transactional(readOnly = true)
-    public List<Employee> findEmployeesByManager(Long s) {
-        return employeeRepo.findEmployeesBySupervisorId(s);
-    }
-
-    @Transactional(readOnly = true)
-    public Optional<Employee> findEmployeeById(Long s) {
-        return employeeRepo.findEmployeeById(s);
-    }
+    private final EmployeeRepository employeeRepo;
 
     @Transactional(readOnly = true)
     public List<Employee> findAllEmployees() {
-        return employeeRepo.findAll();
+        return employeeRepo.findAllWithSupervisor();
     }
-
+   
     @Transactional(readOnly = true)
     public Optional<Employee> findEmployee(Long id) {
         return employeeRepo.findById(id);
@@ -50,7 +35,7 @@ public class EmployeeService {
     }
 
     public void removeEmployee(Employee emp) {
-    	employeeRepo.delete(emp);
+        employeeRepo.delete(emp);
     }
 
     @Transactional(readOnly = true)
@@ -59,12 +44,12 @@ public class EmployeeService {
     }
 
     @Transactional(readOnly = true)
-    public List<Employee> findSubordinates(Long empId) {
-        return employeeRepo.findSubordinates(empId);
+    public List<Long> findAllEmployeeIDs() {
+        return employeeRepo.findAllEmployeeIDs();
     }
 
     @Transactional(readOnly = true)
-    public List<Long> findAllEmployeeIDs() {
-        return employeeRepo.findAllEmployeeIDs();
+    public List<Employee> findEmployeesByManager(Long id) {
+        return employeeRepo.findEmployeesBySupervisorId(id);
     }
 }

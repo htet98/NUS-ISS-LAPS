@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout.html :: html_head}"/>
+
+<body>
+	<div th:replace="~{fragments/layout.html :: menu}"/>
+	<div th:replace="~{fragments/layout.html :: header}"/> 
+	<h3>Employee List page</h3>
+	<a th:href="@{/admin/employee/create}">Add
+		Employee</a>
+
+	<div th:if="${not #lists.isEmpty(employeeList)}">
+		<table style="border: 1;">
+
+			<tr class="listHeading">
+				<th><span th:text="#{fieldLabel.emp_Id}"></span></th>
+				<th><span th:text="#{fieldLabel.first_name}"></span></th>
+				<th><span th:text="#{fieldLabel.last_name}"></span></th>
+				<th><span th:text="#{fieldLabel.email}"></span></th>
+				<th><span th:text="#{fieldLabel.phone_number}"></span></th>
+				<th><span th:text="#{fieldLabel.department}"></span></th>
+				<th><span th:text="#{fieldLabel.designation}"></span></th>
+				<th><span th:text="#{fieldLabel.hire_date}"></span></th>
+				<th><span th:text="#{fieldLabel.employeeStatus}"></span></th>
+				<th><span th:text="#{caption.edit}"></span></th>
+				<th><span th:text="#{caption.delete}"></span></th>
+			</tr>
+			<tr th:each="employee : ${employeeList}" class="listRecord">
+				<td align="left" th:text="${employee.emp_Id}">Employee Id</td>
+				<td align="left" th:text="${employee.first_name}">First Name</td>
+				<td align="left" th:text="${employee.last_name}">Last Name</td>
+				<td align="left" th:text="${employee.email}">Email</td>
+				<td align="left" th:text="${employee.phone_number}">Phone Number</td>
+				<td align="left" th:text="${employee.department}">Department</td>
+				<td align="left" th:text="${employee.designation}">Designation</td>
+				<td align="left" th:text="${employee.hire_date}">Hire Date</td>
+				<td align="left" th:text="${employee.employeeStatus}">Employee Status</td>
+
+				<td><a th:href="@{/admin/employee/edit/}+${employee.emp_Id}" class="btn btn-default"><span
+							th:text="#{caption.edit}"></span></a></td>
+				<td><a th:href="@{/admin/employee/delete/}+${employee.emp_Id}" class="btn btn-default"><span
+							th:text="#{caption.delete}"></span></a></td>
+			</tr>
+		</table>
+	</div>
+
+</body>
+</html>

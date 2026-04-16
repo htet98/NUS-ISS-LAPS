@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout.html :: html_head}"/>
+
+<body>
+	<div th:replace="~{fragments/layout.html :: menu}"/>
+	<div th:replace="~{fragments/layout.html :: header}"/> 
+	<h3>New Employee page</h3>
+
+	<form action="#" th:action="@{/admin/employee/create}" th:object="${employee}" method="post">
+		<table>
+			<tbody>
+				
+				<tr>
+					<td><span th:text="#{fieldLabel.emp_Id}"></span></td>
+					<td>
+						<fieldset>
+							<input type="text" th:field="*{emp_Id}" />
+						</fieldset>
+					</td>
+					<td th:if="${#fields.hasErrors('emp_Id')}" th:errors="*{emp_Id}"></td>
+				</tr>
+				
+				<tr>
+					<td><span th:text="#{fieldLabel.first_name}"></span></td>
+					<td>
+						<fieldset>
+							<input type="text" th:field="*{first_name}" />
+						</fieldset>
+					</td>
+					<td th:if="${#fields.hasErrors('first_name')}" th:errors="*{first_name}"></td>
+				</tr>
+				
+				<tr>
+					<td><span th:text="#{fieldLabel.last_name}"></span></td>
+					<td>
+						<fieldset>
+							<input type="text" th:field="*{last_name}" />
+						</fieldset>
+					</td>
+					<td th:if="${#fields.hasErrors('last_name')}" th:errors="*{last_name}"></td>
+				</tr>
+				
+				<tr>
+					<td><span th:text="#{fieldLabel.email}"></span></td>
+					<td>
+						<fieldset>
+							<input type="text" th:field="*{email}" />
+						</fieldset>
+					</td>
+					<td th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></td>
+				</tr>
+				
+				<tr>
+					<td><span th:text="#{fieldLabel.phone_number}"></span></td>
+					<td>
+						<fieldset>
+							<input type="text" th:field="*{phone_number}" />
+						</fieldset>
+					</td>
+					<td th:if="${#fields.hasErrors('phone_number')}" th:errors="*{phone_number}"></td>
+				</tr>
+				
+				<tr>
+					<td><span th:text="#{fieldLabel.department}"></span></td>
+					<td>
+						<fieldset>
+							<input type="text" th:field="*{department}" />
+						</fieldset>
+					</td>
+					<td th:if="${#fields.hasErrors('department')}" th:errors="*{department}"></td>
+				</tr>
+				
+				<tr>
+					<td><span th:text="#{fieldLabel.designation}"></span></td>
+					<td>
+						<fieldset>
+							<input type="text" th:field="*{designation}" />
+						</fieldset>
+					</td>
+					<td th:if="${#fields.hasErrors('designation')}" th:errors="*{designation}"></td>
+				</tr>
+				
+				<tr>
+					<td><span th:text="#{fieldLabel.hire_date}"></span></td>
+					<td>
+						<fieldset>
+							<input type="text" th:field="*{hire_date}" />
+						</fieldset>
+					</td>
+					<td th:if="${#fields.hasErrors('hire_date')}" th:errors="*{hire_date}"></td>
+				</tr>
+				
+				<tr>
+					<td><span th:text="#{fieldLabel.employeeStatus}"></span></td>
+					<td>
+						<fieldset>
+							<input type="text" th:field="*{employeeStatus}" />
+						</fieldset>
+					</td>
+					<td th:if="${#fields.hasErrors('employeeStatus')}" th:errors="*{employeeStatus}"></td>
+				</tr>
+				
+				<tr>
+					<td>
+						<fieldset>
+							<input type="submit" value="Create" class="blcass" />
+						</fieldset>
+					</td>
+					<td></td>
+					<td></td>
+				</tr>
+			</tbody>
+		</table>
+	</form>
+
+</body>
+</html>

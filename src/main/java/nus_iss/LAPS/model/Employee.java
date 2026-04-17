@@ -22,8 +22,7 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
-import lombok.Getter;
-import lombok.Setter;
+import jakarta.validation.groups.Default;
 
 /**
 	* Author: Junior
@@ -56,14 +55,14 @@ public class Employee {
 	
 	@NotNull(message = "Phone Number is required")
 	@Column(name = "phone_number", length = 15)
-	@Pattern(regexp="^[689]\\d{7}$") //Not include Toll-free
+	@Pattern(regexp = "\\d{7,15}", message = "Phone number must be between 7 and 15 digits")
 	private String phoneNumber;
 	
 	@Column(name="department", nullable=false)
 	private String department;
 	
 	@Enumerated(EnumType.STRING)
-	@Column(name="designation")
+	@Column(name="designation", nullable=false, length = 20)
 	private Designation designation;
 	
 	@Column(name="hire_date", nullable=false)
@@ -102,6 +101,109 @@ public class Employee {
 
 	// Htet Nandar (Grace) - 14/04/2026
     // Bug fix: Phone number should be stored without dashes for easier validation and querying.
+	public String getPhoneNumber() {
+		return phoneNumber;
+	}
+
+	public void setPhoneNumber(String phoneNumber) {
+		this.phoneNumber = phoneNumber;
+	}
+
+	public String getDepartment() {
+		return department;
+	}
+
+	public void setDepartment(String department) {
+		this.department = department;
+	}
+
+	public Designation getDesignation() {
+		return designation;
+	}
+
+	public void setDesignation(Designation designation) {
+		this.designation = designation;
+	}
+
+	public LocalDate getHire_date() {
+		return hire_date;
+	}
+
+	public void setHire_date(LocalDate hire_date) {
+		this.hire_date = hire_date;
+	}
+
+	public EmployeeStatus getEmployeeStatus() {
+		return employeeStatus;
+	}
+
+	public void setEmployeeStatus(EmployeeStatus employeeStatus) {
+		this.employeeStatus = employeeStatus;
+	}
+
+	public String getCreatedBy() {
+		return createdBy;
+	}
+
+	public void setCreatedBy(String createdBy) {
+		this.createdBy = createdBy;
+	}
+
+	public LocalDateTime getCreatedWhen() {
+		return createdWhen;
+	}
+
+	public void setCreatedWhen(LocalDateTime createdWhen) {
+		this.createdWhen = createdWhen;
+	}
+
+	public String getUpdatedBy() {
+		return updatedBy;
+	}
+
+	public void setUpdatedBy(String updatedBy) {
+		this.updatedBy = updatedBy;
+	}
+
+	public LocalDateTime getUpdatedWhen() {
+		return updatedWhen;
+	}
+
+	public void setUpdatedWhen(LocalDateTime updatedWhen) {
+		this.updatedWhen = updatedWhen;
+	}
+
+	public User getUser() {
+		return user;
+	}
+
+	public void setUser(User user) {
+		this.user = user;
+	}
+
+	public List<LeaveBalance> getLeaveBalances() {
+		return LeaveBalances;
+	}
+
+	public void setLeaveBalances(List<LeaveBalance> leaveBalances) {
+		LeaveBalances = leaveBalances;
+	}
+	 
+	public Employee getSupervisor() {
+		return supervisor;
+	}
+
+	public void setSupervisor(Employee supervisor) {
+		this.supervisor = supervisor;
+	}
+
+	public List<Employee> getSubordinates() {
+		return subordinates;
+	}
+
+	public void setSubordinates(List<Employee> subordinates) {
+		this.subordinates = subordinates;
+	}
 
 	public Employee(Long emp_id, String first_name, @NotNull(message = "Last_name is required") String last_name,
 			@NotNull(message = "Email Address is required") @Email String email,

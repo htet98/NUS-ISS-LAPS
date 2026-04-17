@@ -22,14 +22,19 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
 	* Author: Junior
  	* Created on: 13/04/2026
+ 	* Updated on 15/04/2026 (LOMBOK, Designation change to ENUM)
 **/
 
 @Entity
 @Table(name = "employees")
+@Getter
+@Setter
 public class Employee {
 	
 	@Id
@@ -58,8 +63,9 @@ public class Employee {
 	@Column(name="department", nullable=false)
 	private String department;
 	
-	@Column(name="designation", nullable=false)
-	private String designation;
+	@Enumerated(EnumType.STRING)
+	@Column(name="designation")
+	private Designation designation;
 	
 	@Column(name="hire_date", nullable=false)
 	private LocalDate hire_date;
@@ -95,148 +101,13 @@ public class Employee {
 	@OneToMany(mappedBy = "supervisor")
 	private List<Employee> subordinates;
 
-	public Long getEmp_id() {
-		return emp_id;
-	}
-
-	public void setEmp_id(Long emp_id) {
-		this.emp_id = emp_id;
-	}
-
-	public String getFirst_name() {
-		return first_name;
-	}
-
-	public void setFirst_name(String first_name) {
-		this.first_name = first_name;
-	}
-
-	public String getLast_name() {
-		return last_name;
-	}
-
-	public void setLast_name(String last_name) {
-		this.last_name = last_name;
-	}
-
-	public String getEmail() {
-		return email;
-	}
-
-	public void setEmail(String email) {
-		this.email = email;
-	}
-
-    // Htet Nandar (Grace) - 14/04/2026
+	// Htet Nandar (Grace) - 14/04/2026
     // Bug fix: Phone number should be stored without dashes for easier validation and querying.
-	public String getPhoneNumber() {
-		return phoneNumber;
-	}
-
-	public void setPhoneNumber(String phoneNumber) {
-		this.phoneNumber = phoneNumber;
-	}
-
-	public String getDepartment() {
-		return department;
-	}
-
-	public void setDepartment(String department) {
-		this.department = department;
-	}
-
-	public String getDesignation() {
-		return designation;
-	}
-
-	public void setDesignation(String designation) {
-		this.designation = designation;
-	}
-
-	public LocalDate getHire_date() {
-		return hire_date;
-	}
-
-	public void setHire_date(LocalDate hire_date) {
-		this.hire_date = hire_date;
-	}
-
-	public EmployeeStatus getEmployeeStatus() {
-		return employeeStatus;
-	}
-
-	public void setEmployeeStatus(EmployeeStatus employeeStatus) {
-		this.employeeStatus = employeeStatus;
-	}
-
-	public String getCreatedBy() {
-		return createdBy;
-	}
-
-	public void setCreatedBy(String createdBy) {
-		this.createdBy = createdBy;
-	}
-
-	public LocalDateTime getCreatedWhen() {
-		return createdWhen;
-	}
-
-	public void setCreatedWhen(LocalDateTime createdWhen) {
-		this.createdWhen = createdWhen;
-	}
-
-	public String getUpdatedBy() {
-		return updatedBy;
-	}
-
-	public void setUpdatedBy(String updatedBy) {
-		this.updatedBy = updatedBy;
-	}
-
-	public LocalDateTime getUpdatedWhen() {
-		return updatedWhen;
-	}
-
-	public void setUpdatedWhen(LocalDateTime updatedWhen) {
-		this.updatedWhen = updatedWhen;
-	}
-
-	public User getUser() {
-		return user;
-	}
-
-	public void setUser(User user) {
-		this.user = user;
-	}
-
-	public List<LeaveBalance> getLeaveBalances() {
-		return LeaveBalances;
-	}
-
-	public void setLeaveBalances(List<LeaveBalance> leaveBalances) {
-		LeaveBalances = leaveBalances;
-	}
-	 
-	public Employee getSupervisor() {
-		return supervisor;
-	}
-
-	public void setSupervisor(Employee supervisor) {
-		this.supervisor = supervisor;
-	}
-
-	public List<Employee> getSubordinates() {
-		return subordinates;
-	}
-
-	public void setSubordinates(List<Employee> subordinates) {
-		this.subordinates = subordinates;
-	}
 
 	public Employee(Long emp_id, String first_name, @NotNull(message = "Last_name is required") String last_name,
 			@NotNull(message = "Email Address is required") @Email String email,
 			@NotNull(message = "Phone Number is required") String phoneNumber, String department,
-			String designation, LocalDate hire_date,
+			Designation designation, LocalDate hire_date,
 			EmployeeStatus employeeStatus, String createdBy, LocalDateTime createdWhen, String updatedBy,
 			LocalDateTime updatedWhen, User user, List<LeaveBalance> leaveBalances, Employee supervisor,
 			List<Employee> subordinates) {

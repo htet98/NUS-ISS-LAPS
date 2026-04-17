@@ -40,7 +40,7 @@ public class EmployeeService {
 
     @Transactional(readOnly = true)
     public List<Employee> findAllSupervisors() {
-        return employeeRepo.findAllSupervisor();
+        return employeeRepo.findAllSupervisors();
     }
 
     @Transactional(readOnly = true)

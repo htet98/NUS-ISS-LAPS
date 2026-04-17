@@ -49,7 +49,7 @@
                 </li>
 				<!-- ADMIN links -->
 				<li class="nav-item" th:if="${session.role != null and session.role.name() == 'ADMIN'}">
-				    <a class="nav-link" th:href="@{/leave-balances/view}">
+				    <a class="nav-link" th:href="@{/leave-balances}">
 				         Manage Leave Balance
 				    </a>
 				</li>

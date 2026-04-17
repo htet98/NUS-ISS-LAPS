@@ -74,11 +74,13 @@
 	<div class="container" th:if="${session.role != null and session.role.name() == 'ADMIN'}">
 		<div class="card" th:if="${currentPath != null and currentPath.contains('create')}">
 			<h2>Create Leave Balance</h2>
-			<div th:if="${error}" style="color:red;">
-				<p th:text="${error}"></p>
-			</div>
-			<div th:if="${success}" style="color:green;">
-				<p th:text="${success}"></p>
+			<div class="mt-1">
+				<div th:if="${error}" style="color:red;">
+					<p th:text="${error}"></p>
+				</div>
+				<div th:if="${success}" style="color:green;">
+					<p th:text="${success}"></p>
+				</div>
 			</div>
 			<form th:action="@{/leave-balances/create}" method="post">
 				<label for="employeeId">Employee:</label>
@@ -102,12 +104,12 @@
 				<label>Total Days</label>
 				<input type="number" name="totalDays" id="totalDays" step="0.5" min="0" required />
 				<div class="d-grid gap-2 mt-2">
-				  <button class="btn btn-primary" type="submit">Create</button>
+					<button class="btn btn-primary" type="submit">Create</button>
 				</div>
 			</form>
-			<form th:action="@{/leave-balances/view}" method="get">
+			<form th:action="@{/leave-balances}" method="get">
 				<div class="d-grid gap-2 mt-2">
-				  <button class="btn btn-secondary" type="submit">Back</button>
+					<button class="btn btn-secondary" type="submit">Back</button>
 				</div>
 			</form>
 		</div>
@@ -115,11 +117,13 @@
 	<div class="container" th:if="${session.role != null and session.role.name() == 'ADMIN'}">
 		<div class="card" th:if="${currentPath != null and currentPath.contains('edit')}">
 			<h2>Edit Leave Balance</h2>
-			<div th:if="${error}" style="color:red;">
-				<p th:text="${error}"></p>
-			</div>
-			<div th:if="${success}" style="color:green;">
-				<p th:text="${success}"></p>
+			<div class="mt-1">
+				<div th:if="${error}" style="color:red;">
+					<p th:text="${error}"></p>
+				</div>
+				<div th:if="${success}" style="color:green;">
+					<p th:text="${success}"></p>
+				</div>
 			</div>
 			<form th:action="@{/leave-balances/update-total-days}" method="post">
 				<label>Employee Name</label>
@@ -141,9 +145,9 @@
 					<button class="btn btn-primary" type="submit">Update</button>
 				</div>
 			</form>
-			<form th:action="@{/leave-balances/view}" method="get">
+			<form th:action="@{/leave-balances}" method="get">
 				<div class="d-grid gap-2 mt-2">
-				  <button class="btn btn-secondary" type="submit">Back</button>
+					<button class="btn btn-secondary" type="submit">Back</button>
 				</div>
 			</form>
 		</div>
@@ -151,6 +155,14 @@
 	<div class="container" th:if="${session.role != null and session.role.name() == 'ADMIN'}">
 		<div class="card" th:if="${currentPath != null and currentPath.contains('delete')}">
 			<h2>Leave Balance</h2>
+			<div class="mt-1">
+				<div th:if="${error}" style="color:red;">
+					<p th:text="${error}"></p>
+				</div>
+				<div th:if="${success}" style="color:green;">
+					<p th:text="${success}"></p>
+				</div>
+			</div>
 			<form th:action="@{/leave-balances/delete/{id}(id=${balance.leaveBalanceId})}" method="post"
 				style="display: inline" onsubmit="return confirm('Are you sure you want to delete?');">
 
@@ -174,7 +186,7 @@
 					<button class="btn btn-primary" type="submit">Delete</button>
 				</div>
 			</form>
-			<form th:action="@{/leave-balances/view}" method="get">
+			<form th:action="@{/leave-balances}" method="get">
 				<div class="d-grid gap-2 mt-2">
 					<button class="btn btn-secondary" type="submit">Back</button>
 				</div>
@@ -220,6 +232,9 @@
 			}
 		}
 	</script>
+	<div class="mt-3 mx-2" th:if="${session.role != null and session.role.name() != 'ADMIN' or session.role == null}">
+		Unauthorized
+	</div>
 	<footer th:replace="~{fragments/footer :: footer}"></footer>
 </body>
 

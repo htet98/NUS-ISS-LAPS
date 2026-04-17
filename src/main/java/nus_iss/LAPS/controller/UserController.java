@@ -20,7 +20,6 @@ import java.util.List; //CRUD
 import java.util.Optional;
 
 @Controller
-@RequestMapping("/users") //CRUD
 public class UserController {
 
     @Autowired private UserService userService;
@@ -86,39 +85,4 @@ public class UserController {
         session.invalidate();
         return "redirect:/login";
     }
-    
-// Loh Si Hua (Shannon) - 15/04/2026  
-    
- // CREATE
-    @PostMapping
-    public User createUser(@RequestBody User user) {
-        return userService.createUser(user, "system"); // replace with logged-in user
-    }
-
-    // READ ALL
-    @GetMapping
-    public List<User> getAllUsers() {
-        return userService.getAllUsers();
-    }
-
-    // READ ONE
-    @GetMapping("/{id}")
-    public User getUser(@PathVariable Long id) {
-        return userService.getUserById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-    }
-
-    // UPDATE
-    @PutMapping("/{id}")
-    public User updateUser(@PathVariable Long id, @RequestBody User user) {
-        return userService.updateUser(id, user, "system");
-    }
-
-    // DELETE
-    @DeleteMapping("/{id}")
-    public String deleteUser(@PathVariable Long id) {
-        userService.deleteUser(id);
-        return "User deleted successfully";
-    }
-    
-}
+}    

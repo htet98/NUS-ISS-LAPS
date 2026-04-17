@@ -1,0 +1,223 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head th:insert="~{fragments/header :: head('Page Title – LAPS')}"></head>
+
+  <head>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+    />
+    <style>
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+        background: #f4f6f8;
+        height: 100vh;
+      }
+
+      .main {
+        padding-left: 20px;
+        padding-right: 20px;
+        height: 100vh;
+      }
+
+      .message {
+        padding-left: 20px;
+        padding-right: 20px;
+        padding-top: 5px;
+      }
+
+      table {
+        font-family: Arial, Helvetica, sans-serif;
+        border-collapse: collapse;
+        width: 95%;
+        margin: 0 auto;
+      }
+
+      td,
+      th {
+        border: 1px solid #ddd;
+        padding: 8px;
+      }
+
+      tr:nth-child(even) {
+        background-color: #f2f2f2;
+      }
+
+      tr:hover {
+        background-color: #ddd;
+      }
+
+      th {
+        padding-top: 12px;
+        padding-bottom: 12px;
+        text-align: left;
+        background-color: #007bff;
+        color: white;
+      }
+
+      button:hover {
+        background-color: #0056b3;
+      }
+
+      .btn:hover {
+        background-color: #0056b3;
+      }
+    </style>
+    <title>Leave Balances</title>
+  </head>
+
+  <body>
+    <div th:replace="~{fragments/layout :: navbar}"></div>
+	<div class="mt-2 mx-3" th:if="${error}" style="color:red;">
+		<p th:text="${error}"></p>
+	</div>
+	<div class="mt-2 mx-3" th:if="${success}" style="color:green;">
+		<p th:text="${success}"></p>
+	</div>
+    <div
+      class="main"
+      th:if="${session.role != null and session.role.name() == 'ADMIN'}"
+    >
+      <div class="d-flex gap-2">
+        <form class="mt-3" th:action="@{/leave-balances}" method="get">
+          <input
+            type="text"
+            name="keyword"
+            th:value="${keyword}"
+            placeholder="Search employee name..."
+          />
+          <button class="btn btn-sm btn-primary" type="submit">
+            <i class="fa fa-search" aria-hidden="true"></i> Search
+          </button>
+        </form>
+        <form class="mt-3" th:action="@{/leave-balances}" method="get">
+          <button class="btn btn-primary btn-sm" type="submit">
+            <i class="fa fa-refresh" aria-hidden="true"></i></i> View All
+          </button>
+        </form>
+        <form class="mt-3" th:action="@{/leave-balances/create}" method="get">
+          <button class="btn btn-secondary btn-sm" type="submit">
+            <i class="fa fa-plus-square" aria-hidden="true"></i> Create
+          </button>
+        </form>
+      </div>
+      <h2 class="mt-2">Leave Balance</h2>
+      <p>
+        Total records :
+        <span
+          th:text="${leaveBalancePage != null 
+								? leaveBalancePage.getTotalElements()
+								: '0'}"
+        ></span>
+      </p>
+      <div
+	  	th:if="${leaveBalancePage != null and leaveBalancePage.getTotalElements() > 0}"
+	  >
+        <table border="1">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Employee</th>
+              <th>Leave Type</th>
+              <th>Total Days</th>
+              <th>Used Days</th>
+              <th>Balance Days</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:each="leaveBalance : ${leaveBalancePage.content}"></tr>
+
+            <tr th:each="balance : ${leaveBalancePage.content}">
+              <td th:text="${balance.leaveBalanceId}"></td>
+
+              <td
+                th:text="${balance.employee != null 
+						? balance.employee.first_name + ' ' + balance.employee.last_name
+						: 'N/A'}"
+              ></td>
+
+              <td
+                th:text="${balance.leaveType != null ? balance.leaveType.name : 'N/A'}"
+              ></td>
+
+              <td
+                th:text="${balance.totalDays % 1 == 0 
+					              ? balance.totalDays.intValue() 
+					              : balance.totalDays}"
+              ></td>
+
+              <td
+                th:text="${balance.usedDays % 1 == 0 
+					              ? balance.usedDays.intValue() 
+					              : balance.usedDays}"
+              ></td>
+
+              <td
+                th:text="${
+					    (balance.totalDays - balance.usedDays) % 1 == 0
+					    ? (balance.totalDays - balance.usedDays).intValue()
+					    : (balance.totalDays - balance.usedDays)
+					}"
+              ></td>
+
+              <td>
+                <a
+                  th:href="@{/leave-balances/edit/{id}(id=${balance.leaveBalanceId})}"
+                  class="btn btn-primary"
+                  ><i class="fa fa-pencil-square-o" aria-hidden="true"></i
+                ></a>
+                <a
+                  th:href="@{/leave-balances/delete/{id}(id=${balance.leaveBalanceId})}"
+                  class="btn btn-secondary"
+                  ><i class="fa fa-trash-o" aria-hidden="true"></i
+                ></a>
+              </td>
+			 </tr>
+          </tbody>
+        </table>
+        <nav class="mx-2 mt-2">
+          <ul class="pagination">
+            <!-- Previous Link -->
+            <li
+              class="page-item"
+              th:classappend="${!leaveBalancePage.hasPrevious()} ? 'disabled'"
+            >
+              <a
+                class="page-link"
+                th:href="@{/leave-balances(page=${leaveBalancePage.number - 1}, keyword=${keyword})}"
+                >Previous</a
+              >
+            </li>
+
+            <!-- Page Numbers -->
+            <li
+              th:each="i : ${#numbers.sequence(0, leaveBalancePage.totalPages - 1)}"
+              class="page-item"
+              th:classappend="${i == leaveBalancePage.number} ? 'active'"
+            >
+              <a
+                class="page-link"
+                th:href="@{/leave-balances(page=${i}, keyword=${keyword})}"
+                th:text="${i + 1}"
+              ></a>
+            </li>
+
+            <!-- Next Link -->
+            <li
+              class="page-item"
+              th:classappend="${!leaveBalancePage.hasNext()} ? 'disabled'"
+            >
+              <a
+                class="page-link"
+                th:href="@{/leave-balances(page=${leaveBalancePage.number + 1}, keyword=${keyword})}"
+                >Next</a
+              >
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
+  </body>
+</html>

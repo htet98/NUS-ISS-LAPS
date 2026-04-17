@@ -1,19 +1,21 @@
 package nus_iss.LAPS.repository;
 
-import nus_iss.LAPS.model.Employee;
-import nus_iss.LAPS.model.User;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Optional;
+import nus_iss.LAPS.model.Employee;
+import nus_iss.LAPS.model.User;
 
 /**
 	* Author: Junior
  	* Created on: 13/04/2026
+ 	* Updated on: 15/04/2026
 **/
 
 public interface EmployeeRepository extends JpaRepository<Employee, Long> {

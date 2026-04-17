@@ -47,7 +47,12 @@
                 <li class="nav-item" th:if="${session.role != null and session.role.name() == ROLE_ADMIN}">
                     <a class="nav-link" th:href="@{__${ROUTE_ADMIN_HIERARCHY}__}">Manage Approval Hierarchy</a>
                 </li>
-
+				<!-- ADMIN links -->
+				<li class="nav-item" th:if="${session.role != null and session.role.name() == 'ADMIN'}">
+				    <a class="nav-link" th:href="@{/leave-balances}">
+				         Manage Leave Balance
+				    </a>
+				</li>
             </ul>
 
             <!-- Right side: username + role badge + logout -->

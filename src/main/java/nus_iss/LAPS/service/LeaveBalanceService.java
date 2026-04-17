@@ -1,5 +1,13 @@
 package nus_iss.LAPS.service;
 
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.validation.BeanPropertyBindingResult;
+import org.springframework.validation.BindingResult;
+
 import nus_iss.LAPS.model.Employee;
 import nus_iss.LAPS.model.LeaveApplication;
 import nus_iss.LAPS.model.LeaveBalance;
@@ -7,11 +15,7 @@ import nus_iss.LAPS.model.LeaveType;
 import nus_iss.LAPS.repository.EmployeeRepository;
 import nus_iss.LAPS.repository.LeaveBalanceRepository;
 import nus_iss.LAPS.repository.LeaveTypeRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.Optional;
+import nus_iss.LAPS.validators.LeaveBalanceValidator;
 
 @Service
 public class LeaveBalanceService {
@@ -27,6 +31,9 @@ public class LeaveBalanceService {
 	public LeaveBalanceService(LeaveBalanceRepository leaveBalanceRepo) {
 		this.leaveBalanceRepo = leaveBalanceRepo;
 	}
+
+	@Autowired
+	private LeaveBalanceValidator leaveBalanceValidator;
 
 	public List<LeaveType> getAllLeaveTypes() {
 		return leaveTypeRepo.findAll();
@@ -62,17 +69,20 @@ public class LeaveBalanceService {
 				.orElseThrow(() -> new RuntimeException("Employee not found"));
 
 		LeaveType type = leaveTypeRepo.findById(leaveTypeId)
-				.orElseThrow(() -> new RuntimeException("LeaveType not found"));
-
-		if (totalDays < 0) {
-			throw new RuntimeException("Total days cannot be negative");
-		}
+				.orElseThrow(() -> new RuntimeException("Leave type not found"));
 
 		LeaveBalance balance = new LeaveBalance();
 		balance.setEmployee(emp);
 		balance.setLeaveType(type);
 		balance.setTotalDays(totalDays);
-		balance.setUsedDays(0);
+		balance.setUsedDays(0.0);
+
+		BindingResult bindingResult = new BeanPropertyBindingResult(balance, "balance");
+		leaveBalanceValidator.validate(balance, bindingResult);
+
+		if (bindingResult.hasErrors()) {
+			throw new IllegalArgumentException(bindingResult.getFieldError().getDefaultMessage());
+		}
 
 		leaveBalanceRepo.save(balance);
 	}
@@ -80,17 +90,16 @@ public class LeaveBalanceService {
 	public void updateTotalDays(Long id, double totalDays) {
 
 		LeaveBalance balance = leaveBalanceRepo.findById(id)
-				.orElseThrow(() -> new RuntimeException("Not found"));
-
-		if (totalDays < 0) {
-			throw new RuntimeException("Total days cannot be negative");
-		}
-
-		if (balance.getUsedDays() > totalDays) {
-			throw new RuntimeException("Used days cannot exceed total days");
-		}
+				.orElseThrow(() -> new RuntimeException("Leave Balance record not found"));
 
 		balance.setTotalDays(totalDays);
+
+		BindingResult bindingResult = new BeanPropertyBindingResult(balance, "balance");
+		leaveBalanceValidator.validate(balance, bindingResult);
+
+		if (bindingResult.hasErrors()) {
+			throw new IllegalArgumentException(bindingResult.getFieldError().getDefaultMessage());
+		}
 
 		leaveBalanceRepo.save(balance);
 	}
@@ -163,32 +172,30 @@ public class LeaveBalanceService {
 		leaveBalanceRepo.delete(balance);
 	}
 
-    // Htet Nandar(Grace) - 12/04/2026
+	// Htet Nandar(Grace) - 12/04/2026
 	// ── Helpers used by LeaveApplicationValidator and LeaveApplicationService ──
 
 	/**
-	 * Returns the remaining balance (totalDays - usedDays) for an employee + leave type.
-	 * Returns 0.0 if no balance record exists.
+	 * Returns the remaining balance (totalDays - usedDays) for an employee + leave
+	 * type. Returns 0.0 if no balance record exists.
 	 */
 	public double getAvailableBalance(Employee employee, LeaveType leaveType) {
 		return leaveBalanceRepo
 				.findByEmployeeIdAndLeaveTypeId(employee.getEmp_id(), leaveType.getLeaveTypeId())
-				.map(lb -> lb.getTotalDays() - lb.getUsedDays())
-				.orElse(0.0);
+				.map(lb -> lb.getTotalDays() - lb.getUsedDays()).orElse(0.0);
 	}
 
 	/**
-	 * Deducts leave days when a leave application is APPROVED.
-	 * Delegates to incrementUsedDays via the balance record ID.
+	 * Deducts leave days when a leave application is APPROVED. Delegates to
+	 * incrementUsedDays via the balance record ID.
 	 */
 	public void deductBalance(LeaveApplication application) {
 		LeaveBalance balance = leaveBalanceRepo
-				.findByEmployeeIdAndLeaveTypeId(
-						application.getEmployee().getEmp_id(),
+				.findByEmployeeIdAndLeaveTypeId(application.getEmployee().getEmp_id(),
 						application.getLeaveType().getLeaveTypeId())
-				.orElseThrow(() -> new RuntimeException(
-						"No leave balance found for employee " + application.getEmployee().getEmp_id()
-						+ " and leave type " + application.getLeaveType().getName()));
+				.orElseThrow(() -> new RuntimeException("No leave balance found for employee "
+						+ application.getEmployee().getEmp_id() + " and leave type "
+						+ application.getLeaveType().getName()));
 		incrementUsedDays(balance.getLeaveBalanceId(), application.getDurationDays());
 	}
 
@@ -198,12 +205,11 @@ public class LeaveBalanceService {
 	 */
 	public void restoreBalance(LeaveApplication application) {
 		LeaveBalance balance = leaveBalanceRepo
-				.findByEmployeeIdAndLeaveTypeId(
-						application.getEmployee().getEmp_id(),
+				.findByEmployeeIdAndLeaveTypeId(application.getEmployee().getEmp_id(),
 						application.getLeaveType().getLeaveTypeId())
-				.orElseThrow(() -> new RuntimeException(
-						"No leave balance found for employee " + application.getEmployee().getEmp_id()
-						+ " and leave type " + application.getLeaveType().getName()));
+				.orElseThrow(() -> new RuntimeException("No leave balance found for employee "
+						+ application.getEmployee().getEmp_id() + " and leave type "
+						+ application.getLeaveType().getName()));
 		decrementUsedDays(balance.getLeaveBalanceId(), application.getDurationDays());
 	}
 

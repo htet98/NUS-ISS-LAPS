@@ -7,10 +7,6 @@ import java.time.LocalDateTime;
 
 
 @Entity
-@Data //For CRUD
-@NoArgsConstructor //For CRUD
-@AllArgsConstructor //FOR CRUD
-@Builder //For CRUD
 
 @Table(name = "users")
 

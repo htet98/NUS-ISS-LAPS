@@ -36,7 +36,7 @@ public record LeaveResponse(
                 ? la.getEmployee().getFirst_name() + " " + la.getEmployee().getLast_name()
                 : "Unknown";
 
-        String empDesignation = la.getEmployee() != null ? la.getEmployee().getDesignation().getDisplayName() : null;
+        String empDesignation = la.getEmployee() != null ? la.getEmployee().getDesignation() : null;
         String empDepartment  = la.getEmployee() != null ? la.getEmployee().getDepartment() : null;
 
         // getName() returns NameTypeEnum — .name() gives the String constant

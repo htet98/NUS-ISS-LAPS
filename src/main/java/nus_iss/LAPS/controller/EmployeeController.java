@@ -3,7 +3,6 @@ package nus_iss.LAPS.controller;
 import java.time.LocalDateTime;
 
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -21,153 +20,150 @@ import nus_iss.LAPS.model.Employee;
 import nus_iss.LAPS.model.Role;
 import nus_iss.LAPS.model.User;
 import nus_iss.LAPS.service.EmployeeService;
+import nus_iss.LAPS.util.GlobalConstants;
 import nus_iss.LAPS.validators.EmployeeValidator;
 
 @Controller
-@RequestMapping("admin/employee")
+@RequestMapping(GlobalConstants.ROUTE_ADMIN + GlobalConstants.ROUTE_ADMIN_EMPLOYEE)
 @RequiredArgsConstructor
 @Slf4j
 public class EmployeeController {
 
-	private final EmployeeService eService;
-	private final EmployeeValidator eValidator;
-	
-	private boolean isAdmin(HttpSession session) {
+    private final EmployeeService eService;
+    private final EmployeeValidator eValidator;
+
+    private boolean isAdmin(HttpSession session) {
         Role role = (Role) session.getAttribute("role");
         return Role.ADMIN.equals(role);
     }
-	
-	//getActor for createdBy   
+
+    private ModelAndView denyAccess(RedirectAttributes redirect) {
+        redirect.addFlashAttribute(GlobalConstants.FLASH_ERROR, "Access denied.");
+        return new ModelAndView(GlobalConstants.REDIRECT_LOGIN);
+    }
+
     private String getActor(HttpSession session) {
         User user = (User) session.getAttribute("user");
-        if (user != null && user.getUsername() != null) {
-            return user.getUsername();
-        }
-        return "system";
+        return (user != null && user.getUsername() != null)
+                ? user.getUsername()
+                : "system";
     }
-      
-    //Create
-	@GetMapping("/create")
-	public ModelAndView newEmployeePage(HttpSession session, 
-										RedirectAttributes redirect) {
-		
-		
-		var mav = new ModelAndView("employee-new", "employee", new Employee());
-		mav.addObject("eidlist", eService.findAllEmployeeIDs());
-		mav.addObject("supervisorList", eService.findAllSupervisors());
-		return mav;
-	}
-	
-	@PostMapping("/create")
-	public ModelAndView createNewEmployee(@ModelAttribute 
-											@Valid Employee employee,
-											BindingResult result,
-											HttpSession session,
-											RedirectAttributes redirect) {
-		
-		if (!isAdmin(session)) {
-            redirect.addFlashAttribute("errorMessage", "Access denied.");
-            return new ModelAndView("redirect:/login");
-        }
-        
-		if(result.hasErrors())
-		{
-			return new ModelAndView("employee-new");
-		}
-		
-		employee.setCreatedBy(getActor(session));
-        employee.setCreatedWhen(LocalDateTime.now());
-        employee.setUpdatedBy(null);
-        employee.setUpdatedWhen(null);
-        
-		log.info("New Employee {} was successfully created.", employee.getEmp_id());
-		eService.createEmployee(employee);
-		
-		redirect.addFlashAttribute("successMessage", "Employee created successfully.");
-		return new ModelAndView("forward:/admin/employee/list");
-	}
-	
-	//List employees
-    // check admin or not. If not, error redirect back to login.
-    @RequestMapping("/list")
-    public ModelAndView listEmployeePage(HttpSession session, 
-    								Model model, RedirectAttributes redirect) {
 
-    	
-    	if (!isAdmin(session)) {
-            redirect.addFlashAttribute("errorMessage", "Access denied.");
-            return new ModelAndView("redirect:/login");
-        }
-    	
-    	var mav = new ModelAndView("employee-list");
-    	mav.addObject("employeeList", eService.findAllEmployees());
+    private void populateForm(ModelAndView mav) {
+        mav.addObject("eidlist", eService.findAllEmployeeIDs());
+        mav.addObject("supervisorList", eService.findAllSupervisors());
+    }
+
+    @GetMapping(GlobalConstants.ROUTE_ADMIN_EMPLOYEE_NEW)
+    public ModelAndView newEmployeePage(HttpSession session, RedirectAttributes redirect) {
+        if (!isAdmin(session)) return denyAccess(redirect);
+
+        ModelAndView mav = new ModelAndView(GlobalConstants.VIEW_ADMIN_EMPLOYEE_NEW);
+        mav.addObject("employee", new Employee());
+        populateForm(mav);
         return mav;
     }
-	
-	//edit
-	@GetMapping("/edit/{id}")
-	public ModelAndView editEmployeePage(@PathVariable Long id,
-            								HttpSession session,
-            								RedirectAttributes redirect) {
-		
-		if (!isAdmin(session)) {
-            redirect.addFlashAttribute("errorMessage", "Access denied.");
-            return new ModelAndView("redirect:/login");
+
+    @PostMapping(GlobalConstants.ROUTE_ADMIN_EMPLOYEE_NEW)
+    public ModelAndView createNewEmployee(
+            @ModelAttribute @Valid Employee employee,
+            BindingResult result,
+            HttpSession session,
+            RedirectAttributes redirect) {
+
+        if (!isAdmin(session)) return denyAccess(redirect);
+
+        eValidator.validate(employee, result);
+
+        if (result.hasErrors()) {
+            ModelAndView mav = new ModelAndView(GlobalConstants.VIEW_ADMIN_EMPLOYEE_NEW);
+            mav.addObject("employee", employee);
+            populateForm(mav);
+            return mav;
         }
-        
-		var mav = new ModelAndView("employee-edit");
-		eService.findEmployee(id).ifPresent(emp -> mav.addObject("employee", emp));
-		mav.addObject("eidlist", eService.findAllEmployeeIDs());
-		mav.addObject("supervisorList", eService.findAllSupervisors());
-		return mav;
-	}
-	
-	@PostMapping("/edit/{id}")
-	public ModelAndView editEmployee(@ModelAttribute 
-									@Valid Employee employee,
-            						BindingResult result,
-            						@PathVariable Long id,
-            						HttpSession session,
-            						RedirectAttributes redirect) {
-		
-		if (!isAdmin(session)) {
-            redirect.addFlashAttribute("errorMessage", "Access denied.");
-            return new ModelAndView("redirect:/login");
+
+        employee.setCreatedBy(getActor(session));
+        employee.setCreatedWhen(LocalDateTime.now());
+
+        eService.createEmployee(employee);
+        log.info("Employee {} created.", employee.getEmp_id());
+
+        redirect.addFlashAttribute(GlobalConstants.FLASH_SUCCESS, "Employee created successfully.");
+        return new ModelAndView(GlobalConstants.REDIRECT_ADMIN_EMPLOYEE_LIST);
+    }
+
+    @GetMapping(GlobalConstants.ROUTE_ADMIN_EMPLOYEE_LIST)
+    public ModelAndView listEmployeePage(HttpSession session, RedirectAttributes redirect) {
+        if (!isAdmin(session)) return denyAccess(redirect);
+
+        ModelAndView mav = new ModelAndView(GlobalConstants.VIEW_ADMIN_EMPLOYEE_LIST);
+        mav.addObject("employeeList", eService.findAllEmployees());
+        return mav;
+    }
+
+    @GetMapping("/edit/{id}")
+    public ModelAndView editEmployeePage(
+            @PathVariable Long id,
+            HttpSession session,
+            RedirectAttributes redirect) {
+
+        if (!isAdmin(session)) return denyAccess(redirect);
+
+        ModelAndView mav = new ModelAndView(GlobalConstants.VIEW_ADMIN_EMPLOYEE_EDIT);
+
+        eService.findEmployee(id).ifPresentOrElse(
+                emp -> mav.addObject("employee", emp),
+                () -> { throw new IllegalArgumentException("Employee not found: " + id); }
+        );
+
+        populateForm(mav);
+        return mav;
+    }
+
+    @PostMapping("/edit/{id}")
+    public ModelAndView editEmployee(
+            @ModelAttribute @Valid Employee employee,
+            BindingResult result,
+            @PathVariable Long id,
+            HttpSession session,
+            RedirectAttributes redirect) {
+
+        if (!isAdmin(session)) return denyAccess(redirect);
+
+        eValidator.validate(employee, result);
+
+        if (result.hasErrors()) {
+            ModelAndView mav = new ModelAndView(GlobalConstants.VIEW_ADMIN_EMPLOYEE_EDIT);
+            mav.addObject("employee", employee);
+            populateForm(mav);
+            return mav;
         }
-	     
-		if(result.hasErrors()) {
-			return new ModelAndView("employee-edit");
-		}
-		
-		employee.setEmp_id(id);
-		employee.setCreatedBy(null);
-		employee.setCreatedWhen(null);
-	    employee.setUpdatedBy(getActor(session));
-	    employee.setUpdatedWhen(LocalDateTime.now());
-	     
-		log.info("Employee {} was successfully updated.", employee.getEmp_id());
-		eService.changeEmployee(employee);
-		
-		redirect.addFlashAttribute("successMessage", "Employee updated successfully.");
-		
-		return new ModelAndView("redirect:/admin/employee/list");
-	}
-	
-	@GetMapping("/delete/{id}")
-	public ModelAndView deleteEmployee(@PathVariable Long id,
-            							HttpSession session,
-            							RedirectAttributes redirect) {
-		
-		if (!isAdmin(session)) {
-            redirect.addFlashAttribute("errorMessage", "Access denied.");
-            return new ModelAndView("redirect:/login");
-        }
-	      
-		eService.findEmployee(id).ifPresent(employee -> {
-		eService.removeEmployee(employee);
-			log.info("The employee {} was successfully deleted.", employee.getEmp_id());
-			redirect.addFlashAttribute("successMessage", "Employee deleted successfully.");
-		});
-		return new ModelAndView("forward:/admin/employee/list");
-	}
+
+        employee.setEmp_id(id);
+        employee.setUpdatedBy(getActor(session));
+        employee.setUpdatedWhen(LocalDateTime.now());
+
+        eService.changeEmployee(employee);
+        log.info("Employee {} updated.", id);
+
+        redirect.addFlashAttribute(GlobalConstants.FLASH_SUCCESS, "Employee updated successfully.");
+        return new ModelAndView(GlobalConstants.REDIRECT_ADMIN_EMPLOYEE_LIST);
+    }
+
+    @GetMapping("/delete/{id}")
+    public ModelAndView deleteEmployee(
+            @PathVariable Long id,
+            HttpSession session,
+            RedirectAttributes redirect) {
+
+        if (!isAdmin(session)) return denyAccess(redirect);
+
+        eService.findEmployee(id).ifPresent(emp -> {
+            eService.removeEmployee(emp);
+            log.info("Employee {} deleted.", id);
+        });
+
+        redirect.addFlashAttribute(GlobalConstants.FLASH_SUCCESS, "Employee deleted successfully.");
+        return new ModelAndView(GlobalConstants.REDIRECT_ADMIN_EMPLOYEE_LIST);
+    }
 }

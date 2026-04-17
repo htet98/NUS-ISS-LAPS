@@ -55,10 +55,10 @@
                     </a>
                 </li>
                 <li class="nav-item" th:if="${session.role != null and session.role.name() == 'ADMIN'}">
-                    <a class="nav-link" th:href="@{/admin/employee/list2}">Manage Staff</a>
+                    <a class="nav-link" th:href="@{/admin/employee/list}">Manage Staff</a>
                 </li>
 				<li class="nav-item" th:if="${session.role != null and session.role.name() == 'ADMIN'}">
-				                    <a class="nav-link" th:href="@{/admin/employee/list}">Manage Leave Types</a>
+				                    <a th:href="@{/admin/leavetype}">Manage Leave Types</a>
                 </li>
 				<!-- ADMIN links -->
 				<li class="nav-item" th:if="${session.role != null and session.role.name() == 'ADMIN'}">

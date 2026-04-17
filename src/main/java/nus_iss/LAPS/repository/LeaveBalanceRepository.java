@@ -20,4 +20,13 @@ public interface LeaveBalanceRepository extends JpaRepository<LeaveBalance, Long
 		   "AND lb.leaveType.leaveTypeId = :leaveTypeId")
 	Optional<LeaveBalance> findByEmployeeIdAndLeaveTypeId(@Param("empId") Long empId,
 														  @Param("leaveTypeId") Long leaveTypeId);
+
+	@Query("""
+		    SELECT COUNT(lb) > 0
+		    FROM LeaveBalance lb
+		    WHERE lb.employee.emp_id = :employeeId
+		    AND lb.leaveType.leaveTypeId = :leaveTypeId
+		""")
+	boolean existsByEmployeeAndLeaveType(@Param("employeeId") Long employeeId,
+		@Param("leaveTypeId") Long leaveTypeId);
 }

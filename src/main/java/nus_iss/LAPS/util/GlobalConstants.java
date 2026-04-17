@@ -51,6 +51,20 @@ public final class GlobalConstants {
     public static final String ROUTE_MANAGER_APPROVE = "/{id}/approve";
     public static final String ROUTE_MANAGER_REJECT = "/{id}/reject";
 
+    // Movement routes
+    public static final String ROUTE_MOVEMENT             = "/movement";
+    public static final String ROUTE_MOVEMENT_REGISTER    = "/register";
+    public static final String VIEW_MOVEMENT_REGISTER     = "movement/register";
+    public static final String REDIRECT_MOVEMENT_REGISTER = "redirect:/movement/register";
+
+    // Report routes
+    public static final String ROUTE_REPORT               = "/report";
+    public static final String ROUTE_REPORT_LEAVE         = "/leave";
+    public static final String ROUTE_REPORT_LEAVE_EXPORT  = "/leave/export";
+    public static final String VIEW_REPORT_INDEX          = "report/index";
+    public static final String VIEW_REPORT_LEAVE          = "report/leave-report";
+    public static final String REDIRECT_REPORT            = "redirect:/report";
+
     // Flash message keys
     public static final String FLASH_SUCCESS = "successMessage";
     public static final String FLASH_ERROR = "errorMessage";

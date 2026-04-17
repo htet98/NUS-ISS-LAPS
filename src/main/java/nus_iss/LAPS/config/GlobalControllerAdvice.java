@@ -53,4 +53,11 @@ public class GlobalControllerAdvice {
     @ModelAttribute("ROUTE_LEAVE_CANCEL") public String routeLeaveCancel() { return GlobalConstants.ROUTE_LEAVE + GlobalConstants.ROUTE_LEAVE_CANCEL; }
     @ModelAttribute("ROUTE_MANAGER_APPROVE") public String routeManagerApprove() { return GlobalConstants.ROUTE_LEAVE + GlobalConstants.ROUTE_MANAGER_APPROVE; }
     @ModelAttribute("ROUTE_MANAGER_REJECT") public String routeManagerReject() { return GlobalConstants.ROUTE_LEAVE + GlobalConstants.ROUTE_MANAGER_REJECT; }
+
+    // Movement routes
+    @ModelAttribute("ROUTE_MOVEMENT_REGISTER") public String routeMovementRegister() { return GlobalConstants.ROUTE_MOVEMENT + GlobalConstants.ROUTE_MOVEMENT_REGISTER; }
+
+    // Report routes
+    @ModelAttribute("ROUTE_REPORT")            public String routeReport()      { return GlobalConstants.ROUTE_REPORT; }
+    @ModelAttribute("ROUTE_REPORT_LEAVE")      public String routeReportLeave() { return GlobalConstants.ROUTE_REPORT + GlobalConstants.ROUTE_REPORT_LEAVE; }
 }

@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LAPS | Add New Employee</title>
+    <style>
+        :root {
+            --bg-page: #f4f7f6;
+            --bg-card: #ffffff;
+            --text-primary: #1d1d1f;
+            --text-secondary: #64748b;
+            --nus-blue: #003d7c;
+            --nus-orange: #ef7c00;
+		
+            --border-radius: 12px;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        body {
+            background-color: var(--bg-page);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 40px 20px;
+        }
+
+        .container { max-width: 900px; margin: 0 auto; }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .user-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--bg-card);
+            padding: 8px 16px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .user-avatar {
+            width: 35px; height: 35px; border-radius: 50%;
+            background: var(--nus-orange); color: white;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 0.9rem;
+        }
+
+        .form-card {
+            background: var(--bg-card);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 40px;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            color: var(--nus-blue);
+            margin: 35px 0 20px 0;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #f1f5f9;
+            font-weight: 700;
+        }
+        .section-title:first-of-type { margin-top: 0; }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px 30px;
+        }
+
+        .form-group { display: flex; flex-direction: column; }
+        
+        /* Specific layout for Leave section to fit 3 items */
+        .leave-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        label {
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        input, select {
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            background: #f8fafc;
+            font-family: inherit;
+            font-size: 0.95rem;
+            transition: 0.2s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--nus-blue);
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(0, 61, 124, 0.1);
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+		
+		.page-main-header h1 {
+            margin: 0;
+            font-size: 1.3rem;
+            color: var(--nus-blue);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+		
+		.page-main-header {
+            margin-bottom: 35px;
+            border-bottom: 3px solid var(--nus-orange);
+            display: inline-block;
+            padding-bottom: 5px;
+        }
+		
+
+        .btn {
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            border: none;
+            font-size: 0.95rem;
+        }
+
+        .btn-cancel { background: #e2e8f0; color: var(--text-primary); }
+        .btn-save { background: var(--nus-blue); color: white; }
+        .btn-save:hover { opacity: 0.9; }
+
+        .back-link {
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header class="admin-header">
+        <a th:href="@{/admin/dashboard}" class="back-link">← Back to Administration</a>
+		
+        
+        <div class="user-card" th:if="${adminUser != null}">
+            <div class="user-avatar" th:text="${#strings.substring(adminUser.name,0,1)}">A</div>
+            <div class="user-info">
+                <div style="font-weight: 700; font-size: 0.85rem;" th:text="${adminUser.name}">Admin User</div>
+                <div style="color: var(--text-secondary); font-size: 0.75rem;" th:text="'ID: ' + ${adminUser.employeeId}">ID: 001</div>
+				<div style="font-size:0.8rem; color:var(--text-secondary);"> <a th:href="@{/logout)}">Log Out</a> </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="form-card">
+		<div class="page-main-header">
+            <h1>Add / Update Employee</h1>
+        </div>
+        <form th:action="@{/admin/employee/save}" th:object="${employee}" method="post">
+			
+			<input type="hidden" th:field="*{emp_id}" />
+            
+            <div class="section-title">Professional Details</div>
+            <div class="form-grid">
+                <!--<div class="form-group">
+                    <label>Employee ID</label>
+                    <input type="text" th:field="*{emp_id}" placeholder="e.g. 1001" required>
+                </div> -->
+                <div class="form-group">
+                    <label>Status</label>
+                    <select th:field="*{employeeStatus}" required>
+                        <option value="ACTIVE">ACTIVE</option>
+                        <option value="INACTIVE">INACTIVE</option>
+                        <option value="ON_LEAVE">ON_LEAVE</option>
+						<option value="RESIGNED">RESIGNED</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Designation</label>
+                    <input type="text" th:field="*{designation}" placeholder="Systems Analyst" required>
+                </div>
+                <div class="form-group">
+                    <label>Department</label>
+                    <input type="text" th:field="*{department}" placeholder="IT Department" required>
+                </div>
+                <div class="form-group">
+                    <label>Hire Date</label>
+                    <input type="date" th:field="*{hire_date}" required>
+                </div>
+				<div class="form-group">
+                    <label>Supervisor</label>   
+					 <input type="number" th:field="*{supervisor}" required>   
+					 
+					<!--
+					<select th:field="*{supervisor}">
+					    <option th:each="s : ${employees}" 
+					            th:value="${s}" 
+					            th:text="${s.first_name}">
+					    </option>
+					</select>
+					-->
+                </div>
+				
+				<!--
+				<div class="form-group">
+                    <label>Created-By</label>
+                    <input type="text" th:field="*{created_by}" required>
+                </div>
+				<div class="form-group">
+                    <label>Created-When</label>
+                    <input type="datetime-local" th:field="*{created_when}" required>
+                </div>
+				-->
+				
+            </div>
+
+            <div class="section-title">Personal & Contact Information</div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>First Name</label>
+                    <input type="text" th:field="*{first_name}" required>
+                </div>
+                <div class="form-group">
+                    <label>Last Name</label>
+                    <input type="text" th:field="*{last_name}" required>
+                </div>
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" th:field="*{email}" required>
+                </div>
+                <div class="form-group">
+                    <label>Phone Number</label>
+                    <input type="text" th:field="*{phoneNumber}" required>
+					
+					
+					<div th:errors="*{phoneNumber}"></div>
+					<!--
+					<div th:if="${#fields.hasErrors('phoneNumber')}"
+					     th:errors="*{phoneNumber}">   
+					</div> -->
+					
+                </div>
+            </div>
+<!--
+            <div class="section-title">Leave Entitlement (Current Year)</div>
+            <div class="leave-grid">
+                <div class="form-group">
+                    <label>Annual Leave (Days)</label>
+                    <input type="number" th:field="*{annualLeaveEntitlement}" min="0" value="14" required>
+                </div>
+                <div class="form-group">
+                    <label>Medical Leave (Days)</label>
+                    <input type="number" th:field="*{medicalLeaveEntitlement}" min="0" value="60" required>
+                </div>
+                <div class="form-group">
+                    <label>Compensation Leave (Days)</label>
+                    <input type="number" th:field="*{compensationLeaveEntitlement}" min="0" value="0" required>
+                </div>
+            </div>
+-->
+			
+			<div class="section-title">Account Security</div>
+            <div class="leave-grid">
+                <div class="form-group">
+					
+					<label>Username</label>
+					<input type="text" th:name="username" required />
+					
+                </div>
+                <div class="form-group">
+                    
+					<label>Password</label>
+					<input type="password" th:name="password" required />
+					
+                </div>
+                <div class="form-group">
+                    <label>Role</label>
+					<select th:name="role">
+						<option value="ADMIN">ADMIN</option>
+						<option value="MANAGER">MANAGER</option>
+						<option value="EMPLOYEE">EMPLOYEE</option>
+					</select>
+                </div>
+            </div>
+
+			<!--
+            <div class="section-title">By Admin</div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Updated-By</label>
+                    <input type="text" th:field="*{updated_by}" required>
+                </div>
+                <div class="form-group">
+                    <label>Updated-When</label>
+                    <input type="datetime-local" th:field="*{updated_when}" required>
+                </div>
+            </div>
+			-->
+
+            <div class="form-actions">
+                <a th:href="@{/admin/dashboard}" class="btn btn-cancel">Cancel</a>
+                <button type="submit" class="btn btn-save">Confirm</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>

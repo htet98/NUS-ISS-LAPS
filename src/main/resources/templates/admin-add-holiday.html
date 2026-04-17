@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LAPS | Add Public Holiday</title>
+    <style>
+        :root {
+            --bg-page: #f4f7f6;
+            --bg-card: #ffffff;
+            --text-primary: #1d1d1f;
+            --text-secondary: #64748b;
+            --nus-blue: #003d7c;
+            --nus-orange: #ef7c00;
+            --border-radius: 12px;
+            --shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        body {
+            background-color: var(--bg-page);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Top Header */
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .user-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--bg-card);
+            padding: 8px 16px;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+        }
+
+        .user-avatar {
+            width: 35px; height: 35px; border-radius: 50%;
+            background: var(--nus-orange); color: white;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 0.9rem;
+        }
+
+        /* Form Card */
+        .form-card {
+            background: var(--bg-card);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 40px;
+        }
+
+        .form-header {
+            margin-bottom: 25px;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 15px;
+        }
+
+        .form-header h2 {
+            margin: 0;
+            font-size: 1.4rem;
+            color: var(--nus-blue);
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        input[type="text"],
+        input[type="date"],
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            background: #f8fafc;
+            font-family: inherit;
+            font-size: 0.95rem;
+            box-sizing: border-box;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--nus-blue);
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(0, 61, 124, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        /* Action Buttons */
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            text-decoration: none;
+            border: none;
+            transition: 0.2s;
+        }
+
+        .btn-cancel {
+            background: #e2e8f0;
+            color: var(--text-primary);
+        }
+
+        .btn-cancel:hover { background: #cbd5e1; }
+
+        .btn-save {
+            background: var(--nus-blue);
+            color: white;
+        }
+
+        .btn-save:hover { opacity: 0.9; }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        
+        .back-link:hover { color: var(--nus-blue); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header class="admin-header">
+        <a th:href="@{/admin/dashboard}" class="back-link">← Back to Administration</a>
+        
+        <div class="user-card" th:if="${adminUser != null}">
+            <div class="user-avatar" th:text="${#strings.substring(adminUser.name,0,1)}">A</div>
+            <div class="user-info">
+                <div style="font-weight: 700; font-size: 0.85rem;" th:text="${adminUser.name}">Admin User</div>
+                <div style="color: var(--text-secondary); font-size: 0.75rem;" th:text="'ID: ' + ${adminUser.employeeId}">ID: 001</div>
+				<div style="font-size:0.8rem; color:var(--text-secondary);"> <a th:href="@{/logout)}">Log Out</a> </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="form-card">
+        <div class="form-header">
+            <h2>Add/Edit Public Holiday</h2>
+            <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 5px;">
+                Entries here.
+            </p>
+        </div>
+
+        <form th:action="@{/admin/holiday/save}" th:object="${holiday}" method="post">
+			
+			<input type="hidden" th:field="*{holidayId}" />
+			
+            <div class="form-group">
+                <label for="holidayDate">Holiday Date</label>
+                <input type="date" id="holidayDate" th:field="*{date}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="holidayName">Holiday Name</label>
+                <input type="text" id="holidayName" th:field="*{name}" placeholder="e.g. National Day" required>
+            </div>
+
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea id="description" th:field="*{description}" placeholder="Provide additional details about the holiday..."></textarea>
+            </div>
+
+            <div class="form-actions">
+                <a th:href="@{/admin/dashboard}" class="btn btn-cancel">Cancel</a>
+                <button type="submit" class="btn btn-save">Save Holiday</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>

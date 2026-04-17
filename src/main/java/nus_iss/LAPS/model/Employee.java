@@ -51,7 +51,8 @@ public class Employee {
 	
 	@NotNull(message = "Phone Number is required")
 	@Column(name = "phone_number", length = 15)
-	@Pattern(regexp="^[689]\\d{7}$") //Not include Toll-free
+	@Pattern(regexp="^[689]\\d{7}$", 
+				message = "Phone number must be 8 digits and start with 6, 8, or 9") //Not include Toll-free
 	private String phoneNumber;
 	
 	@Column(name="department", nullable=false)

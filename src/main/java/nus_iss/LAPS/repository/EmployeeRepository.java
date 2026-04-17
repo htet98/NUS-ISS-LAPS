@@ -1,16 +1,15 @@
 package nus_iss.LAPS.repository;
 
-import java.util.List;
-import java.util.Optional;
-
+import nus_iss.LAPS.model.Employee;
+import nus_iss.LAPS.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
-import nus_iss.LAPS.model.Employee;
-import nus_iss.LAPS.model.User;
+import java.util.List;
+import java.util.Optional;
 
 /**
 	* Author: Junior
@@ -41,7 +40,7 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 	List<Employee> findSubordinates(@Param("emp_id") Long emp_id);
 	
 	@Query("SELECT DISTINCT e.emp_id FROM Employee e")
-	List<String> findAllEmployeeIDs();
+	List<Long> findAllEmployeeIDs();
 	
 	@Query("SELECT e FROM Employee e WHERE e.user.role = 'MANAGER'")
 	List<Employee> findAllManagers();

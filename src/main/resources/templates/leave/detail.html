@@ -6,10 +6,12 @@
 <div th:replace="~{fragments/layout :: navbar}"></div>
 
 <main class="container py-4" style="max-width:780px;">
+    <!-- Breadcrumb -->
+    <div th:replace="~{fragments/breadcrumb :: breadcrumbList(${breadcrumbs})}"></div>
+
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Leave Application Detail</h2>
         <a  class="btn btn-outline-secondary btn-sm" onclick="history.back()">← Back to History</a>
-<!--        <a th:unless="${employee.getUser().getRole().toString().equals(ROLE_EMPLOYEE)}" th:href="@{__${ROUTE_MANAGER_ALL}__}" class="btn btn-outline-secondary btn-sm">← Back to History</a>-->
     </div>
 
     <!-- Status badge -->

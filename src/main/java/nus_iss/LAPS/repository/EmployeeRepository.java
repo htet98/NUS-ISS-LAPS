@@ -39,7 +39,7 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 	List<Employee> findSubordinates(@Param("emp_id") Long emp_id);
 	
 	@Query("SELECT DISTINCT e.emp_id FROM Employee e")
-	List<String> findAllEmployeeIDs();
+	List<Long> findAllEmployeeIDs();
 	
 	@Query("SELECT e FROM Employee e WHERE e.user.role = 'MANAGER'")
 	List<Employee> findAllManagers();

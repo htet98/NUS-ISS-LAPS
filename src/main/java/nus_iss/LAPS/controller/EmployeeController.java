@@ -1,6 +1,7 @@
 package nus_iss.LAPS.controller;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -45,6 +46,14 @@ public class EmployeeController {
         }
         return "system";
     }
+    
+    @GetMapping
+    public List<Employee> getAllEmployees() {
+        List<Employee> employees = eService.findAllEmployees();
+        System.out.println("Employees: " + employees);
+        return employees;
+    }
+
       
     //Create
 	@GetMapping("/create")
@@ -52,7 +61,7 @@ public class EmployeeController {
 										RedirectAttributes redirect) {
 		
 		
-		var mav = new ModelAndView("employee-new", "employee", new Employee());
+		var mav = new ModelAndView("admin/employee-new", "employee", new Employee());
 		mav.addObject("eidlist", eService.findAllEmployeeIDs());
 		mav.addObject("supervisorList", eService.findAllSupervisors());
 		return mav;
@@ -72,7 +81,7 @@ public class EmployeeController {
         
 		if(result.hasErrors())
 		{
-			return new ModelAndView("employee-new");
+			return new ModelAndView("admin/employee-new");
 		}
 		
 		employee.setCreatedBy(getActor(session));
@@ -84,7 +93,7 @@ public class EmployeeController {
 		eService.createEmployee(employee);
 		
 		redirect.addFlashAttribute("successMessage", "Employee created successfully.");
-		return new ModelAndView("forward:/admin/employee/list");
+		return new ModelAndView("redirect:/admin/employee/list");
 	}
 	
 	//List employees
@@ -99,7 +108,7 @@ public class EmployeeController {
             return new ModelAndView("redirect:/login");
         }
     	
-    	var mav = new ModelAndView("employee-list");
+    	var mav = new ModelAndView("admin/employee-list");
     	mav.addObject("employeeList", eService.findAllEmployees());
         return mav;
     }
@@ -115,7 +124,7 @@ public class EmployeeController {
             return new ModelAndView("redirect:/login");
         }
         
-		var mav = new ModelAndView("employee-edit");
+		var mav = new ModelAndView("admin/employee-edit");
 		eService.findEmployee(id).ifPresent(emp -> mav.addObject("employee", emp));
 		mav.addObject("eidlist", eService.findAllEmployeeIDs());
 		mav.addObject("supervisorList", eService.findAllSupervisors());
@@ -136,7 +145,7 @@ public class EmployeeController {
         }
 	     
 		if(result.hasErrors()) {
-			return new ModelAndView("employee-edit");
+			return new ModelAndView("admin/employee-edit");
 		}
 		
 		employee.setEmp_id(id);
@@ -168,6 +177,6 @@ public class EmployeeController {
 			log.info("The employee {} was successfully deleted.", employee.getEmp_id());
 			redirect.addFlashAttribute("successMessage", "Employee deleted successfully.");
 		});
-		return new ModelAndView("forward:/admin/employee/list");
+		return new ModelAndView("redirect:/admin/employee/list");
 	}
 }

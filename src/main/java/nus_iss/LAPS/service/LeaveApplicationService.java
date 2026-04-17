@@ -31,6 +31,9 @@ public class LeaveApplicationService {
     @Autowired
     private LeaveApplicationValidator leaveValidator;
 
+    @Autowired
+    private EmailService emailService;
+
     // ─────────────────────────────────────────────────────────────────────────
     // SUBMIT  (was submitLeave — renamed to match REST controller call)
     // ─────────────────────────────────────────────────────────────────────────
@@ -85,6 +88,9 @@ public class LeaveApplicationService {
         existing.setWorkDissemination(updated.getWorkDissemination());
         existing.setOverseas(updated.getIsOverseas());
         existing.setContactDetails(updated.getContactDetails());
+        existing.setIsHalfDay(updated.getIsHalfDay());
+        // Only persist halfDayPeriod when isHalfDay is actually checked
+        existing.setHalfDayPeriod(Boolean.TRUE.equals(updated.getIsHalfDay()) ? updated.getHalfDayPeriod() : null);
         existing.setDurationDays(leaveValidator.computeDuration(updated));
         existing.setStatus(LeaveStatus.UPDATED);
         existing.setUpdatedBy(resolveActor(updated.getEmployee()));
@@ -156,7 +162,9 @@ public class LeaveApplicationService {
         existing.setStatus(LeaveStatus.APPROVED);
         existing.setApprovedBy(manager);
         existing.setUpdatedBy(resolveActor(manager));
-        return leaveApplicationRepo.save(existing);
+        LeaveApplication approved = leaveApplicationRepo.save(existing);
+        emailService.sendApprovalNotification(approved);   // notify employee
+        return approved;
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -180,7 +188,9 @@ public class LeaveApplicationService {
         existing.setApprovedBy(manager);
         existing.setManagerComment(comment);
         existing.setUpdatedBy(resolveActor(manager));
-        return leaveApplicationRepo.save(existing);
+        LeaveApplication rejected = leaveApplicationRepo.save(existing);
+        emailService.sendRejectionNotification(rejected);  // notify employee
+        return rejected;
     }
 
     // ─────────────────────────────────────────────────────────────────────────

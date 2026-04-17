@@ -45,7 +45,7 @@ INSERT INTO public_holidays (name, date, description) VALUES
 -- ============================================================
 -- Plain-text passwords for demo. All accounts use: password123
 INSERT INTO users (username, email, password, role, created_by, updated_by, created_when, updated_when, active) VALUES
-('manager1', 'manager1@laps.com', 'password123', 'MANAGER',  'system', 'system', NOW(), NOW(), true),
+('manager1', 'james@laps.com', 'password123', 'MANAGER',  'system', 'system', NOW(), NOW(), true),
 ('alice',    'alice@laps.com',    'password123', 'EMPLOYEE', 'system', 'system', NOW(), NOW(), true),
 ('bob',      'bob@laps.com',      'password123', 'EMPLOYEE', 'system', 'system', NOW(), NOW(), true),
 ('admin',    'admin@laps.com',    'password123', 'ADMIN',    'system', 'system', NOW(), NOW(), true);
@@ -65,27 +65,27 @@ INSERT INTO users (username, email, password, role, created_by, updated_by, crea
 INSERT INTO employees (first_name, last_name, email, phone_number, department, designation,
                        hire_date, employee_status, created_by, created_when, updated_by, updated_when,
                        user_id, supervisor_id)
-VALUES ('James', 'Tan', 'manager1@laps.com', '91234567', 'Engineering', 'Engineering Manager',
+VALUES ('James', 'Tan', 'james@laps.com', '91234567', 'Engineering', 'PROFESSIONAL',
         '2020-01-10', 'ACTIVE', 'system', NOW(), 'system', NOW(), 1, NULL);
 
 -- Employees reporting to manager1 (supervisor_id = 1)
 INSERT INTO employees (first_name, last_name, email, phone_number, department, designation,
                        hire_date, employee_status, created_by, created_when, updated_by, updated_when,
                        user_id, supervisor_id)
-VALUES ('Alice', 'Lim', 'alice@laps.com', '82345678', 'Engineering', 'Software Engineer',
+VALUES ('Alice', 'Lim', 'alice@laps.com', '82345678', 'Engineering', 'PROFESSIONAL',
         '2022-03-15', 'ACTIVE', 'system', NOW(), 'system', NOW(), 2, 1);
 
 INSERT INTO employees (first_name, last_name, email, phone_number, department, designation,
                        hire_date, employee_status, created_by, created_when, updated_by, updated_when,
                        user_id, supervisor_id)
-VALUES ('Bob', 'Ng', 'bob@laps.com', '63456789', 'Engineering', 'Administrative Officer',
+VALUES ('Bob', 'Ng', 'bob@laps.com', '63456789', 'Engineering', 'ADMINISTRATIVE',
         '2023-06-01', 'ACTIVE', 'system', NOW(), 'system', NOW(), 3, 1);
 
 -- Admin (no supervisor)
 INSERT INTO employees (first_name, last_name, email, phone_number, department, designation,
                        hire_date, employee_status, created_by, created_when, updated_by, updated_when,
                        user_id, supervisor_id)
-VALUES ('Admin', 'User', 'admin@laps.com', '00000000', 'Management', 'System Administrator',
+VALUES ('Admin', 'User', 'admin@laps.com', '00000000', 'Management', 'PROFESSIONAL',
         '2020-01-01', 'ACTIVE', 'system', NOW(), 'system', NOW(), 4, NULL);
 
 -- ============================================================

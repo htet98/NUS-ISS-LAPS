@@ -1,8 +1,9 @@
 package nus_iss.LAPS.config;
 
-import nus_iss.LAPS.util.GlobalConstants;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
+
+import nus_iss.LAPS.util.GlobalConstants;
 
 @ControllerAdvice
 public class GlobalControllerAdvice {

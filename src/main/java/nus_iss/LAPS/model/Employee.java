@@ -52,14 +52,15 @@ public class Employee {
 	
 	@NotNull(message = "Phone Number is required")
 	@Column(name = "phone_number", length = 15)
-	@Pattern(regexp="^[689]\\d{7}$", message = "Phone number must start with 6, 8, or 9 followed by 7 digits")
+	@Pattern(regexp = "\\d{7,15}", message = "Phone number must be between 7 and 15 digits")
 	private String phoneNumber;
 	
 	@Column(name="department", nullable=false)
 	private String department;
 	
-	@Column(name="designation", nullable=false)
-	private String designation;
+	@Enumerated(EnumType.STRING)
+	@Column(name="designation", nullable=false, length = 20)
+	private Designation designation;
 	
 	@Column(name="hire_date", nullable=false)
 	private LocalDate hire_date;
@@ -145,11 +146,11 @@ public class Employee {
 		this.department = department;
 	}
 
-	public String getDesignation() {
+	public Designation getDesignation() {
 		return designation;
 	}
 
-	public void setDesignation(String designation) {
+	public void setDesignation(Designation designation) {
 		this.designation = designation;
 	}
 
@@ -236,7 +237,7 @@ public class Employee {
 	public Employee(Long emp_id, String first_name, @NotNull(message = "Last_name is required") String last_name,
 			@NotNull(message = "Email Address is required") @Email String email,
 			@NotNull(message = "Phone Number is required") String phoneNumber, String department,
-			String designation, LocalDate hire_date,
+			Designation designation, LocalDate hire_date,
 			EmployeeStatus employeeStatus, String createdBy, LocalDateTime createdWhen, String updatedBy,
 			LocalDateTime updatedWhen, User user, List<LeaveBalance> leaveBalances, Employee supervisor,
 			List<Employee> subordinates) {

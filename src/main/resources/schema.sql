@@ -3,6 +3,9 @@
 -- Schema SQL
 -- ============================================================
 
+-- Disable foreign key checks to allow dropping tables with constraints
+SET FOREIGN_KEY_CHECKS = 0;
+
 -- Drop tables in reverse dependency order
 DROP TABLE IF EXISTS leave_application;
 DROP TABLE IF EXISTS leave_balances;
@@ -10,6 +13,9 @@ DROP TABLE IF EXISTS employees;
 DROP TABLE IF EXISTS leave_types;
 DROP TABLE IF EXISTS public_holidays;
 DROP TABLE IF EXISTS users;
+
+-- Re-enable foreign key checks
+SET FOREIGN_KEY_CHECKS = 1;
 
 -- ============================================================
 -- Table: user
@@ -129,3 +135,4 @@ CREATE TABLE leave_application (
     CHECK (duration_days > 0)
 
 );
+

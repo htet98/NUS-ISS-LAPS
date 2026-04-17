@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+<nav th:fragment="breadcrumbList(breadcrumbs)" style="--bs-breadcrumb-divider: '>';"  aria-label="breadcrumb" class="mb-4" th:if="${breadcrumbs != null and #lists.size(breadcrumbs) > 0}">
+    <ol class="breadcrumb">
+        <li th:each="crumb, iterStat : ${breadcrumbs}"
+            class="breadcrumb-item"
+            th:classappend="${iterStat.last} ? 'active' : ''"
+            th:aria-current="${iterStat.last} ? 'page' : null">
+
+            <!-- Link for all items except the last one -->
+            <a th:if="${!iterStat.last}" th:href="${crumb.url}" th:text="${crumb.label}">Home</a>
+
+            <!-- Plain text for the current (last) page -->
+            <span th:if="${iterStat.last}" th:text="${crumb.label}">Current Page</span>
+        </li>
+    </ol>
+</nav>
+</body>
+</html>
+

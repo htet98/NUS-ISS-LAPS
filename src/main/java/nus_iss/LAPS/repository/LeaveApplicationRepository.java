@@ -91,4 +91,29 @@ public interface LeaveApplicationRepository extends JpaRepository<LeaveApplicati
             "ORDER BY la.updatedWhen DESC " +
             "LIMIT 10")
     List<LeaveApplication> findRecentDecisionsByManager(@Param("manager") Employee manager);
+
+    // ── Report: employees on leave (APPROVED) within a date range ─────────────
+    // leaveTypeId = null → all types; employee = null → all employees under manager
+    @Query("SELECT la FROM LeaveApplication la " +
+            "WHERE la.employee.supervisor = :manager " +
+            "AND la.status = 'APPROVED' " +
+            "AND la.startDate <= :endDate " +
+            "AND la.endDate   >= :startDate " +
+            "AND (:leaveTypeId IS NULL OR la.leaveType.leaveTypeId = :leaveTypeId) " +
+            "ORDER BY la.startDate ASC")
+    List<LeaveApplication> findApprovedLeavesForReport(
+            @Param("manager")     Employee manager,
+            @Param("startDate")   LocalDate startDate,
+            @Param("endDate")     LocalDate endDate,
+            @Param("leaveTypeId") Long leaveTypeId);
+
+    // ── Movement Register: all APPROVED leaves overlapping a month ────────────
+    @Query("SELECT la FROM LeaveApplication la " +
+            "WHERE la.status = 'APPROVED' " +
+            "AND la.startDate <= :monthEnd " +
+            "AND la.endDate   >= :monthStart " +
+            "ORDER BY la.startDate ASC")
+    List<LeaveApplication> findApprovedLeavesInMonth(
+            @Param("monthStart") LocalDate monthStart,
+            @Param("monthEnd")   LocalDate monthEnd);
 }

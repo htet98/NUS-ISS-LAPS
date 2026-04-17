@@ -1,15 +1,11 @@
 package nus_iss.LAPS.model;
 
 import jakarta.persistence.*;
-import lombok.*;
-
 import java.time.LocalDateTime;
 
 
 @Entity
-
 @Table(name = "users")
-
 public class User {
 
     @Id
@@ -78,7 +74,9 @@ public class User {
         this.updatedby = updatedby;
     }
 
-    // ── Getters & Setters ─────────────────────────────────────────────────────
+    public User() {
+    }
+// ── Getters & Setters ─────────────────────────────────────────────────────
 
     public Long getUser_id()                  { return user_id; }
     public void setUser_id(Long user_id)      { this.user_id = user_id; }

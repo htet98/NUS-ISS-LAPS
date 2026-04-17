@@ -10,6 +10,7 @@ import nus_iss.LAPS.model.LeaveType;
 import nus_iss.LAPS.repository.LeaveTypeRepository;
 import nus_iss.LAPS.service.LeaveApplicationService;
 import nus_iss.LAPS.service.LeaveBalanceService;
+import nus_iss.LAPS.util.BreadcrumbItem;
 import nus_iss.LAPS.util.GlobalConstants;
 import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
@@ -64,6 +65,15 @@ public class LeaveApplicationController {
         model.addAttribute("leaveTypes", leaveTypes);
         model.addAttribute("leaveBalances",
                 leaveBalanceService.getLeaveBalancesByEmployeeId(emp.getEmp_id()));
+        
+        // Add breadcrumbs
+        List<BreadcrumbItem> breadcrumbs = List.of(
+                new BreadcrumbItem("LAPS", null),
+                new BreadcrumbItem("Leave", GlobalConstants.ROUTE_LEAVE + GlobalConstants.ROUTE_LEAVE_HISTORY),
+                new BreadcrumbItem("Apply for Leave", null)
+        );
+        model.addAttribute("breadcrumbs", breadcrumbs);
+        
         return GlobalConstants.VIEW_LEAVE_APPLY;
     }
 
@@ -101,8 +111,10 @@ public class LeaveApplicationController {
                 ra.addFlashAttribute(GlobalConstants.FLASH_SUCCESS, "Leave application submitted successfully.");
                 return GlobalConstants.REDIRECT_LEAVE_HISTORY;
             } else {
-                log.error("REST controller returned error for employee {}: {}", emp.getEmp_id(), response.getBody());
-                model.addAttribute(GlobalConstants.FLASH_ERROR, "Error submitting leave application.");
+                Object body = response.getBody();
+                String errMsg = (body instanceof ApiResponse ap) ? ap.message() : "Error submitting leave application.";
+                log.error("Validation error for employee {}: {}", emp.getEmp_id(), errMsg);
+                model.addAttribute(GlobalConstants.FLASH_ERROR, errMsg);
                 model.addAttribute("leaveTypes", leaveTypeRepo.findAll());
                 model.addAttribute("leaveBalances",
                         leaveBalanceService.getLeaveBalancesByEmployeeId(emp.getEmp_id()));
@@ -168,6 +180,13 @@ public class LeaveApplicationController {
         model.addAttribute("leaveTypes", leaveTypeRepo.findAll());
         model.addAttribute("selectedStatus", status != null ? status : "");
         model.addAttribute("selectedLeaveTypeId", leaveTypeId);
+        
+        // Add breadcrumbs
+        List<BreadcrumbItem> breadcrumbs = List.of(
+                new BreadcrumbItem("LAPS", null),
+                new BreadcrumbItem("Leave", null)
+        );
+        model.addAttribute("breadcrumbs", breadcrumbs);
         return GlobalConstants.VIEW_LEAVE_HISTORY;
     }
 
@@ -184,6 +203,14 @@ public class LeaveApplicationController {
         return leaveApplicationService.findById(id).map(leaveApplication -> {
             model.addAttribute("leaveApp", LeaveResponse.fromEntity(leaveApplication));
             model.addAttribute("employee", emp);
+            
+            // Add breadcrumbs
+            List<BreadcrumbItem> breadcrumbs = Arrays.asList(
+                new BreadcrumbItem("Leave", GlobalConstants.ROUTE_LEAVE + GlobalConstants.ROUTE_LEAVE_HISTORY),
+                new BreadcrumbItem("Details", null)
+            );
+            model.addAttribute("breadcrumbs", breadcrumbs);
+            
             return GlobalConstants.VIEW_LEAVE_DETAIL;
         }).orElseGet(() -> {
             ra.addFlashAttribute(GlobalConstants.FLASH_ERROR, "Leave application not found.");
@@ -215,6 +242,14 @@ public class LeaveApplicationController {
             model.addAttribute("leaveTypes", leaveTypeRepo.findAll());
             model.addAttribute("leaveBalances",
                     leaveBalanceService.getLeaveBalancesByEmployeeId(emp.getEmp_id()));
+
+            // Add breadcrumbs
+            List<BreadcrumbItem> breadcrumbs = Arrays.asList(
+                    new BreadcrumbItem("Leave", GlobalConstants.ROUTE_LEAVE + GlobalConstants.ROUTE_LEAVE_HISTORY),
+                    new BreadcrumbItem("Details", null)
+            );
+            model.addAttribute("breadcrumbs", breadcrumbs);
+            
             return GlobalConstants.VIEW_LEAVE_EDIT;
         }).orElseGet(() -> {
             ra.addFlashAttribute(GlobalConstants.FLASH_ERROR, "Leave application not found.");
@@ -256,15 +291,23 @@ public class LeaveApplicationController {
                 ra.addFlashAttribute(GlobalConstants.FLASH_SUCCESS, "Leave application updated successfully.");
                 return GlobalConstants.REDIRECT_LEAVE_HISTORY;
             } else {
-                log.error("REST controller returned error for employee {}: {}", emp.getEmp_id(), response.getBody());
-                ra.addFlashAttribute(GlobalConstants.FLASH_ERROR, "Error updating leave application.");
-                return GlobalConstants.REDIRECT_LEAVE_HISTORY;
+                Object body = response.getBody();
+                String errMsg = (body instanceof ApiResponse ap) ? ap.message() : "Error updating leave application.";
+                log.error("Validation error updating application {} for employee {}: {}", id, emp.getEmp_id(), errMsg);
+                // Stay on edit form so user can correct the error
+                leaveApplication.setLeaveApplicationId(id);
+                model.addAttribute(GlobalConstants.FLASH_ERROR, errMsg);
+                model.addAttribute("leaveApplication", leaveApplication);
+                model.addAttribute("leaveTypes", leaveTypeRepo.findAll());
+                model.addAttribute("leaveBalances",
+                        leaveBalanceService.getLeaveBalancesByEmployeeId(emp.getEmp_id()));
+                return GlobalConstants.VIEW_LEAVE_EDIT;
             }
 
         } catch (IllegalArgumentException | IllegalStateException | SecurityException e) {
             log.error("Error updating leave application {} for employee {}: {}", id, emp.getEmp_id(), e.getMessage());
             ra.addFlashAttribute(GlobalConstants.FLASH_ERROR, e.getMessage());
-            return "redirect:/leave/" + id + "/edit";
+            return "redirect:" + GlobalConstants.ROUTE_LEAVE + "/" + id + "/edit";
         }
     }
 
@@ -345,6 +388,13 @@ public class LeaveApplicationController {
         model.addAttribute("leaveBalances",
                 leaveBalanceService.getLeaveBalancesByEmployeeId(mgr.getEmp_id()));
 
+        // Add breadcrumbs
+        List<BreadcrumbItem> breadcrumbs = Arrays.asList(
+                new BreadcrumbItem("LAPS", null),
+                new BreadcrumbItem("Leave Approvals", null)
+        );
+        model.addAttribute("breadcrumbs", breadcrumbs);
+
         return GlobalConstants.VIEW_MANAGER_PENDING;
     }
 
@@ -373,6 +423,13 @@ public class LeaveApplicationController {
         model.addAttribute("leaveBalances",
                 leaveBalanceService.getLeaveBalancesByEmployeeId(mgr.getEmp_id()));
 
+        // Add breadcrumbs
+        List<BreadcrumbItem> breadcrumbs = Arrays.asList(
+                new BreadcrumbItem("LAPS", null),
+                new BreadcrumbItem("Team Leave History", null)
+        );
+        model.addAttribute("breadcrumbs", breadcrumbs);
+
         return GlobalConstants.VIEW_MANAGER_ALL;
     }
 
@@ -392,8 +449,10 @@ public class LeaveApplicationController {
                 log.info("Leave application {} approved successfully by manager {}", id, mgr.getEmp_id());
                 ra.addFlashAttribute(GlobalConstants.FLASH_SUCCESS, "Leave application approved.");
             } else {
-                log.error("REST controller returned error for manager {}: {}", mgr.getEmp_id(), response.getBody());
-                ra.addFlashAttribute(GlobalConstants.FLASH_ERROR, "Error approving leave application.");
+                Object body = response.getBody();
+                String errMsg = (body instanceof ApiResponse ap) ? ap.message() : "Error approving leave application.";
+                log.error("Error approving application {} for manager {}: {}", id, mgr.getEmp_id(), errMsg);
+                ra.addFlashAttribute(GlobalConstants.FLASH_ERROR, errMsg);
             }
         } catch (IllegalArgumentException | IllegalStateException e) {
             log.error("Error approving leave application {} by manager {}: {}", id, mgr.getEmp_id(), e.getMessage());
@@ -410,31 +469,26 @@ public class LeaveApplicationController {
     // ─────────────────────────────────────────────────────────────────────────
 
     @PostMapping(GlobalConstants.ROUTE_MANAGER_REJECT)
-    public String reject(
-            @PathVariable Long id,
-            @RequestParam String managerComment,
-            HttpSession session,
-            RedirectAttributes ra) {
-
+    public String reject(@PathVariable Long id,
+                         @RequestParam String managerComment,
+                         HttpSession session, RedirectAttributes ra) {
         if (!isLoggedIn(session)) return GlobalConstants.REDIRECT_LOGIN;
         Employee mgr = getSessionEmployee(session);
 
         try {
-            log.info("Manager {} rejecting leave application {} with comment", mgr.getEmp_id(), id);
-            ManagerActionRequest req = new ManagerActionRequest(managerComment);
-            ResponseEntity<?> response = restController.rejectLeave(id, mgr.getEmp_id(), req);
+            log.info("Manager {} rejecting leave application {}", mgr.getEmp_id(), id);
+            ResponseEntity<?> response = restController.rejectLeave(id, mgr.getEmp_id(),
+                    new ManagerActionRequest(managerComment));
             if (response.getStatusCode().is2xxSuccessful()) {
-                log.info("Leave application {} rejected successfully by manager {}", id, mgr.getEmp_id());
                 ra.addFlashAttribute(GlobalConstants.FLASH_SUCCESS, "Leave application rejected.");
             } else {
-                log.error("REST controller returned error for manager {}: {}", mgr.getEmp_id(), response.getBody());
-                ra.addFlashAttribute(GlobalConstants.FLASH_ERROR, "Error rejecting leave application.");
+                Object body = response.getBody();
+                String errMsg = (body instanceof ApiResponse ap) ? ap.message() : "Error rejecting leave application.";
+                ra.addFlashAttribute(GlobalConstants.FLASH_ERROR, errMsg);
             }
         } catch (IllegalArgumentException | IllegalStateException e) {
-            log.error("Error rejecting leave application {} by manager {}: {}", id, mgr.getEmp_id(), e.getMessage());
             ra.addFlashAttribute(GlobalConstants.FLASH_ERROR, e.getMessage());
         } catch (Exception e) {
-            log.error("Unexpected error rejecting leave application {} by manager {}: {}", id, mgr.getEmp_id(), e.getMessage());
             ra.addFlashAttribute(GlobalConstants.FLASH_ERROR, "An error occurred: " + e.getMessage());
         }
         return GlobalConstants.REDIRECT_MANAGER_PENDING;

@@ -6,6 +6,9 @@
 <div th:replace="~{fragments/layout :: navbar}"></div>
 
 <main class="container py-4">
+    <!-- Breadcrumb -->
+    <div th:replace="~{fragments/breadcrumb :: breadcrumbList(${breadcrumbs})}"></div>
+
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Team Leave History</h2>
         <a th:href="@{__${ROUTE_MANAGER_PENDING}__}" class="btn btn-warning btn-sm">

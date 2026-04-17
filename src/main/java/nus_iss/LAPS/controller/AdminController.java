@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpSession;
 import nus_iss.LAPS.model.Employee;
 import nus_iss.LAPS.model.Role;
 import nus_iss.LAPS.repository.EmployeeRepository;
+import nus_iss.LAPS.util.BreadcrumbItem;
 import nus_iss.LAPS.util.GlobalConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -32,6 +33,11 @@ public class AdminController {
         if (!isAdmin(session)) return GlobalConstants.REDIRECT_LOGIN;
 
         List<Employee> employees = employeeRepo.findAll();
+        // Add breadcrumbs
+        List<BreadcrumbItem> breadcrumbs = List.of(
+                new BreadcrumbItem("LAPS", null),
+                new BreadcrumbItem("Leave Approval Hierarchy", null)
+        );
         model.addAttribute("employees", employees);
         return GlobalConstants.VIEW_ADMIN_HIERARCHY;
     }
@@ -47,6 +53,12 @@ public class AdminController {
 
         model.addAttribute("employee", empOpt.get());
         model.addAttribute("managers", employeeRepo.findAllManagers());
+        // Add breadcrumbs
+        List<BreadcrumbItem> breadcrumbs = List.of(
+                new BreadcrumbItem("LAPS", null),
+                new BreadcrumbItem("Leave Approval Hierarchy", GlobalConstants.ROUTE_ADMIN_HIERARCHY),
+                new BreadcrumbItem("Edit Hierarchy", null)
+        );
         return GlobalConstants.VIEW_ADMIN_EDIT_HIERARCHY;
     }
 

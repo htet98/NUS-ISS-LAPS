@@ -6,6 +6,9 @@
 <div th:replace="~{fragments/layout :: navbar}"></div>
 
 <main class="container py-4" style="max-width:780px;">
+    <!-- Breadcrumb -->
+    <div th:replace="~{fragments/breadcrumb :: breadcrumbList(${breadcrumbs})}"></div>
+
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Edit Leave Application</h2>
         <a th:href="@{__${ROUTE_LEAVE_HISTORY}__}" class="btn btn-outline-secondary btn-sm">← Back to History</a>
@@ -42,7 +45,8 @@
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Leave Type <span class="text-danger">*</span></label>
                     <select th:field="*{leaveType}" class="form-select"
-                            th:classappend="${#fields.hasErrors('leaveType')} ? 'is-invalid'">
+                            th:classappend="${#fields.hasErrors('leaveType')} ? 'is-invalid'"
+                            onchange="toggleHalfDaySection()">
                         <option value="">-- Select Leave Type --</option>
                         <option th:each="leaveType : ${leaveTypes}"
                                 th:value="${leaveType.leaveTypeId}"
@@ -113,7 +117,9 @@
                          th:errors="*{contactDetails}"></div>
                 </div>
                 <!-- Half-day (Compensation Leave only) -->
-                <div class="mb-3" id="halfDaySection" th:if="*{leaveType != null}">
+                <!-- Show on load if: leave type is already COMPENSATION, OR the existing record has isHalfDay=true -->
+                <div class="mb-3" id="halfDaySection"
+                     th:style="*{(leaveType != null and leaveType.name.toString() == 'COMPENSATION') or isHalfDay} ? '' : 'display:none'">
                     <div class="form-check form-switch">
                         <input type="checkbox" th:field="*{isHalfDay}" class="form-check-input"
                                id="isHalfDayCheck" onchange="toggleHalfDayPeriod()"/>
@@ -123,7 +129,9 @@
                     </div>
                 </div>
 
-                <div class="mb-3" id="halfDayPeriodSection" style="display:none">
+                <!-- Show on load only if COMPENSATION AND isHalfDay -->
+                <div class="mb-3" id="halfDayPeriodSection"
+                     th:style="*{(leaveType != null and leaveType.name.toString() == 'COMPENSATION') and isHalfDay} ? '' : 'display:none'">
                     <label class="form-label fw-semibold">Half-Day Period</label>
                     <select th:field="*{halfDayPeriod}" class="form-select">
                         <option value="">-- Select Period --</option>
@@ -132,8 +140,9 @@
                     </select>
                 </div>
 
+                <!-- Action buttons -->
                 <div class="d-flex gap-2 mt-4">
-                    <button type="submit" class="btn btn-warning">Update Application</button>
+                    <button type="submit" class="btn btn-primary">Update Application</button>
                     <a th:href="@{__${ROUTE_LEAVE_HISTORY}__}" class="btn btn-outline-secondary">Cancel</a>
                 </div>
             </form>
@@ -144,21 +153,27 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     function toggleContactDetails() {
-        const overseaCheck = document.getElementById('isOverseasCheck');
-        document.getElementById('contactDetailsSection').style.display = overseaCheck.checked ? '' : 'none';
+        const cb = document.getElementById('isOverseasCheck');
+        document.getElementById('contactDetailsSection').style.display = cb.checked ? '' : 'none';
+    }
+
+    function toggleHalfDaySection() {
+        const select = document.querySelector('select[name="leaveType"]');
+        const selectedText = select.options[select.selectedIndex]?.text ?? '';
+        const isComp = selectedText.trim() === 'COMPENSATION';
+        document.getElementById('halfDaySection').style.display = isComp ? '' : 'none';
+        if (!isComp) {
+            // Leaving COMPENSATION — reset half-day state
+            const cb = document.getElementById('isHalfDayCheck');
+            if (cb) cb.checked = false;
+            document.getElementById('halfDayPeriodSection').style.display = 'none';
+        }
     }
 
     function toggleHalfDayPeriod() {
-        const halfdayCheck = document.getElementById('isHalfDayCheck');
-        document.getElementById('halfDayPeriodSection').style.display = halfdayCheck.checked ? '' : 'none';
+        const cb = document.getElementById('isHalfDayCheck');
+        document.getElementById('halfDayPeriodSection').style.display = cb.checked ? '' : 'none';
     }
-    // if the page is loaded with half-day already checked, show the period section
-    document.addEventListener('DOMContentLoaded', function() {
-        const halfdayCheck = document.getElementById('isHalfDayCheck');
-        if (halfdayCheck.checked) {
-            document.getElementById('halfDayPeriodSection').style.display = '';
-        }
-    });
 </script>
 <footer th:replace="~{fragments/footer :: footer}"></footer>
 </body>

@@ -7,6 +7,9 @@
 <div th:replace="~{fragments/layout :: navbar}"></div>
 
 <main class="container py-4">
+    <!-- Breadcrumb -->
+    <div th:replace="~{fragments/breadcrumb :: breadcrumbList(${breadcrumbs})}"></div>
+
     <h2 class="mb-4">Apply for Leave</h2>
 
     <!-- Flash / inline error messages -->
@@ -160,8 +163,9 @@
     document.querySelector('select[name="leaveType"]').addEventListener('change', function () {
         const selectedText = this.options[this.selectedIndex].text;
         const halfDaySection = document.getElementById('halfDaySection');
-        halfDaySection.style.display = selectedText.toLowerCase().includes('compensation') ? '' : 'none';
-        if (!selectedText.toLowerCase().includes('compensation')) {
+        halfDaySection.style.display = selectedText.includes('COMPENSATION') ? '' : 'none';
+        if (!selectedText.includes('COMPENSATION')) {
+            document.getElementById('isHalfDayCheck').checked = false;
             document.getElementById('halfDayPeriodSection').style.display = 'none';
         }
     });

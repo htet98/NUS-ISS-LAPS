@@ -1,205 +1,223 @@
 <!doctype html>
 <html xmlns:th="http://www.thymeleaf.org">
+  <head th:insert="~{fragments/header :: head('Page Title – LAPS')}"></head>
 
-<head th:insert="~{fragments/header :: head('Page Title – LAPS')}"></head>
+  <head>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+    />
+    <style>
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+        background: #f4f6f8;
+        height: 100vh;
+      }
 
-<head>
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
-	<style>
-		body {
-			font-family: Arial, Helvetica, sans-serif;
-			/* padding: 30px; */
-			background: #f4f6f8;
-			height: 100vh;
-		}
+      .main {
+        padding-left: 20px;
+        padding-right: 20px;
+        height: 100vh;
+      }
 
-		.main {
-			padding-left: 20px;
-			padding-right: 20px;
-			height: 100vh;
-		}
+      .message {
+        padding-left: 20px;
+        padding-right: 20px;
+        padding-top: 5px;
+      }
 
-		.message {
-			padding-left: 20px;
-			padding-right: 20px;
-			padding-top: 5px;
-		}
-		table {
-			font-family: Arial, Helvetica, sans-serif;
-			border-collapse: collapse;
-			width: 95%;
-			margin: 0 auto;
-		}
+      table {
+        font-family: Arial, Helvetica, sans-serif;
+        border-collapse: collapse;
+        width: 95%;
+        margin: 0 auto;
+      }
 
-		td,
-		th {
-			border: 1px solid #ddd;
-			padding: 8px;
-		}
+      td,
+      th {
+        border: 1px solid #ddd;
+        padding: 8px;
+      }
 
-		tr:nth-child(even) {
-			background-color: #f2f2f2;
-		}
+      tr:nth-child(even) {
+        background-color: #f2f2f2;
+      }
 
-		tr:hover {
-			background-color: #ddd;
-		}
+      tr:hover {
+        background-color: #ddd;
+      }
 
-		th {
-			padding-top: 12px;
-			padding-bottom: 12px;
-			text-align: left;
-			background-color: #007bff;
-			color: white;
-		}
+      th {
+        padding-top: 12px;
+        padding-bottom: 12px;
+        text-align: left;
+        background-color: #007bff;
+        color: white;
+      }
 
-		label {
-			/* display: block; */
-			margin-bottom: 8px;
-			text-align: left;
-			font-weight: bold;
-		}
+      button:hover {
+        background-color: #0056b3;
+      }
 
-		select {
-			padding: 10px;
-			border-radius: 6px;
-			border: 1px solid #ccc;
-			margin-bottom: 20px;
-			font-size: 14px;
-		}
+      .btn:hover {
+        background-color: #0056b3;
+      }
+    </style>
+    <title>Leave Balances</title>
+  </head>
 
-		select:focus {
-			outline: none;
-			border-color: #007bff;
-		}
-
-		button {
-			/* width: 100%; */
-			padding: 10px;
-			background-color: #007bff;
-			color: white;
-			border: none;
-			border-radius: 6px;
-			font-size: 15px;
-			cursor: pointer;
-		}
-
-		button:hover {
-			background-color: #0056b3;
-		}
-
-		.btn:hover {
-			background-color: #0056b3;
-		}
-
-		.btn-warning {
-			background-color: orangered;
-		}
-
-		.hint {
-			font-size: 12px;
-			color: #777;
-			margin-top: 10px;
-		}
-
-		.divButton {
-			display: flex;
-			gap: 10px;
-			margin-top: 10px;
-		}
-	</style>
-	<title>Leave Balances</title>
-</head>
-
-<body>
-	<div th:replace="~{fragments/layout :: navbar}"></div>
-	<div class="message">
-		<div th:if="${error}" style="color: red">
-			<p th:text="${error}"></p>
-		</div>
-		<div th:if="${success}" style="color: green">
-			<p th:text="${success}"></p>
-		</div>
+  <body>
+    <div th:replace="~{fragments/layout :: navbar}"></div>
+	<div class="mt-2 mx-3" th:if="${error}" style="color:red;">
+		<p th:text="${error}"></p>
 	</div>
+	<div class="mt-2 mx-3" th:if="${success}" style="color:green;">
+		<p th:text="${success}"></p>
+	</div>
+    <div
+      class="main"
+      th:if="${session.role != null and session.role.name() == 'ADMIN'}"
+    >
+      <div class="d-flex gap-2">
+        <form class="mt-3" th:action="@{/leave-balances}" method="get">
+          <input
+            type="text"
+            name="keyword"
+            th:value="${keyword}"
+            placeholder="Search employee name..."
+          />
+          <button class="btn btn-sm btn-primary" type="submit">
+            <i class="fa fa-search" aria-hidden="true"></i> Search
+          </button>
+        </form>
+        <form class="mt-3" th:action="@{/leave-balances}" method="get">
+          <button class="btn btn-primary btn-sm" type="submit">
+            <i class="fa fa-refresh" aria-hidden="true"></i></i> View All
+          </button>
+        </form>
+        <form class="mt-3" th:action="@{/leave-balances/create}" method="get">
+          <button class="btn btn-secondary btn-sm" type="submit">
+            <i class="fa fa-plus-square" aria-hidden="true"></i> Create
+          </button>
+        </form>
+      </div>
+      <h2 class="mt-2">Leave Balance</h2>
+      <p>
+        Total records :
+        <span
+          th:text="${leaveBalancePage != null 
+								? leaveBalancePage.getTotalElements()
+								: '0'}"
+        ></span>
+      </p>
+      <div
+	  	th:if="${leaveBalancePage != null and leaveBalancePage.getTotalElements() > 0}"
+	  >
+        <table border="1">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Employee</th>
+              <th>Leave Type</th>
+              <th>Total Days</th>
+              <th>Used Days</th>
+              <th>Balance Days</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:each="leaveBalance : ${leaveBalancePage.content}"></tr>
 
-	<div class="main" th:if="${session.role != null and session.role.name() == 'ADMIN'}">
-		<div class="divButton" th:if="${employees != null and !employees.isEmpty()}">
-			<form th:action="@{/leave-balances/view}" method="get">
-				<label for="employeeId">Employee:</label>
+            <tr th:each="balance : ${leaveBalancePage.content}">
+              <td th:text="${balance.leaveBalanceId}"></td>
 
-				<select name="employeeId" id="employeeId">
-					<option value="">-- Select Employee --</option>
-
-					<option th:each="emp : ${employees}" th:value="${emp.emp_id}"
-						th:text="${emp.first_name} + ' ' + ${emp.last_name}"></option>
-				</select>
-
-				<button type="submit">
-					<i class="fa fa-file-o" aria-hidden="true"></i> View
-				</button>
-			</form>
-			<form th:action="@{/leave-balances/create}" method="get">
-				<button type="submit">
-					<i class="fa fa-plus-square" aria-hidden="true"></i> Create
-				</button>
-			</form>
-		</div>
-		<h2>Leave Balance</h2>
-		<div th:if="${balances != null and !balances.isEmpty()}">
-			<table border="1" th:if="${not #lists.isEmpty(balances)}">
-				<thead>
-					<tr>
-						<th>ID</th>
-						<th>Employee</th>
-						<th>Leave Type</th>
-						<th>Total Days</th>
-						<th>Used Days</th>
-						<th>Balance Days</th>
-						<th>Actions</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr th:each="balance : ${balances}">
-						<td th:text="${balance.leaveBalanceId}"></td>
-
-						<td th:text="${balance.employee != null 
+              <td
+                th:text="${balance.employee != null 
 						? balance.employee.first_name + ' ' + balance.employee.last_name
-						: 'N/A'}"></td>
+						: 'N/A'}"
+              ></td>
 
-						<td th:text="${balance.leaveType != null ? balance.leaveType.name : 'N/A'}"></td>
+              <td
+                th:text="${balance.leaveType != null ? balance.leaveType.name : 'N/A'}"
+              ></td>
 
-						<td th:text="${balance.totalDays % 1 == 0 
+              <td
+                th:text="${balance.totalDays % 1 == 0 
 					              ? balance.totalDays.intValue() 
-					              : balance.totalDays}"></td>
+					              : balance.totalDays}"
+              ></td>
 
-						<td th:text="${balance.usedDays % 1 == 0 
+              <td
+                th:text="${balance.usedDays % 1 == 0 
 					              ? balance.usedDays.intValue() 
-					              : balance.usedDays}"></td>
+					              : balance.usedDays}"
+              ></td>
 
-						<td th:text="${
+              <td
+                th:text="${
 					    (balance.totalDays - balance.usedDays) % 1 == 0
 					    ? (balance.totalDays - balance.usedDays).intValue()
 					    : (balance.totalDays - balance.usedDays)
-					}"></td>
+					}"
+              ></td>
 
-						<td>
-							<a th:href="@{/leave-balances/edit/{id}(id=${balance.leaveBalanceId})}"
-								class="btn btn-primary"><i class="fa fa-pencil-square-o" aria-hidden="true"></i></a>
-							<a th:href="@{/leave-balances/delete/{id}(id=${balance.leaveBalanceId})}"
-								class="btn btn-secondary"><i class="fa fa-trash-o" aria-hidden="true"></i></a>
-						</td>
-					</tr>
-				</tbody>
-			</table>
-		</div>
-		<div th:if="${balances != null and balances.isEmpty()}">
-			<div th:unless="${not #lists.isEmpty(balances)}">
-				<p>No Leave Balance record found.</p>
-			</div>
-		</div>
-	</div>
-	<div class="main" th:if="${session.role != null and session.role.name() != 'ADMIN'}">Forbidden</div>
-	<footer th:replace="~{fragments/footer :: footer}"></footer>
-</body>
+              <td>
+                <a
+                  th:href="@{/leave-balances/edit/{id}(id=${balance.leaveBalanceId})}"
+                  class="btn btn-primary"
+                  ><i class="fa fa-pencil-square-o" aria-hidden="true"></i
+                ></a>
+                <a
+                  th:href="@{/leave-balances/delete/{id}(id=${balance.leaveBalanceId})}"
+                  class="btn btn-secondary"
+                  ><i class="fa fa-trash-o" aria-hidden="true"></i
+                ></a>
+              </td>
+			 </tr>
+          </tbody>
+        </table>
+        <nav class="mx-2 mt-2">
+          <ul class="pagination">
+            <!-- Previous Link -->
+            <li
+              class="page-item"
+              th:classappend="${!leaveBalancePage.hasPrevious()} ? 'disabled'"
+            >
+              <a
+                class="page-link"
+                th:href="@{/leave-balances(page=${leaveBalancePage.number - 1}, keyword=${keyword})}"
+                >Previous</a
+              >
+            </li>
 
+            <!-- Page Numbers -->
+            <li
+              th:each="i : ${#numbers.sequence(0, leaveBalancePage.totalPages - 1)}"
+              class="page-item"
+              th:classappend="${i == leaveBalancePage.number} ? 'active'"
+            >
+              <a
+                class="page-link"
+                th:href="@{/leave-balances(page=${i}, keyword=${keyword})}"
+                th:text="${i + 1}"
+              ></a>
+            </li>
+
+            <!-- Next Link -->
+            <li
+              class="page-item"
+              th:classappend="${!leaveBalancePage.hasNext()} ? 'disabled'"
+            >
+              <a
+                class="page-link"
+                th:href="@{/leave-balances(page=${leaveBalancePage.number + 1}, keyword=${keyword})}"
+                >Next</a
+              >
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+    <footer th:replace="~{fragments/footer :: footer}"></footer>
+  </body>
 </html>

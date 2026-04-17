@@ -1,14 +1,13 @@
 package nus_iss.LAPS.service;
 
-import java.util.List;
-import java.util.Optional;
-
-import org.springframework.stereotype.Service;
-
-import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import nus_iss.LAPS.model.Employee;
 import nus_iss.LAPS.repository.EmployeeRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -55,7 +54,7 @@ public class EmployeeService {
 
     @Transactional(readOnly = true)
     public List<Employee> findAllSupervisors() {
-        return employeeRepo.findAllSupervisors();
+        return employeeRepo.findAllSupervisor();
     }
 
     @Transactional(readOnly = true)

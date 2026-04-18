@@ -27,7 +27,7 @@ public class EmployeeService {
 
     @Transactional(readOnly = true)
     public Optional<Employee> findEmployeeById(Long s) {
-        return employeeRepo.findEmployeeById(s);
+        return employeeRepo.findEmployeeByIds(s);
     }
 
     @Transactional(readOnly = true)
@@ -54,7 +54,7 @@ public class EmployeeService {
 
     @Transactional(readOnly = true)
     public List<Employee> findAllSupervisors() {
-        return employeeRepo.findAllSupervisor();
+        return employeeRepo.findAllSupervisors();
     }
 
     @Transactional(readOnly = true)

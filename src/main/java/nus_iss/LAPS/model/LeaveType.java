@@ -19,14 +19,14 @@ public class LeaveType
     private String description;
 
     @Column(name = "default_days")
-    private int defaultDays;
+    private Double defaultDays;
 
     @Column(name = "is_paid")
-    private boolean isPaid;
+    private Boolean isPaid;
 
     public LeaveType() {}
 
-    public LeaveType(NameTypeEnum name, String description, int defaultDays, boolean isPaid) 
+    public LeaveType(NameTypeEnum name, String description, Double defaultDays, boolean isPaid) 
     {
         this.name = name;
         this.description = description;
@@ -43,11 +43,11 @@ public class LeaveType
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
 
-    public int getDefaultDays() { return defaultDays; }
-    public void setDefaultDays(int defaultDays) { this.defaultDays = defaultDays; }
+    public Double getDefaultDays() { return defaultDays; }
+    public void setDefaultDays(Double defaultDays) { this.defaultDays = defaultDays; }
 
-    public boolean isPaid() { return isPaid; }
-    public void setPaid(boolean paid) { isPaid = paid; }
+    public Boolean getIsPaid() { return isPaid; }
+    public void setIsPaid(Boolean isPaid) { this.isPaid = isPaid; }
     
     
     @Override

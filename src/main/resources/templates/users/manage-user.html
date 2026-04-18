@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/header :: head('Manage Approval Hierarchy – LAPS')}"></head>
+<body>
+
+    <style>
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+        background: #f4f6f8;
+        height: 100vh;
+      }
+
+      .main {
+        padding-left: 20px;
+        padding-right: 20px;
+        height: 100vh;
+      }
+
+      .message {
+        padding-left: 20px;
+        padding-right: 20px;
+        padding-top: 5px;
+      }
+
+      table {
+        font-family: Arial, Helvetica, sans-serif;
+        border-collapse: collapse;
+        width: 95%;
+        margin: 0 auto;
+      }
+
+      td,
+      th {
+        border: 1px solid #ddd;
+        padding: 8px;
+      }
+
+      tr:nth-child(even) {
+        background-color: #f2f2f2;
+      }
+
+      tr:hover {
+        background-color: #ddd;
+      }
+
+      th {
+        padding-top: 12px;
+        padding-bottom: 12px;
+        text-align: left;
+        background-color: #007bff;
+        color: white;
+      }
+
+      button:hover {
+        background-color: #0056b3;
+      }
+
+      .btn:hover {
+        background-color: #0056b3;
+      }
+    </style>
+	<!--Manage User-->
+    <title>Manage User</title>
+  </head>
+
+  <body>
+  <div th:replace="~{fragments/layout :: navbar}"></div>
+
+  <!-- Messages -->
+  <div class="mt-2 mx-3" th:if="${error}" style="color:red;">
+      <p th:text="${error}"></p>
+  </div>
+
+  <div class="mt-2 mx-3" th:if="${success}" style="color:green;">
+      <p th:text="${success}"></p>
+  </div>
+
+  <div class="main"
+       th:if="${session.role != null and session.role.name() == 'ADMIN'}">
+
+      <h2>Manage Users</h2>
+
+      <!-- SEARCH + ACTIONS -->
+      <div class="d-flex gap-2">
+
+          <form th:action="@{/users/manage-user}" method="get">
+              <input type="text" name="keyword"
+                     th:value="${keyword}"
+                     placeholder="Search username..." />
+              <button type="submit" class="btn btn-sm btn-primary">Search</button>
+          </form>
+
+          <form th:action="@{/users/manage-user}" method="get">
+              <button class="btn btn-sm btn-primary">View All</button>
+          </form>
+
+          <form th:action="@{/users/create}" method="get">
+              <button class="btn btn-sm btn-secondary">Create</button>
+          </form>
+      </div>
+
+      <!-- TOTAL -->
+      <p>
+          Total records :
+          <span th:text="${userPage != null ? userPage.totalElements : 0}"></span>
+      </p>
+
+      <!-- TABLE -->
+      <div th:if="${userPage != null and userPage.totalElements > 0}">
+          <table>
+              <thead>
+              <tr>
+                  <th>User ID</th>
+                  <th>Username</th>
+                  <th>Role</th>
+                  <th>Action</th>
+              </tr>
+              </thead>
+
+              <tbody>
+              <tr th:each="user : ${userPage.content}">
+                  <td th:text="${user.user_id}"></td>
+                  <td th:text="${user.username}"></td>
+                  <td th:text="${user.role}"></td>
+
+                  <td>
+                      <a th:href="@{/users/edit/{id}(id=${user.user_id})}"
+                         class="btn btn-primary">Edit</a>
+
+						 <a th:href="@{/users/delete/{id}(id=${user.user_id})}"
+						    onclick="return confirm('Delete this user?')">
+						    Delete
+						 </a>
+                  </td>
+              </tr>
+              </tbody>
+          </table>
+
+          <!-- PAGINATION -->
+          <nav class="mt-2">
+              <ul class="pagination">
+
+                  <li class="page-item"
+                      th:classappend="${!userPage.hasPrevious()} ? 'disabled'">
+                      <a class="page-link"
+                         th:href="@{/users/manage-user(page=${userPage.number - 1}, keyword=${keyword})}">
+                          Previous
+                      </a>
+                  </li>
+
+                  <li th:each="i : ${#numbers.sequence(0, userPage.totalPages - 1)}"
+                      class="page-item"
+                      th:classappend="${i == userPage.number} ? 'active'">
+                      <a class="page-link"
+                         th:href="@{/users/manage-user(page=${i}, keyword=${keyword})}"
+                         th:text="${i + 1}">
+                      </a>
+                  </li>
+
+                  <li class="page-item"
+                      th:classappend="${!userPage.hasNext()} ? 'disabled'">
+                      <a class="page-link"
+                         th:href="@{/users/manage-user(page=${userPage.number + 1}, keyword=${keyword})}">
+                          Next
+                      </a>
+                  </li>
+
+              </ul>
+          </nav>
+      </div>
+  </div>
+
+  <footer th:replace="~{fragments/footer :: footer}"></footer>
+  </body>
+</html>

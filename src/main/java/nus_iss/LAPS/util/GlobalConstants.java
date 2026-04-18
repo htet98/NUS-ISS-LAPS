@@ -25,6 +25,10 @@ public final class GlobalConstants {
     public static final String VIEW_LEAVE_EDIT = "leave/edit";
     public static final String VIEW_MANAGER_PENDING = "leave/manager/history/pending";
     public static final String VIEW_MANAGER_ALL = "leave/manager/history/all";
+    //public static final String VIEW_USER_LOGIN = "login"; //CRUD-user
+    public static final String VIEW_MANAGE_USER = "users/manage-user"; //CRUD-user
+    public static final String VIEW_CREATE_USER = "users/create-user"; //CRUD-user
+    public static final String VIEW_EDIT_USER = "users/edit-user";  //CRUD-user
 
     // Redirects
     public static final String REDIRECT_LOGIN = "redirect:/login";
@@ -32,6 +36,9 @@ public final class GlobalConstants {
     public static final String REDIRECT_ADMIN_HIERARCHY_EDIT = "redirect:/admin/hierarchy/edit/";
     public static final String REDIRECT_LEAVE_HISTORY = "redirect:/leave/history";
     public static final String REDIRECT_MANAGER_PENDING = "redirect:/leave/manager/history/pending";
+    //public static final String REDIRECT_USER_LOGIN = "redirect:/users/login"; //CRUD-user
+    public static final String REDIRECT_HOME = "redirect:/users/"; //CRUD-user
+    public static final String REDIRECT_ROOT = "redirect:/"; //CRUD-user
 
     // Controller Mapping Routes
     public static final String ROUTE_ADMIN = "/admin";

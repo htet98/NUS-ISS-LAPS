@@ -25,10 +25,10 @@ import nus_iss.LAPS.model.*;
 	    "spring.datasource.url=jdbc:h2:mem:testdb",
 	    "spring.jpa.database-platform=org.hibernate.dialect.H2Dialect"
 	})
-class LeaveApplicationRepositoryTest {
+class LeaveBalanceRepositoryTest {
 
     @Autowired
-    private LeaveApplicationRepository leaveAppRepo;
+    private LeaveBalanceRepository repo;
 
     @Autowired
     private EmployeeRepository employeeRepo;
@@ -36,7 +36,6 @@ class LeaveApplicationRepositoryTest {
     @Autowired
     private LeaveTypeRepository leaveTypeRepo;
 
-    // Create Employee (REUSE your fixed version)
     private Employee createEmployee() {
         String unique = System.currentTimeMillis() + "_" + Math.random();
 
@@ -59,72 +58,58 @@ class LeaveApplicationRepositoryTest {
         user.setRole(Role.ADMIN);
         user.setCreatedby("system");
         user.setUpdatedby("system");
-        user.setActive(true);
 
         e.setUser(user);
 
-        return employeeRepo.save(e); // IMPORTANT: save first
+        return employeeRepo.save(e);
     }
 
-    // Create LeaveType
-    private LeaveType createLeaveType() {
+    private LeaveType createLeaveType(NameTypeEnum type) {
         LeaveType lt = new LeaveType();
-        
-		lt.setName(NameTypeEnum.ANNUAL); // adjust field name if needed
-		
+        lt.setName(type);
+        lt.setDefaultDays(10.0);
+        lt.setIsPaid(true);
         return leaveTypeRepo.save(lt);
     }
 
-    // Create LeaveApplication
-    private LeaveApplication createLeaveApplication() {
+    private LeaveBalance createLeaveBalance(Employee emp, LeaveType lt) {
+        LeaveBalance lb = new LeaveBalance();
+        lb.setEmployee(emp);
+        lb.setLeaveType(lt);
+        lb.setTotalDays(10);
+        lb.setUsedDays(2);
+        return lb;
+    }
+
+    @Test
+    void testSave() {
         Employee emp = createEmployee();
-        LeaveType lt = createLeaveType();
+        LeaveType lt = createLeaveType(NameTypeEnum.ANNUAL);
 
-        LeaveApplication la = new LeaveApplication();
-        la.setEmployee(emp);
-        la.setLeaveType(lt);
-        la.setStartDate(LocalDate.now());
-        la.setEndDate(LocalDate.now().plusDays(2));
-        la.setDurationDays(2.0);
-        la.setReason("Vacation");
-        la.setIsOverseas(false);
+        LeaveBalance saved = repo.save(createLeaveBalance(emp, lt));
 
-        return la;
-    }
-
-    @Test
-    void testSaveLeaveApplication() {
-        LeaveApplication saved = leaveAppRepo.save(createLeaveApplication());
-
-        assertThat(saved.getLeaveApplicationId()).isNotNull();
-    }
-
-    @Test
-    void testFindById() {
-        LeaveApplication saved = leaveAppRepo.save(createLeaveApplication());
-
-        LeaveApplication found = leaveAppRepo.findById(saved.getLeaveApplicationId()).orElse(null);
-
-        assertThat(found).isNotNull();
-        assertThat(found.getReason()).isEqualTo("Vacation");
+        assertThat(saved.getLeaveBalanceId()).isNotNull();
     }
 
     @Test
     void testFindAll() {
-        leaveAppRepo.save(createLeaveApplication());
-        leaveAppRepo.save(createLeaveApplication());
+        Employee emp = createEmployee();
 
-        List<LeaveApplication> list = leaveAppRepo.findAll();
+        repo.save(createLeaveBalance(emp, createLeaveType(NameTypeEnum.ANNUAL)));
+        repo.save(createLeaveBalance(emp, createLeaveType(NameTypeEnum.MEDICAL))); // different type
 
-        assertThat(list).hasSize(2);
+        assertThat(repo.findAll()).hasSize(2);
     }
 
     @Test
-    void testDeleteLeaveApplication() {
-        LeaveApplication saved = leaveAppRepo.save(createLeaveApplication());
+    void testDelete() {
+        Employee emp = createEmployee();
+        LeaveType lt = createLeaveType(NameTypeEnum.ANNUAL);
 
-        leaveAppRepo.deleteById(saved.getLeaveApplicationId());
+        LeaveBalance saved = repo.save(createLeaveBalance(emp, lt));
 
-        assertThat(leaveAppRepo.findById(saved.getLeaveApplicationId())).isEmpty();
+        repo.deleteById(saved.getLeaveBalanceId());
+
+        assertThat(repo.findById(saved.getLeaveBalanceId())).isEmpty();
     }
 }

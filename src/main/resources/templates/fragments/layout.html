@@ -53,12 +53,14 @@
 				         Manage Leave Balance
 				    </a>
 				</li>
-				<li class="nav-item"
-				    th:if="${session.role == T(nus_iss.LAPS.model.Role).ADMIN}">
+				<li class="nav-item" th:if="${session.role != null and  session.role.name() == 'ADMIN'}">
 				    <a class="nav-link" th:href="@{/users/manage-user}">
 				        Manage User
 				    </a>
-				</li>				
+				</li>
+                <li class="nav-item" th:if="${session.role != null and session.role.name() == 'ADMIN'}">
+                    <a class="nav-link" th:href="@{__${ROUTE_ADMIN_EMPLOYEE_LIST}__}">Manage Staff</a>
+                </li>
 				
 				<li class="nav-item" th:if="${session.role != null and session.role.name() == 'ADMIN'}">
 				    <a class="nav-link" th:href="@{/admin/leave-type/list}">

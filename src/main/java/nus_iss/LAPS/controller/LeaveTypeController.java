@@ -2,62 +2,173 @@ package nus_iss.LAPS.controller;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import nus_iss.LAPS.model.LeaveType;
-import nus_iss.LAPS.model.NameTypeEnum;
+import nus_iss.LAPS.model.Role;
 import nus_iss.LAPS.service.LeaveTypeService;
-import nus_iss.LAPS.util.GlobalConstants;
-
-/**
- * Author: Junior
- * Created on: 15/04/2026
- **/
+import nus_iss.LAPS.validators.LeaveTypeValidator;
 
 @Controller
-@RequestMapping(GlobalConstants.ROUTE_ADMIN + GlobalConstants.ROUTE_ADMIN_LEAVETYPE)
+@RequestMapping("/admin/leave-type")
+@RequiredArgsConstructor
 public class LeaveTypeController {
 
-    private final LeaveTypeService leaveTypeService;
+	private final LeaveTypeService ltService;
+	private final LeaveTypeValidator ltValidator;
 
-    public LeaveTypeController(LeaveTypeService leaveTypeService) {
-        this.leaveTypeService = leaveTypeService;
-    }
+	@InitBinder("leaveType")
+	protected void initBinder(WebDataBinder binder) {
+		binder.addValidators(ltValidator);
+	}
 
-    @GetMapping
-    public String showPage(Model model) {
-        model.addAttribute("leaveTypes", leaveTypeService.findAll());
-        model.addAttribute("leaveType", new LeaveType());
-        model.addAttribute("nameTypes", NameTypeEnum.values());
-        return GlobalConstants.VIEW_ADMIN_LEAVETYPE_MANAGE;
-    }
+	private boolean isLoggedIn(HttpSession session) {
+		return (session.getAttribute("userId") != null);
+	}
 
-    @PostMapping(GlobalConstants.ROUTE_ADMIN_LEAVETYPE_SAVE)
-    public String save(@ModelAttribute("leaveType") LeaveType leaveType) {
-        if (leaveType.getLeaveTypeId() == null) {
-            leaveTypeService.saveLeaveType(leaveType);
-        } else {
-            leaveTypeService.updateLeaveType(leaveType.getLeaveTypeId(), leaveType);
-        }
+	private boolean isAdmin(HttpSession session) {
+		Role role = (Role) session.getAttribute("role");
+		return Role.ADMIN.equals(role);
+	}
 
-        return GlobalConstants.REDIRECT_ADMIN_LEAVETYPE_LIST;
-    }
+	@GetMapping("/create")
+	public ModelAndView newLeaveTypePage(HttpSession session, RedirectAttributes redirect) {
+		
+		 if(!isLoggedIn(session)){ return new ModelAndView("redirect:/login"); }
+		 
+		 
+		 if(!isAdmin(session)){ redirect.addFlashAttribute("errorMessage",
+		 "Only admins can view leave types"); return new
+		 ModelAndView("redirect:/login"); }
+		 
 
-    @GetMapping("/edit/{id}")
-    public String edit(@PathVariable("id") Long id, Model model) {
-        model.addAttribute("leaveType", leaveTypeService.findById(id));
-        model.addAttribute("leaveTypes", leaveTypeService.findAll());
-        model.addAttribute("nameTypes", NameTypeEnum.values());
-        return GlobalConstants.VIEW_ADMIN_LEAVETYPE_MANAGE;
-    }
+		var mav = new ModelAndView("leave-type-new", "leaveType", new LeaveType());
+		mav.addObject("ltidlist", ltService.getAllLeaveTypes());
+		return mav;
+	}
 
-    @GetMapping("/delete/{id}")
-    public String delete(@PathVariable("id") Long id) {
-        leaveTypeService.deleteLeaveType(id);
-        return GlobalConstants.REDIRECT_ADMIN_LEAVETYPE_LIST;
-    }
+	@PostMapping("/create")
+	public ModelAndView createLeaveType(@ModelAttribute @Valid LeaveType leaveType, BindingResult bindingResult,
+			HttpSession session, RedirectAttributes redirect) {
+
+		
+		 if(!isLoggedIn(session)){ return new ModelAndView("redirect:/login"); }
+		 
+		 
+		 if(!isAdmin(session)){ redirect.addFlashAttribute("errorMessage",
+		 "Only admins can view leave types"); return new
+		 ModelAndView("redirect:/login"); }
+		 
+
+		if (bindingResult.hasErrors()) {
+			return new ModelAndView("leave-type-new");
+		}
+
+		try {
+			ltService.createLeaveType(leaveType);
+			redirect.addFlashAttribute("successMessage", "Leave type created successfully");
+		} catch (Exception e) {
+
+			var mav = new ModelAndView("leave-type-new");
+			mav.addObject("errorMessage", "Could not create leave type");
+			return mav;
+		}
+		return new ModelAndView("redirect:/admin/leave-type/list");
+	}
+
+	@RequestMapping("/list")
+	public String listLeaveType(HttpSession session, RedirectAttributes redirect, Model model) {
+		
+		 if(!isLoggedIn(session)){ return "redirect:/login"; }
+		 
+		 
+		 if(!isAdmin(session)){ redirect.addFlashAttribute("errorMessage",
+		 "Only admins can view leave types list"); return "redirect:/login"; }
+		 
+
+		model.addAttribute("leaveTypesList", ltService.getAllLeaveTypes());
+		return "leave-type-list";
+	}
+
+	@GetMapping("/edit/{id}")
+	public ModelAndView editLeaveTypePage(@PathVariable("id") Long id, HttpSession session,
+			RedirectAttributes redirect) {
+		
+		 if(!isLoggedIn(session)){ return new ModelAndView("redirect:/login"); }
+	
+		 
+		 if(!isAdmin(session)){ redirect.addFlashAttribute("errorMessage",
+		 "Only admins can edit leave types"); return new
+		 ModelAndView("redirect:/login"); }
+		 
+
+		var mav = new ModelAndView("leave-type-edit");
+		ltService.getLeaveTypeById(id).ifPresent(leaveT -> mav.addObject("leaveType", leaveT));
+
+		mav.addObject("ltidlist", ltService.getAllLeaveTypes());
+
+		return mav;
+	}
+
+	@PostMapping("/edit/{id}")
+	public ModelAndView editLeaveType(@ModelAttribute("leaveType") @Valid LeaveType leaveType,
+			BindingResult bindingResult, @PathVariable("id") Long id, HttpSession session,
+			RedirectAttributes redirect) {
+		
+		 if(!isLoggedIn(session)){ return new ModelAndView("redirect:/login"); }
+		 
+		 
+		 if(!isAdmin(session)){ redirect.addFlashAttribute("errorMessage",
+		 "Only admins can edit leave types"); return new
+		 ModelAndView("redirect:/login"); }
+		 
+
+		if (bindingResult.hasErrors()) {
+			return new ModelAndView("leave-type-edit");
+		}
+
+		try {
+			leaveType.setLeaveTypeId(id);
+			ltService.changeLeaveType(leaveType);
+			redirect.addFlashAttribute("successMessage", "Leave type updated successfully");
+		} catch (Exception e) {
+			redirect.addFlashAttribute("errorMessage", "Could not edit leave type");
+			return new ModelAndView("leave-type-edit");
+		}
+		return new ModelAndView("redirect:/admin/leave-type/list");
+	}
+
+	@RequestMapping("/delete/{id}")
+	public ModelAndView deleteLeaveType(@PathVariable("id") Long id, HttpSession session, RedirectAttributes redirect) {
+		
+		 if(!isLoggedIn(session)){ return new ModelAndView("redirect:/login"); }
+		 if(!isAdmin(session)){ redirect.addFlashAttribute("message",
+		 "Only admins can delete leave types"); return new
+		 ModelAndView("redirect:/login"); }
+		 
+
+		try {
+			ltService.getLeaveTypeById(id).ifPresent(ltService::removeLeaveType);
+			redirect.addFlashAttribute("successMessage", "Leave type has been deleted");
+
+		} catch (Exception e) {
+			redirect.addFlashAttribute("errorMessage", "An unexpected error has occurred");
+		}
+
+		return new ModelAndView("redirect:/admin/leave-type/list");
+
+	}
+
 }

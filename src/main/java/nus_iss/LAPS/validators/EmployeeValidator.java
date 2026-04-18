@@ -1,22 +1,32 @@
 package nus_iss.LAPS.validators;
 
 import java.time.LocalDate;
+
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
 import org.springframework.validation.ValidationUtils;
 import org.springframework.validation.Validator;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import nus_iss.LAPS.model.Employee;
 
 @Component
-public class EmployeeValidator implements Validator {
+@RequiredArgsConstructor
+@Slf4j
+public class EmployeeValidator implements Validator{
 
+	/**
+	 * Author: Junior
+	 * Created on: 15/04/2026
+	 */
+	
 	@Override
 	public boolean supports(Class<?> clazz) {
-
 		return Employee.class.isAssignableFrom(clazz);
 	}
-
+	
+	//Author: Thiha
 	@Override
 	public void validate(Object target, Errors errors) {
 		Employee employee = (Employee) target;
@@ -45,7 +55,6 @@ public class EmployeeValidator implements Validator {
 		}
 
 		// Validate phone number
-
 		ValidationUtils.rejectIfEmptyOrWhitespace(errors, "phoneNumber", "phoneNumber.empty",
 				"Phone number cannot be empty");
 		if (employee.getPhoneNumber() != null && !employee.getPhoneNumber().matches("^[689]\\d{7}$")) {
@@ -66,8 +75,19 @@ public class EmployeeValidator implements Validator {
 		if (employee.getHire_date().isAfter(LocalDate.now())) {
 			errors.rejectValue("hire_date", "error.hire_date.future", "Hire date must not be in future");
 			return;
-
 		}
-	}
+		
+		//added by Junior
+		// Validate same firstname and lastname
+		if (employee.getFirst_name() != null &&
+	            employee.getLast_name() != null &&
+	            employee.getFirst_name().equalsIgnoreCase(employee.getLast_name())) {
 
+	            errors.rejectValue("last_name",
+	                    "error.employee.name.same",
+	                    "First name and last name cannot be the same.");
+	        }
+
+	        log.debug("Validating employee: {}", employee);
+	}
 }

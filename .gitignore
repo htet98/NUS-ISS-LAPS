@@ -3,7 +3,6 @@
 *.jar
 *.war
 *.ear
-*.class
 *.java~
 *.swp
 *.swo
@@ -27,3 +26,5 @@ out/
 .DS_Store
 *.log
 bin/
+.factorypath
+.gitattributes

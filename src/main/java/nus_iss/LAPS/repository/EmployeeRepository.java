@@ -3,8 +3,10 @@ package nus_iss.LAPS.repository;
 import nus_iss.LAPS.model.Employee;
 import nus_iss.LAPS.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -12,6 +14,7 @@ import java.util.Optional;
 /**
 	* Author: Junior
  	* Created on: 13/04/2026
+ 	* Updated on: 15/04/2026
 **/
 
 public interface EmployeeRepository extends JpaRepository<Employee, Long> {
@@ -37,7 +40,15 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 	List<Employee> findSubordinates(@Param("emp_id") Long emp_id);
 	
 	@Query("SELECT DISTINCT e.emp_id FROM Employee e")
-	List<String> findAllEmployeeIDs();
+	List<Long> findAllEmployeeIDs();
 	
+	@Query("SELECT e FROM Employee e WHERE e.user.role = 'MANAGER'")
+	List<Employee> findAllManagers();
+
 	Optional<Employee> findByUser(User user);
+	
+	@Modifying
+	@Transactional
+	@Query("UPDATE Employee e SET e.supervisor = :supervisor WHERE e.emp_id = :emp_id")
+	void updateSupervisor(@Param("emp_id") Long emp_id, @Param("supervisor") Employee supervisor);
 }

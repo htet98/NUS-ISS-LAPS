@@ -65,8 +65,6 @@ public class User {
 
     // ── Constructors ──────────────────────────────────────────────────────────
 
-    public User() {}
-
     public User(String username, String email, String password,
                 String createdby, String updatedby) {
         this.username  = username;
@@ -76,7 +74,9 @@ public class User {
         this.updatedby = updatedby;
     }
 
-    // ── Getters & Setters ─────────────────────────────────────────────────────
+    public User() {
+    }
+// ── Getters & Setters ─────────────────────────────────────────────────────
 
     public Long getUser_id()                  { return user_id; }
     public void setUser_id(Long user_id)      { this.user_id = user_id; }

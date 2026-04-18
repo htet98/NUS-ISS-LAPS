@@ -6,18 +6,21 @@
 <div th:replace="~{fragments/layout :: navbar}"></div>
 
 <main class="container py-4">
+    <!-- Breadcrumb -->
+    <div th:replace="~{fragments/breadcrumb :: breadcrumbList(${breadcrumbs})}"></div>
+
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Pending Leave Applications</h2>
-        <a th:href="@{/leave/manager/all}" class="btn btn-outline-secondary btn-sm">View Full Team History</a>
+        <a th:href="@{__${ROUTE_MANAGER_ALL}__}" class="btn btn-outline-secondary btn-sm">View Full Team History</a>
     </div>
 
     <!-- Flash messages -->
-    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
-        <span th:text="${successMessage}"></span>
+    <div th:if="${__${FLASH_SUCCESS}__}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <span th:text="${__${FLASH_SUCCESS}__}"></span>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
-    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
-        <span th:text="${errorMessage}"></span>
+    <div th:if="${__${FLASH_ERROR}__}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <span th:text="${__${FLASH_ERROR}__}"></span>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 
@@ -27,35 +30,36 @@
 
     <!-- Pending applications cards -->
     <div th:unless="${#lists.isEmpty(applications)}" class="row g-3">
-        <div th:each="app : ${applications}" class="col-12">
+        <div th:each="app, iterStat : ${applications}" class="col-12">
             <div class="card shadow-sm">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <div>
-                        <strong th:text="${app.employee.first_name + ' ' + app.employee.last_name}">Employee Name</strong>
+                        <span class="badge bg-secondary me-2" th:text="${currentPage * size + iterStat.index + 1}">1</span>
+                        <strong th:text="${app.employeeName}">Employee Name</strong>
                         <span class="text-muted ms-2 small"
-                              th:text="${app.employee.designation + ' – ' + app.employee.department}">Designation</span>
+                              th:text="${app.employeeDesignation + ' – ' + app.employeeDepartment}">Designation</span>
                     </div>
-                    <span class="badge bg-warning text-dark" th:text="${app.status.name()}">APPLIED</span>
+                    <span class="badge bg-warning text-dark" th:text="${app.status}">APPLIED</span>
                 </div>
                 <div class="card-body">
                     <div class="row g-2">
                         <div class="col-md-3">
                             <div class="text-muted small">Leave Type</div>
-                            <div class="fw-semibold" th:text="${app.leaveType.name}">Annual Leave</div>
+                            <div class="fw-semibold" th:text="${app.leaveType}">Annual Leave</div>
                         </div>
                         <div class="col-md-3">
                             <div class="text-muted small">Duration</div>
-                            <div class="fw-semibold" th:text="${app.getDurationDisplay()}">3.0 days</div>
+                            <div class="fw-semibold" th:text="${app.durationDisplay}">3.0 days</div>
                         </div>
                         <div class="col-md-3">
                             <div class="text-muted small">Start Date</div>
                             <div class="fw-semibold"
-                                 th:text="${#temporals.format(app.startDate, 'dd MMM yyyy')}">01 Jan 2026</div>
+                                 th:text="${#temporals.format(app.startDate, DATE_DISPLAY_FORMAT)}">01 Jan 2026</div>
                         </div>
                         <div class="col-md-3">
                             <div class="text-muted small">End Date</div>
                             <div class="fw-semibold"
-                                 th:text="${#temporals.format(app.endDate, 'dd MMM yyyy')}">05 Jan 2026</div>
+                                 th:text="${#temporals.format(app.endDate, DATE_DISPLAY_FORMAT)}">05 Jan 2026</div>
                         </div>
                     </div>
 
@@ -78,7 +82,7 @@
 
                 <div class="card-footer d-flex gap-2 align-items-end">
                     <!-- Approve -->
-                    <form th:action="@{/leave/{id}/approve(id=${app.leaveApplicationId})}"
+                    <form th:action="@{__${ROUTE_LEAVE_BASE}__/{id}/approve(id=${app.leaveApplicationId})}"
                           method="post" class="d-inline"
                           onsubmit="return confirm('Approve this leave application?')">
                         <button type="submit" class="btn btn-success btn-sm">✓ Approve</button>
@@ -92,7 +96,7 @@
                     </button>
 
                     <!-- View detail -->
-                    <a th:href="@{/leave/{id}(id=${app.leaveApplicationId})}"
+                    <a th:href="@{__${ROUTE_LEAVE_BASE}__/{id}(id=${app.leaveApplicationId})}"
                        class="btn btn-outline-primary btn-sm ms-auto">View Details</a>
                 </div>
             </div>
@@ -106,14 +110,14 @@
                             <h5 class="modal-title">Reject Leave Application</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
-                        <form th:action="@{/leave/{id}/reject(id=${app.leaveApplicationId})}"
+                        <form th:action="@{__${ROUTE_LEAVE_BASE}__/{id}/reject(id=${app.leaveApplicationId})}"
                               method="post">
                             <div class="modal-body">
                                 <p class="text-muted small">
                                     Rejecting application for
-                                    <strong th:text="${app.employee.first_name + ' ' + app.employee.last_name}">Employee</strong>
-                                    (<span th:text="${app.leaveType.name}">Leave</span>,
-                                     <span th:text="${app.getDurationDisplay()}">3 days</span>).
+                                    <strong th:text="${app.employeeName}">Employee</strong>
+                                    (<span th:text="${app.leaveType}">Leave</span>,
+                                     <span th:text="${app.durationDisplay}">3 days</span>).
                                 </p>
                                 <div class="mb-3">
                                     <label class="form-label fw-semibold">
@@ -135,9 +139,13 @@
             </div>
         </div>
     </div>
+
+    <!-- Pagination -->
+    <div th:replace="~{fragments/layout :: pagination(${ROUTE_MANAGER_PENDING}, ${currentPage}, ${totalPages}, ${totalItems})}"></div>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <footer th:replace="~{fragments/footer :: footer}"></footer>
 </body>
 </html>
+

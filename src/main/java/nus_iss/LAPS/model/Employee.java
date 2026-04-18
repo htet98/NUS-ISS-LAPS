@@ -22,10 +22,12 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.groups.Default;
 
 /**
 	* Author: Junior
  	* Created on: 13/04/2026
+ 	* Updated on 15/04/2026 (LOMBOK, Designation change to ENUM)
 **/
 
 @Entity
@@ -48,17 +50,18 @@ public class Employee {
 	@Column(name = "email")
 	@Email
 	private String email;
-	
+
 	@NotNull(message = "Phone Number is required")
 	@Column(name = "phone_number", length = 15)
-	@Pattern(regexp="^[689]\\d{7}$") //Not include Toll-free
+	@Pattern(regexp = "\\d{7,15}", message = "Phone number must be between 7 and 15 digits")
 	private String phoneNumber;
 	
 	@Column(name="department", nullable=false)
 	private String department;
 	
-	@Column(name="designation", nullable=false)
-	private String designation;
+	@Enumerated(EnumType.STRING)
+	@Column(name="designation", nullable=false, length = 20)
+	private Designation designation;
 	
 	@Column(name="hire_date", nullable=false)
 	private LocalDate hire_date;
@@ -94,39 +97,7 @@ public class Employee {
 	@OneToMany(mappedBy = "supervisor")
 	private List<Employee> subordinates;
 
-	public Long getEmp_id() {
-		return emp_id;
-	}
-
-	public void setEmp_id(Long emp_id) {
-		this.emp_id = emp_id;
-	}
-
-	public String getFirst_name() {
-		return first_name;
-	}
-
-	public void setFirst_name(String first_name) {
-		this.first_name = first_name;
-	}
-
-	public String getLast_name() {
-		return last_name;
-	}
-
-	public void setLast_name(String last_name) {
-		this.last_name = last_name;
-	}
-
-	public String getEmail() {
-		return email;
-	}
-
-	public void setEmail(String email) {
-		this.email = email;
-	}
-
-    // Htet Nandar (Grace) - 14/04/2026
+	// Htet Nandar (Grace) - 14/04/2026
     // Bug fix: Phone number should be stored without dashes for easier validation and querying.
 	public String getPhoneNumber() {
 		return phoneNumber;
@@ -144,11 +115,43 @@ public class Employee {
 		this.department = department;
 	}
 
-	public String getDesignation() {
+	public Designation getDesignation() {
 		return designation;
 	}
 
-	public void setDesignation(String designation) {
+    public Long getEmp_id() {
+        return emp_id;
+    }
+
+    public void setEmp_id(Long emp_id) {
+        this.emp_id = emp_id;
+    }
+
+    public String getFirst_name() {
+        return first_name;
+    }
+
+    public void setFirst_name(String first_name) {
+        this.first_name = first_name;
+    }
+
+    public String getLast_name() {
+        return last_name;
+    }
+
+    public void setLast_name(String last_name) {
+        this.last_name = last_name;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public void setDesignation(Designation designation) {
 		this.designation = designation;
 	}
 
@@ -235,7 +238,7 @@ public class Employee {
 	public Employee(Long emp_id, String first_name, @NotNull(message = "Last_name is required") String last_name,
 			@NotNull(message = "Email Address is required") @Email String email,
 			@NotNull(message = "Phone Number is required") String phoneNumber, String department,
-			String designation, LocalDate hire_date,
+			Designation designation, LocalDate hire_date,
 			EmployeeStatus employeeStatus, String createdBy, LocalDateTime createdWhen, String updatedBy,
 			LocalDateTime updatedWhen, User user, List<LeaveBalance> leaveBalances, Employee supervisor,
 			List<Employee> subordinates) {

@@ -6,37 +6,40 @@
 <div th:replace="~{fragments/layout :: navbar}"></div>
 
 <main class="container py-4">
+    <!-- Breadcrumb -->
+    <div th:replace="~{fragments/breadcrumb :: breadcrumbList(${breadcrumbs})}"></div>
+
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>My Leave History</h2>
-        <a th:href="@{/leave/apply}" class="btn btn-primary">+ Apply for Leave</a>
+        <a th:href="@{__${ROUTE_LEAVE_APPLY}__}" class="btn btn-primary">+ Apply for Leave</a>
     </div>
 
     <!-- Flash messages -->
-    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
-        <span th:text="${successMessage}"></span>
+    <div th:if="${__${FLASH_SUCCESS}__}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <span th:text="${__${FLASH_SUCCESS}__}"></span>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
-    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
-        <span th:text="${errorMessage}"></span>
+    <div th:if="${__${FLASH_ERROR}__}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <span th:text="${__${FLASH_ERROR}__}"></span>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 
     <!-- Leave Balance Summary -->
     <div class="row g-3 mb-4">
-        <div th:each="bal : ${leaveBalances}" class="col-md-4">
+        <div th:each="balance : ${leaveBalances}" class="col-md-4">
             <div class="card text-center border-0 shadow-sm">
                 <div class="card-body py-3">
-                    <div class="fw-semibold text-secondary small" th:text="${bal.leaveType.name}">Leave Type</div>
+                    <div class="fw-semibold text-secondary small" th:text="${balance.leaveType.name}">Leave Type</div>
                     <div class="fs-4 fw-bold text-primary"
-                         th:text="${#numbers.formatDecimal(bal.totalDays - bal.usedDays, 1, 1)}">0</div>
+                         th:text="${#numbers.formatDecimal(balance.totalDays - balance.usedDays, 1, 'POINT', 1, 'COMMA')}"></div>
                     <div class="text-muted small">days remaining</div>
                     <div class="progress mt-2" style="height:6px;">
                         <div class="progress-bar"
-                             th:style="'width:' + ${bal.totalDays > 0 ? (bal.usedDays / bal.totalDays * 100) : 0} + '%'"></div>
+                             th:style="'width:' + ${balance.totalDays > 0 ? (balance.usedDays / balance.totalDays * 100) : 0} + '%'"></div>
                     </div>
                     <div class="text-muted small mt-1">
-                        <span th:text="${bal.usedDays}">0</span> used /
-                        <span th:text="${bal.totalDays}">0</span> total
+                        <span th:text="${#numbers.formatDecimal(balance.usedDays, 1, 'POINT', 1, 'POINT')}"></span> used /
+                        <span th:text="${#numbers.formatDecimal(balance.totalDays, 1, 'POINT', 1, 'POINT')}"></span> total
                     </div>
                 </div>
             </div>
@@ -44,7 +47,7 @@
     </div>
 
     <!-- Filter bar -->
-    <form th:action="@{/leave/history}" method="get" class="row g-2 mb-3 align-items-end">
+    <form th:action="@{__${ROUTE_LEAVE_HISTORY}__}" method="get" class="row g-2 mb-3 align-items-end">
         <div class="col-md-4">
             <label class="form-label small fw-semibold">Filter by Status</label>
             <select name="status" class="form-select form-select-sm">
@@ -69,7 +72,7 @@
             <button type="submit" class="btn btn-outline-primary btn-sm w-100">Apply Filter</button>
         </div>
         <div class="col-md-2">
-            <a th:href="@{/leave/history}" class="btn btn-outline-secondary btn-sm w-100">Reset</a>
+            <a th:href="@{__${ROUTE_LEAVE_HISTORY}__}" class="btn btn-outline-secondary btn-sm w-100">Reset</a>
         </div>
     </form>
 
@@ -79,62 +82,67 @@
             <div th:if="${#lists.isEmpty(applications)}" class="text-center text-muted py-5">
                 No leave applications found for the selected filter.
             </div>
-            <table th:unless="${#lists.isEmpty(applications)}" class="table table-hover mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>#</th>
-                        <th>Leave Type</th>
-                        <th>Start Date</th>
-                        <th>End Date</th>
-                        <th>Duration</th>
-                        <th>Status</th>
-                        <th>Submitted</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr th:each="app : ${applications}">
-                        <td th:text="${app.leaveApplicationId}">1</td>
-                        <td th:text="${app.leaveType.name}">Annual Leave</td>
-                        <td th:text="${#temporals.format(app.startDate, 'dd MMM yyyy')}">01 Jan 2026</td>
-                        <td th:text="${#temporals.format(app.endDate, 'dd MMM yyyy')}">05 Jan 2026</td>
-                        <td th:text="${app.getDurationDisplay()}">3.0 days</td>
-                        <td>
-                            <span class="badge"
-                                  th:classappend="${app.status.name() == 'APPROVED'} ? 'bg-success'
-                                               : (${app.status.name() == 'APPLIED'} ? 'bg-primary'
-                                               : (${app.status.name() == 'UPDATED'} ? 'bg-info text-dark'
-                                               : (${app.status.name() == 'REJECTED'} ? 'bg-danger'
-                                               : (${app.status.name() == 'CANCELLED'} ? 'bg-secondary'
-                                               : (${app.status.name() == 'DELETED'} ? 'bg-dark'
-                                               : 'bg-light text-dark')))))"
-                                  th:text="${app.status.name()}">APPLIED</span>
-                        </td>
-                        <td th:text="${#temporals.format(app.createdWhen, 'dd MMM yyyy')}">01 Jan 2026</td>
-                        <td>
-                            <a th:href="@{/leave/{id}(id=${app.leaveApplicationId})}"
-                               class="btn btn-sm btn-outline-primary me-1">View</a>
-                            <a th:if="${app.editable}"
-                               th:href="@{/leave/{id}/edit(id=${app.leaveApplicationId})}"
-                               class="btn btn-sm btn-outline-warning me-1">Edit</a>
-                            <form th:if="${app.deletable}"
-                                  th:action="@{/leave/{id}/delete(id=${app.leaveApplicationId})}"
-                                  method="post" class="d-inline"
-                                  onsubmit="return confirm('Delete this application?')">
-                                <button type="submit" class="btn btn-sm btn-outline-danger me-1">Delete</button>
-                            </form>
-                            <form th:if="${app.cancellable}"
-                                  th:action="@{/leave/{id}/cancel(id=${app.leaveApplicationId})}"
-                                  method="post" class="d-inline"
-                                  onsubmit="return confirm('Cancel this approved leave?')">
-                                <button type="submit" class="btn btn-sm btn-outline-secondary">Cancel Leave</button>
-                            </form>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+            <div th:unless="${#lists.isEmpty(applications)}" class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Leave Type</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Duration</th>
+                            <th>Status</th>
+                            <th>Submitted</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="app, iterStat : ${applications}">
+                            <td th:text="${(currentPage * size) + iterStat.index + 1}"></td>
+                            <td th:text="${app.leaveType}"></td>
+                            <td th:text="${#temporals.format(app.startDate, DATE_DISPLAY_FORMAT)}"></td>
+                            <td th:text="${#temporals.format(app.endDate, DATE_DISPLAY_FORMAT)}"></td>
+                            <td th:text="${app.durationDisplay}"></td>
+                            <td>
+                                <span class="badge"
+                                      th:classappend="${app.status == STATUS_APPROVED} ? 'bg-success'
+                                                   : (${app.status == STATUS_APPLIED} ? 'bg-primary'
+                                                   : (${app.status == STATUS_UPDATED} ? 'bg-info text-dark'
+                                                   : (${app.status == STATUS_REJECTED} ? 'bg-danger'
+                                                   : (${app.status == STATUS_CANCELLED} ? 'bg-secondary'
+                                                   : (${app.status == STATUS_DELETED} ? 'bg-dark'
+                                                   : 'bg-light text-dark')))))"
+                                      th:text="${app.status}"></span>
+                            </td>
+                            <td th:text="${#temporals.format(app.createdWhen, DATE_DISPLAY_FORMAT)}"></td>
+                            <td>
+                                <a th:href="@{__${ROUTE_LEAVE_BASE}__/{id}(id=${app.leaveApplicationId})}"
+                                   class="btn btn-sm btn-outline-primary me-1">View</a>
+                                <a th:if="${app.editable}"
+                                   th:href="@{__${ROUTE_LEAVE_BASE}__/{id}/edit(id=${app.leaveApplicationId})}"
+                                   class="btn btn-sm btn-outline-warning me-1">Edit</a>
+                                <form th:if="${app.deletable}"
+                                      th:action="@{__${ROUTE_LEAVE_BASE}__/{id}/delete(id=${app.leaveApplicationId})}"
+                                      method="post" class="d-inline"
+                                      onsubmit="return confirm('Delete this application?')">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger me-1">Delete</button>
+                                </form>
+                                <form th:if="${app.cancellable}"
+                                      th:action="@{__${ROUTE_LEAVE_BASE}__/{id}/cancel(id=${app.leaveApplicationId})}"
+                                      method="post" class="d-inline"
+                                      onsubmit="return confirm('Cancel this approved leave?')">
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary">Cancel Leave</button>
+                                </form>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
+
+    <!-- Pagination -->
+    <div th:replace="~{fragments/layout :: pagination(${ROUTE_LEAVE_HISTORY}, ${currentPage}, ${totalPages}, ${totalItems})}"></div>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

@@ -57,7 +57,11 @@ public class GlobalControllerAdvice {
     // Movement routes
     @ModelAttribute("ROUTE_MOVEMENT_REGISTER") public String routeMovementRegister() { return GlobalConstants.ROUTE_MOVEMENT + GlobalConstants.ROUTE_MOVEMENT_REGISTER; }
 
-    // Report routes
-    @ModelAttribute("ROUTE_REPORT")            public String routeReport()      { return GlobalConstants.ROUTE_REPORT; }
-    @ModelAttribute("ROUTE_REPORT_LEAVE")      public String routeReportLeave() { return GlobalConstants.ROUTE_REPORT + GlobalConstants.ROUTE_REPORT_LEAVE; }
+    @ModelAttribute("ROUTE_ADMIN_EMPLOYEE_LIST") public String routeAdminEmployeeList() { return GlobalConstants.ROUTE_ADMIN + GlobalConstants.ROUTE_ADMIN_EMPLOYEE + GlobalConstants.ROUTE_ADMIN_EMPLOYEE_LIST; }
+    @ModelAttribute("ROUTE_ADMIN_EMPLOYEE_NEW") public String routeAdminEmployeeNew() { return GlobalConstants.ROUTE_ADMIN + GlobalConstants.ROUTE_ADMIN_EMPLOYEE + GlobalConstants.ROUTE_ADMIN_EMPLOYEE_NEW; }
+    @ModelAttribute("ROUTE_ADMIN_EMPLOYEE_EDIT") public String routeAdminEmployeeEdit() { return GlobalConstants.ROUTE_ADMIN + GlobalConstants.ROUTE_ADMIN_EMPLOYEE + "/edit"; }
+
+        // Report routes
+    @ModelAttribute("ROUTE_REPORT")  public String routeReport()      { return GlobalConstants.ROUTE_REPORT; }
+    @ModelAttribute("ROUTE_REPORT_LEAVE")   public String routeReportLeave() { return GlobalConstants.ROUTE_REPORT + GlobalConstants.ROUTE_REPORT_LEAVE; }
 }

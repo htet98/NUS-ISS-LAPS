@@ -1,0 +1,94 @@
+<!-- Author: Junior -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/header :: head('New Employee – LAPS')}"></head>
+<link rel="stylesheet" th:href="@{/css/style.css}"/>
+
+<body class="bg-light">
+<div th:replace="~{fragments/layout :: navbar}"></div>
+
+<div class="container py-5">
+    <div class="mb-4">
+        <h1 class="display-5 fw-normal">Create Employee</h1>
+    </div>
+
+    <div th:if="${errorMessage}" class="alert alert-danger">
+        <span th:text="${errorMessage}"></span>
+    </div>
+
+    <div class="card shadow-sm rounded-4 border">
+        <div class="card-body p-4 p-md-5">
+            <form th:action="@{${ROUTE_ADMIN_EMPLOYEE_NEW}}" th:object="${employee}" method="post">
+                <div class="row g-4">
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">First Name</label>
+                        <input type="text" class="form-control" th:field="*{first_name}" placeholder="Enter first name">
+                        <div class="text-danger small" th:errors="*{first_name}"></div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Last Name</label>
+                        <input type="text" class="form-control" th:field="*{last_name}" placeholder="Enter last name">
+                        <div class="text-danger small" th:errors="*{last_name}"></div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Email</label>
+                        <input type="email" class="form-control" th:field="*{email}" placeholder="Enter email">
+                        <div class="text-danger small" th:errors="*{email}"></div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Phone</label>
+                        <input type="text" class="form-control" th:field="*{phoneNumber}" placeholder="Enter 8-digit phone number">
+                        <div class="text-danger small" th:errors="*{phoneNumber}"></div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Department</label>
+                        <input type="text" class="form-control" th:field="*{department}" placeholder="Enter department">
+                        <div class="text-danger small" th:errors="*{department}"></div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Designation</label>
+                        <select class="form-select" th:field="*{designation}">
+                            <option value="">-- Select Designation --</option>
+                            <option value="PROFESSIONAL">Professional</option>
+                            <option value="ADMINISTRATIVE">Administrative</option>
+                        </select>
+                        <div class="text-danger small" th:errors="*{designation}"></div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Hire Date</label>
+                        <input type="date" class="form-control" th:field="*{hire_date}">
+                        <div class="text-danger small" th:errors="*{hire_date}"></div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Status</label>
+                        <select class="form-select" th:field="*{employeeStatus}">
+                            <option value="">-- Select Status --</option>
+                            <option value="ACTIVE">ACTIVE</option>
+                            <option value="INACTIVE">INACTIVE</option>
+                        </select>
+                        <div class="text-danger small" th:errors="*{employeeStatus}"></div>
+                    </div>
+
+                    <div class="col-12 pt-3">
+                        <button type="submit" class="btn btn-primary px-4 me-2">Create Employee</button>
+                        <a th:href="@{${ROUTE_ADMIN_EMPLOYEE_LIST}}" class="btn btn-outline-secondary px-4">Back to List</a>
+                    </div>
+
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>

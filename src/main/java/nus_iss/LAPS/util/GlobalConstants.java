@@ -30,6 +30,11 @@ public final class GlobalConstants {
     public static final String VIEW_CREATE_USER = "users/create-user"; //CRUD-user
     public static final String VIEW_EDIT_USER = "users/edit-user";  //CRUD-user
 
+    // Manage employee :: Junior
+    public static final String VIEW_ADMIN_EMPLOYEE_LIST = "admin/employee-list";
+    public static final String VIEW_ADMIN_EMPLOYEE_NEW = "admin/employee-new";
+    public static final String VIEW_ADMIN_EMPLOYEE_EDIT = "admin/employee-edit";
+
     // Redirects
     public static final String REDIRECT_LOGIN = "redirect:/login";
     public static final String REDIRECT_ADMIN_HIERARCHY = "redirect:/admin/hierarchy";
@@ -39,6 +44,8 @@ public final class GlobalConstants {
     //public static final String REDIRECT_USER_LOGIN = "redirect:/users/login"; //CRUD-user
     public static final String REDIRECT_HOME = "redirect:/users/"; //CRUD-user
     public static final String REDIRECT_ROOT = "redirect:/"; //CRUD-user
+    public static final String REDIRECT_ADMIN_EMPLOYEE_LIST = "redirect:/admin/employee/list";
+    public static final String REDIRECT_ADMIN_EMPLOYEE_NEW = "redirect:/admin/employee/create";
 
     // Controller Mapping Routes
     public static final String ROUTE_ADMIN = "/admin";
@@ -57,6 +64,13 @@ public final class GlobalConstants {
     public static final String ROUTE_MANAGER_ALL = "/manager/history/all";
     public static final String ROUTE_MANAGER_APPROVE = "/{id}/approve";
     public static final String ROUTE_MANAGER_REJECT = "/{id}/reject";
+
+    // emplyee
+    public static final String ROUTE_ADMIN_EMPLOYEE = "/employee";
+    public static final String ROUTE_ADMIN_EMPLOYEE_LIST = "/list";
+    public static final String ROUTE_ADMIN_EMPLOYEE_NEW = "/create";
+    public static final String ROUTE_ADMIN_EMPLOYEE_EDIT = "/edit/{id}";
+    public static final String ROUTE_ADMIN_EMPLOYEE_DELETE = "/delete/{id}";
 
     // Movement routes
     public static final String ROUTE_MOVEMENT             = "/movement";

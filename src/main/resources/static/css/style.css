@@ -1,0 +1,23 @@
+body {
+    background-color: #f8f9fa;
+}
+
+.card {
+    border-radius: 16px;
+}
+
+h1 {
+    color: #1f2d3d;
+}
+
+.form-label {
+    margin-bottom: 6px;
+}
+
+.text-danger.small {
+    margin-top: 4px;
+}
+
+.btn {
+    border-radius: 10px;
+}

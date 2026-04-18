@@ -25,21 +25,26 @@ public final class GlobalConstants {
     public static final String VIEW_LEAVE_EDIT = "leave/edit";
     public static final String VIEW_MANAGER_PENDING = "leave/manager/history/pending";
     public static final String VIEW_MANAGER_ALL = "leave/manager/history/all";
-    //public static final String VIEW_USER_LOGIN = "login"; //CRUD-user
-    public static final String VIEW_MANAGE_USER = "users/manage-user"; //CRUD-user
-    public static final String VIEW_CREATE_USER = "users/create-user"; //CRUD-user
-    public static final String VIEW_EDIT_USER = "users/edit-user";  //CRUD-user
+    
+    // Manage employee :: Junior
+    public static final String VIEW_ADMIN_EMPLOYEE_LIST = "admin/employee-list";
+    public static final String VIEW_ADMIN_EMPLOYEE_NEW = "admin/employee-new";
+    public static final String VIEW_ADMIN_EMPLOYEE_EDIT = "admin/employee-edit";
 
+    // Manage LeaveType :: Junior
+    public static final String VIEW_ADMIN_LEAVETYPE_MANAGE = "admin/leavetype-manage";
+    
     // Redirects
     public static final String REDIRECT_LOGIN = "redirect:/login";
     public static final String REDIRECT_ADMIN_HIERARCHY = "redirect:/admin/hierarchy";
     public static final String REDIRECT_ADMIN_HIERARCHY_EDIT = "redirect:/admin/hierarchy/edit/";
     public static final String REDIRECT_LEAVE_HISTORY = "redirect:/leave/history";
     public static final String REDIRECT_MANAGER_PENDING = "redirect:/leave/manager/history/pending";
-    //public static final String REDIRECT_USER_LOGIN = "redirect:/users/login"; //CRUD-user
-    public static final String REDIRECT_HOME = "redirect:/users/"; //CRUD-user
-    public static final String REDIRECT_ROOT = "redirect:/"; //CRUD-user
-
+    public static final String REDIRECT_ADMIN_EMPLOYEE_LIST = "redirect:/admin/employee/list";
+    public static final String REDIRECT_ADMIN_EMPLOYEE_NEW = "redirect:/admin/employee/create";
+    public static final String REDIRECT_ADMIN_LEAVETYPE_LIST = "redirect:/admin/leavetype";
+    public static final String REDIRECT_ADMIN_LEAVETYPE_EDIT = "redirect:/admin/leavetype/edit/";
+    
     // Controller Mapping Routes
     public static final String ROUTE_ADMIN = "/admin";
     public static final String ROUTE_ADMIN_HIERARCHY = "/hierarchy";
@@ -58,6 +63,17 @@ public final class GlobalConstants {
     public static final String ROUTE_MANAGER_APPROVE = "/{id}/approve";
     public static final String ROUTE_MANAGER_REJECT = "/{id}/reject";
 
+    public static final String ROUTE_ADMIN_EMPLOYEE = "/employee";
+    public static final String ROUTE_ADMIN_EMPLOYEE_LIST = "/list";
+    public static final String ROUTE_ADMIN_EMPLOYEE_NEW = "/create";
+    public static final String ROUTE_ADMIN_EMPLOYEE_EDIT = "/edit/{id}";
+    public static final String ROUTE_ADMIN_EMPLOYEE_DELETE = "/delete/{id}";
+    
+    public static final String ROUTE_ADMIN_LEAVETYPE = "/leavetype";
+    public static final String ROUTE_ADMIN_LEAVETYPE_SAVE = "/save";
+    public static final String ROUTE_ADMIN_LEAVETYPE_EDIT = "/edit/{id}";
+    public static final String ROUTE_ADMIN_LEAVETYPE_DELETE = "/delete/{id}";
+    
     // Movement routes
     public static final String ROUTE_MOVEMENT             = "/movement";
     public static final String ROUTE_MOVEMENT_REGISTER    = "/register";

@@ -27,4 +27,7 @@ public interface LeaveTypeRepository extends JpaRepository<LeaveType, Long> {
 
     /** Check if a leave type with this name already exists */
     boolean existsByName(NameTypeEnum name);
+    
+    //Author: Junior added for LeaveType-manage
+    boolean existsByNameAndLeaveTypeIdNot(NameTypeEnum name, Long leaveTypeId);
 }

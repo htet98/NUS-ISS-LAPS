@@ -1,8 +1,8 @@
 package nus_iss.LAPS.api;
 
 import java.util.List;
+import java.util.Optional;
 
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,39 +17,55 @@ import nus_iss.LAPS.model.Employee;
 import nus_iss.LAPS.service.EmployeeService;
 
 @RestController
-@RequestMapping("/api/admin/employees")
+@RequestMapping("/api/employees")
 @RequiredArgsConstructor
+
+/**
+ * Author: Junior
+ * Created on: 15/04/2026
+ **/
+
 public class EmployeeRestController {
+			
+		private final EmployeeService eService;
+		
+		//employee list
+		@GetMapping
+	    public List<Employee> getAllEmployees() {
+	        return eService.findAllEmployees();
+	    }
+		
+		//create Employee
+		@PostMapping
+	    public Employee createEmployee(@RequestBody Employee employee) {
+	        return eService.createEmployee(employee);
+	    }
+		
+		//update Employee
+		@PutMapping("/{id}")
+	    public Employee updateEmployee(@PathVariable Long id,
+	                                   @RequestBody Employee employee) {
+			Optional<Employee> existing = eService.findEmployee(id);
+			
+			if (existing.isPresent()) {
+	            employee.setEmp_id(id);
+	            return eService.changeEmployee(employee);
+	        }
 
-    private final EmployeeService eService;
+	        return null;
+		}
+		
+		//delete Employee
+		@DeleteMapping("/{id}")
+	    public String deleteEmployee(@PathVariable Long id) {
 
-    @GetMapping
-    public List<Employee> getAll() {
-        return eService.findAllEmployees();
-    }
+	        Optional<Employee> emp = eService.findEmployee(id);
 
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getById(@PathVariable Long id) {
-        return eService.findEmployee(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
+	        if (emp.isPresent()) {
+	        	eService.removeEmployee(emp.get());
+	            return "Employee deleted successfully";
+	        }
 
-    @PostMapping
-    public ResponseEntity<?> create(@RequestBody Employee employee) {
-        return ResponseEntity.ok(eService.createEmployee(employee));
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<?> update(@PathVariable Long id,
-                                    @RequestBody Employee employee) {
-        employee.setEmp_id(id);
-        return ResponseEntity.ok(eService.changeEmployee(employee));
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@PathVariable Long id) {
-        eService.findEmployee(id).ifPresent(eService::removeEmployee);
-        return ResponseEntity.ok().build();
-    }
+	        return "Employee not found";
+		}
 }

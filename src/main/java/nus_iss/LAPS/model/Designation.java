@@ -1,4 +1,5 @@
 package nus_iss.LAPS.model;
+
 /**
  * Represents the job designation category of an employee.
  *
@@ -8,28 +9,28 @@ package nus_iss.LAPS.model;
  * Author: Htet Nandar (Grace)
  */
 public enum Designation {
-	
-	    ADMINISTRATIVE("Administrative"),
-	    PROFESSIONAL("Professional");
 
-	    private final String displayName;
+    ADMINISTRATIVE("Administrative"),
+    PROFESSIONAL("Professional");
 
-	    Designation(String displayName) {
-	        this.displayName = displayName;
-	    }
+    private final String displayName;
 
-	    /** Human-readable label used in templates and reports. */
-	    public String getDisplayName() {
-	        return displayName;
-	    }
+    Designation(String displayName) {
+        this.displayName = displayName;
+    }
 
-	    /**
-	     * Returns the human-readable display name so that Thymeleaf expressions
-	     * like {@code th:text="${emp.designation}"} render "Administrative" or
-	     * "Professional" rather than the raw enum constant name.
-	     */
-	    @Override
-	    public String toString() {
-	        return displayName;
-	    }
-	}
+    /** Human-readable label used in templates and reports. */
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    /**
+     * Returns the human-readable display name so that Thymeleaf expressions
+     * like {@code th:text="${emp.designation}"} render "Administrative" or
+     * "Professional" rather than the raw enum constant name.
+     */
+    @Override
+    public String toString() {
+        return displayName;
+    }
+}

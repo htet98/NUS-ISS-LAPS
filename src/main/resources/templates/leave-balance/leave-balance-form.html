@@ -84,19 +84,19 @@
 			</div>
 			<form th:action="@{/leave-balances/create}" method="post">
 				<label for="employeeId">Employee:</label>
-				<select name="employeeId" id="employeeId" required>
+				<select name="employeeId" id="employeeSelect" required>
 					<option value="">-- Select Employee --</option>
 					<option th:each="emp : ${employees}" th:value="${emp.emp_id}"
-						th:text="${emp.first_name} + ' ' + ${emp.last_name}"></option>
+						th:text="${emp.first_name + ' ' + emp.last_name}" th:attr="data-designation=${emp.designation}">
+					</option>
 				</select>
-
-				<!-- Leave Type Dropdown -->
-				<label>Leave Type</label>
+				<label>Employee Designation</label>
+				<input type="text" id="designationInput" name="employeeDesignation" readonly />
+				<label for="leaveTypeSelect">Leave Type</label>
 				<select name="leaveTypeId" id="leaveTypeSelect" required>
 					<option value="">-- Select Leave Type --</option>
-					</option>
 					<option th:each="type : ${leaveTypes}" th:value="${type.leaveTypeId}" th:text="${type.name}"
-						th:attr="data-default-days=${type.defaultDays}, data-type=${type.name}">
+						th:data-default-days="${type.defaultDays}" th:data-type="${type.name}">
 					</option>
 				</select>
 
@@ -129,10 +129,11 @@
 				<label>Employee Name</label>
 				<input type="text" name="employeeName"
 					th:value="${balance.employee.first_name} + ' ' + ${balance.employee.last_name}" disabled />
-				<label>Leave Balance ID</label>
-				<input type="text" name="leaveBalanceId" th:value="${balance.leaveBalanceId}" readonly />
+				<label>Employee Designation</label>
+				<input type="text" id="designation" th:value="${balance.employee.designation}" readonly />
+				<input type="hidden" name="leaveBalanceId" th:value="${balance.leaveBalanceId}" readonly />
 				<label>Leave Type</label>
-				<input type="text" id="type" th:value="${balance.leaveType.name}" disabled />
+				<input type="text" id="type" th:value="${balance.leaveType.name}" readonly />
 				<label>Used Days</label>
 				<input type="number" name="usedDays" th:value="${balance.usedDays % 1 == 0 
 								              ? balance.usedDays.intValue() 
@@ -169,8 +170,9 @@
 				<label>Employee Name</label>
 				<input type="text" name="employeeName"
 					th:value="${balance.employee.first_name} + ' ' + ${balance.employee.last_name}" disabled />
-				<label>Leave Balance ID</label>
-				<input type="text" name="leaveBalanceId" th:value="${balance.leaveBalanceId}" disabled />
+				<label>Employee Designation</label>
+				<input type="text" id="designation" th:value="${balance.employee.designation}" readonly />
+				<input type="hidden" name="leaveBalanceId" th:value="${balance.leaveBalanceId}" />
 				<label>Leave Type</label>
 				<input type="text" th:value="${balance.leaveType.name}" disabled />
 
@@ -197,38 +199,73 @@
 	<script>
 		const leaveTypeSelect = document.getElementById("leaveTypeSelect");
 		const totalDaysElement = document.getElementById("totalDays");
+		const leaveTypeElement = document.getElementById("type");
+		const employeeSelect = document.getElementById("employeeSelect");
 
-		if (leaveTypeSelect && totalDaysElement) {
-			leaveTypeSelect.addEventListener("change", function () {
-				const selectedOption =
-					leaveTypeSelect.options[leaveTypeSelect.selectedIndex];
-				const totalDaysValue = selectedOption.getAttribute("data-default-days");
-				if (totalDaysValue % 1 === 0) {
-					totalDaysElement.value = totalDaysValue | 0;
-				} else {
-					totalDaysElement.value = totalDaysValue;
-				}
+		function updateTotalDays() {
+			const employeeOption = employeeSelect.options[employeeSelect.selectedIndex];
+			const leaveTypeOption = leaveTypeSelect.options[leaveTypeSelect.selectedIndex];
 
-				const type = selectedOption.getAttribute("data-type");
-				if (type === "COMPENSATION") {
-					totalDaysElement.step = "0.5";
-					totalDaysElement.min = "0.0";
-				} else {
-					totalDaysElement.step = "1";
-					totalDaysElement.min = "0";
-				}
-			});
+			const designation = employeeOption.dataset.designation;
+			const leaveType = leaveTypeOption.dataset.type;
+			const defaultDays = parseInt(leaveTypeOption.dataset.defaultDays, 10);
+
+			let totalDays = "";
+			document.getElementById("designationInput").value = designation || "";
+
+			if (!employeeSelect.value || !leaveTypeSelect.value) {
+				totalDaysElement.value = "";
+				return;
+			}
+
+			if (designation === "Administrative" && leaveType === "ANNUAL") {
+				totalDays = 14;
+			} else if (designation === "Professional" && leaveType === "ANNUAL") {
+				totalDays = 18;
+			} else {
+				totalDays = defaultDays;
+			}
+
+			if (leaveType === "COMPENSATION") {
+				totalDaysElement.step = "0.5";
+				totalDaysElement.min = "0.0";
+			} else {
+				totalDaysElement.step = "1";
+				totalDaysElement.min = "0";
+			}
+
+			//totalDaysElement.value = totalDays;
+
+			if (totalDays % 1 === 0) {
+				totalDaysElement.value = totalDays | 0;
+			} else {
+				totalDaysElement.value = totalDays;
+			}
+
+			console.log("designation:", designation);
+			console.log("leaveType:", leaveType);
+			console.log("defaultDays:", defaultDays);
+			console.log("totalDays:", totalDays);
 		}
-		if (!leaveTypeSelect && totalDaysElement) {
-			const typeInput = document.getElementById("type");
-			if (typeInput) {
-				if (typeInput.value === "COMPENSATION") {
-					totalDaysElement.step = "0.5";
-					totalDaysElement.min = "0.0";
-				} else {
-					totalDaysElement.step = "1";
-					totalDaysElement.min = "0";
-				}
+
+		if (employeeSelect && leaveTypeSelect && totalDaysElement) {
+			employeeSelect.addEventListener("change", updateTotalDays);
+			leaveTypeSelect.addEventListener("change", updateTotalDays);
+		}
+
+
+		if (employeeSelect && leaveTypeSelect && totalDaysElement) {
+			employeeSelect.addEventListener("change", updateTotalDays);
+			leaveTypeSelect.addEventListener("change", updateTotalDays);
+		}
+
+		if (leaveTypeElement) {
+			if (leaveTypeElement.value === "COMPENSATION") {
+				totalDaysElement.step = "0.5";
+				totalDaysElement.min = "0.0";
+			} else {
+				totalDaysElement.step = "1";
+				totalDaysElement.min = "0";
 			}
 		}
 	</script>

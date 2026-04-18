@@ -1,28 +1,14 @@
 package nus_iss.LAPS.model;
 
+import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.groups.Default;
 
 /**
 	* Author: Junior
@@ -90,11 +76,11 @@ public class Employee {
 	private List<LeaveBalance> LeaveBalances = new ArrayList<>();
 	
 	//Self-referenced
-	@ManyToOne(cascade=CascadeType.ALL, fetch=FetchType.LAZY)
+	@ManyToOne(fetch=FetchType.LAZY)
 	@JoinColumn(name="supervisor_id")
 	private Employee supervisor;
 	
-	@OneToMany(mappedBy = "supervisor")
+	@OneToMany(mappedBy = "supervisor", fetch=FetchType.LAZY)
 	private List<Employee> subordinates;
 
 	// Htet Nandar (Grace) - 14/04/2026
@@ -265,13 +251,13 @@ public class Employee {
 	public Employee() {
 	}
 
-	@Override
-	public String toString() {
-		return "Employee [emp_id=" + emp_id + ", first_name=" + first_name + ", last_name=" + last_name + ", email="
-				+ email + ", phoneNumber=" + phoneNumber + ", department=" + department + ", designation=" + designation
-				+ ", hire_date=" + hire_date + ", employeeStatus=" + employeeStatus + ", createdBy=" + createdBy
-				+ ", createdWhen=" + createdWhen + ", updatedBy=" + updatedBy + ", updatedWhen=" + updatedWhen
-				+ ", user=" + user + ", LeaveBalances=" + LeaveBalances + ", supervisor=" + supervisor
-				+ ", subordinates=" + subordinates + "]";
-	}
+    @Override
+    public String toString() {
+        return "Employee{" +
+                "emp_id=" + emp_id +
+                ", first_name='" + first_name + '\'' +
+                ", last_name='" + last_name + '\'' +
+                ", email='" + email + '\'' +
+                '}';
+    }
 }

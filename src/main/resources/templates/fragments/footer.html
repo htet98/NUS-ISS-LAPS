@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<!--
+  Reusable footer fragment.
+  Usage in any page (place just before </body>):
+      <footer th:replace="~{fragments/footer :: footer}"></footer>
+-->
+<body>
+<footer th:fragment="footer" class="mt-5 py-3 bg-light border-top">
+    <div class="container text-center">
+        <span class="text-muted small">
+            &copy; 2026 LAPS &ndash; Leave Application Processing System &nbsp;|&nbsp; NUS-ISS &nbsp;|&nbsp; All rights reserved.
+        </span>
+    </div>
+</footer>
+</body>
+</html>

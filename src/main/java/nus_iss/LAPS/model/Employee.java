@@ -40,7 +40,7 @@ public class Employee {
 	@Column(name = "first_name")
 	private String first_name;
 	
-	//@NotNull(message = "Last_name is required")
+	@NotNull(message = "Last_name is required")
 	@Column(name= "last_name")
 	private String last_name;
 	
@@ -48,10 +48,10 @@ public class Employee {
 	@Column(name = "email")
 	@Email
 	private String email;
-	
+
 	@NotNull(message = "Phone Number is required")
 	@Column(name = "phone_number", length = 15)
-	@Pattern(regexp="^[689]\\d{7}$") //Not include Toll-free
+	@Pattern(regexp = "\\d{7,15}", message = "Phone number must be between 7 and 15 digits")
 	private String phoneNumber;
 	
 	@Column(name="department", nullable=false)
@@ -272,8 +272,5 @@ public class Employee {
 
 	public void setSubordinates(List<Employee> subordinates) {
 		this.subordinates = subordinates;
-	}
-	
-	
-
+  }	
 }

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/header :: head('Leave Report – LAPS')}"></head>
+<body>
+
+<div th:replace="~{fragments/layout :: navbar}"></div>
+
+<main class="container py-4">
+    <!-- Breadcrumb -->
+    <div th:replace="~{fragments/breadcrumb :: breadcrumbList(${breadcrumbs})}"></div>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">Leave Report</h2>
+            <p class="text-muted small mb-0">
+                <span th:text="${#temporals.format(startDate, 'dd MMM yyyy')}">–</span>
+                to
+                <span th:text="${#temporals.format(endDate, 'dd MMM yyyy')}">–</span>
+                <span th:if="${leaveTypeId != null}">
+                    &nbsp;·&nbsp;
+                    <span th:each="leaveType : ${leaveTypes}" th:if="${leaveType.leaveTypeId == leaveTypeId}"
+                          th:text="${leaveType.name}">Type</span>
+                </span>
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <!-- CSV Export -->
+            <a th:href="@{/report/leave/export(startDate=${startDate},endDate=${endDate},leaveTypeId=${leaveTypeId})}"
+               class="btn btn-outline-success btn-sm">⬇ Export CSV</a>
+            <a th:href="@{/report}" class="btn btn-outline-secondary btn-sm">← Back to Reports</a>
+        </div>
+    </div>
+
+    <!-- Refine filter -->
+    <div class="card mb-4">
+        <div class="card-body py-2">
+            <form th:action="@{/report/leave}" method="get" class="row g-2 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label small fw-semibold mb-1">Start Date</label>
+                    <input type="date" name="startDate" class="form-control form-control-sm"
+                           th:value="${startDate}" required/>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-semibold mb-1">End Date</label>
+                    <input type="date" name="endDate" class="form-control form-control-sm"
+                           th:value="${endDate}" required/>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-semibold mb-1">Leave Type</label>
+                    <select name="leaveTypeId" class="form-select form-select-sm">
+                        <option value="">All Types</option>
+                        <option th:each="leaveType : ${leaveTypes}"
+                                th:value="${leaveType.leaveTypeId}"
+                                th:text="${leaveType.name}"
+                                th:selected="${leaveType.leaveTypeId == leaveTypeId}">Type</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary btn-sm w-100">Re-run</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Summary badge -->
+    <div class="mb-3">
+        <span class="badge bg-secondary fs-6 px-3 py-2"
+              th:text="${#lists.size(applications)} + ' record(s) found'">0 records</span>
+    </div>
+
+    <!-- Results -->
+    <div class="card">
+        <div class="card-body p-0">
+            <div th:if="${#lists.isEmpty(applications)}" class="text-center text-muted py-5">
+                No approved leave records found for the selected period.
+            </div>
+
+            <div class="table-responsive" th:unless="${#lists.isEmpty(applications)}">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Employee</th>
+                            <th>Department</th>
+                            <th>Leave Type</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Duration</th>
+                            <th>Overseas</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="la : ${applications}">
+                            <td>
+                                <div class="fw-semibold"
+                                     th:text="${la.employee.first_name + ' ' + la.employee.last_name}">–</div>
+                                <div class="text-muted small" th:text="${la.employee.designation}">–</div>
+                            </td>
+                            <td th:text="${la.employee.department}">–</td>
+                            <td>
+                                <span class="badge bg-primary"
+                                      th:text="${la.leaveType != null ? la.leaveType.name : '–'}">–</span>
+                            </td>
+                            <td th:text="${#temporals.format(la.startDate, 'dd MMM yyyy')}">–</td>
+                            <td th:text="${#temporals.format(la.endDate, 'dd MMM yyyy')}">–</td>
+                            <td th:text="${la.durationDisplay}">–</td>
+                            <td>
+                                <span th:if="${la.isOverseas}" class="badge bg-info text-dark">Overseas</span>
+                                <span th:unless="${la.isOverseas}" class="text-muted small">–</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>

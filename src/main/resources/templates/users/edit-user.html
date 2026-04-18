@@ -1,0 +1,120 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:insert="~{fragments/header :: head('Page Title – LAPS')}"></head>
+
+<head>		
+	<title>Edit User</title>
+
+	<style>
+	    html {
+	        padding: 0;
+	        margin: 0;
+	    }
+
+	    body {
+	        background: #f4f6f8;
+	        height: 100vh;
+	        padding: 0;
+	    }
+
+	    .main {
+	        padding: 20px;
+	        background: #2a66a1;
+	    }
+
+	    .container {
+	        display: flex;
+	        justify-content: center;
+	        align-items: center;
+	    }
+
+	    .card {
+	        margin-top: 40px;
+	        background: white;
+	        padding: 30px;
+	        border-radius: 10px;
+	        width: 50%;
+	        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+	    }
+
+	    h2 {
+	        margin-bottom: 20px;
+	    }
+
+	    label {
+	        display: block;
+	        margin-top: 10px;
+	    }
+
+	    select {
+	        width: 100%;
+	        padding: 8px;
+	        margin-top: 5px;
+	        border-radius: 5px;
+	        border: 1px solid #ccc;
+	    }
+
+	    input {
+	        width: 100%;
+	        padding: 8px;
+	        margin-top: 5px;
+	        border-radius: 5px;
+	        border: 1px solid #ccc;
+	    }
+
+	    button:hover {
+	        background: #0056b3;
+	    }
+	</style>
+	</head>
+	<body>
+	<div th:replace="~{fragments/layout :: navbar}"></div>
+	<div class="container" th:if="${session.role != null and session.role.name() == 'ADMIN'}">
+	    <div class="card">
+		<!--Edit User-->
+		<h2>Edit User</h2>
+        <div class="mt-1">
+            <div th:if="${error}" style="color:red;">
+                <p th:text="${error}"></p>
+            </div>
+            <div th:if="${success}" style="color:green;">
+                <p th:text="${success}"></p>
+            </div>
+        </div>
+		
+		<form th:action="@{/users/save}" 
+		      th:object="${user}" 
+		      method="post">
+
+		    <!-- ID -->
+		    <input type="hidden" th:field="*{user_id}" />
+
+		    <label>Username</label>
+		    <input type="text" th:field="*{username}" required />
+
+		    <label>Email</label>
+		    <input type="email" th:field="*{email}" required />
+
+		    <label>Password</label>
+		    <input type="password" th:field="*{password}" 
+		           placeholder="Leave blank to keep current password"/>
+
+		    <label>Role</label>
+		    <select th:field="*{role}">
+		        <option th:each="r : ${roles}"
+		                th:value="${r}"
+		                th:text="${r}">
+		        </option>
+		    </select>
+
+		    <button type="submit">Update</button>
+		</form>
+
+		<form th:action="@{/users/manage-user}" method="get">
+		    <div class="d-grid gap-2 mt-2">
+		        <button class="btn btn-secondary" type="submit">Back</button>
+		    </div>
+		</form>
+    </div>
+</div>

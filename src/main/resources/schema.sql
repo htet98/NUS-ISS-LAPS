@@ -3,96 +3,98 @@
 -- Schema SQL
 -- ============================================================
 
+-- Disable foreign key checks to allow dropping tables with constraints
+SET FOREIGN_KEY_CHECKS = 0;
+
 -- Drop tables in reverse dependency order
 DROP TABLE IF EXISTS leave_application;
-DROP TABLE IF EXISTS leave_balance;
-DROP TABLE IF EXISTS employee;
-DROP TABLE IF EXISTS leave_type;
-DROP TABLE IF EXISTS public_holiday;
-DROP TABLE IF EXISTS user;
+DROP TABLE IF EXISTS leave_balances;
+DROP TABLE IF EXISTS employees;
+DROP TABLE IF EXISTS leave_types;
+DROP TABLE IF EXISTS public_holidays;
+DROP TABLE IF EXISTS users;
+
+-- Re-enable foreign key checks
+SET FOREIGN_KEY_CHECKS = 1;
 
 -- ============================================================
 -- Table: user
 -- ============================================================
-CREATE TABLE user (
-    user_id       BIGINT AUTO_INCREMENT PRIMARY KEY,
-    username      VARCHAR(50)  NOT NULL UNIQUE,
-    email         VARCHAR(100) NOT NULL UNIQUE,
-    password_hash VARCHAR(255) NOT NULL,
-    role          ENUM('EMPLOYEE', 'MANAGER', 'ADMIN') NOT NULL DEFAULT 'EMPLOYEE',
-    created_by    VARCHAR(50),
-    created_when  DATETIME     DEFAULT CURRENT_TIMESTAMP,
-    updated_by    VARCHAR(50),
-    updated_when  DATETIME     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+CREATE TABLE users (
+    user_id             BIGINT AUTO_INCREMENT PRIMARY KEY,
+    username          VARCHAR(50)  NOT NULL UNIQUE,
+    email                 VARCHAR(100) NOT NULL UNIQUE,
+    password           VARCHAR(255) NOT NULL,
+    role                    ENUM('EMPLOYEE', 'MANAGER', 'ADMIN') NOT NULL DEFAULT 'EMPLOYEE',
+    created_by        VARCHAR(50),
+    created_when    DATETIME     DEFAULT CURRENT_TIMESTAMP,
+    updated_by        VARCHAR(50),
+    updated_when    DATETIME     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    active                  BOOLEAN      NOT NULL DEFAULT TRUE
 );
 
 -- ============================================================
 -- Table: leave_type
 -- ============================================================
-CREATE TABLE leave_type (
-    leavetype_id  BIGINT AUTO_INCREMENT PRIMARY KEY,
-    name          VARCHAR(50)  NOT NULL UNIQUE,
-    description   VARCHAR(255),
-    default_days  INT          NOT NULL DEFAULT 0,
-    is_paid       BOOLEAN      NOT NULL DEFAULT TRUE
+CREATE TABLE leave_types (
+     leavetype_id       BIGINT AUTO_INCREMENT PRIMARY KEY,
+     name                   ENUM('ANNUAL', 'MEDICAL', 'COMPENSATION') NOT NULL DEFAULT 'ANNUAL', -- NameTypeEnum: ANNUAL, MEDICAL, COMPENSATION
+     description          VARCHAR(255),
+     default_days       INT     NOT NULL    DEFAULT 0,
+     is_paid                BOOLEAN     NOT NULL    DEFAULT TRUE
 );
 
 -- ============================================================
 -- Table: public_holiday
 -- ============================================================
-CREATE TABLE public_holiday (
-    publicholiday_id  BIGINT AUTO_INCREMENT PRIMARY KEY,
-    date              DATE         NOT NULL UNIQUE,
-    description       VARCHAR(100) NOT NULL
+CREATE TABLE public_holidays (
+     holiday_id     BIGINT AUTO_INCREMENT PRIMARY KEY,
+     name               VARCHAR(255)  NOT NULL    UNIQUE,
+     date               DATE      NOT NULL        UNIQUE,
+     description    VARCHAR(255)
 );
 
 -- ============================================================
 -- Table: employee
 -- (self-referencing FK for supervisor hierarchy)
 -- ============================================================
-CREATE TABLE employee (
-    emp_id        BIGINT AUTO_INCREMENT PRIMARY KEY,
-    user_id       BIGINT       NOT NULL UNIQUE,
-    first_name    VARCHAR(50)  NOT NULL,
-    last_name     VARCHAR(50)  NOT NULL,
-    department    VARCHAR(100),
-    supervisor_id BIGINT,
-    hire_date     DATE         NOT NULL,
-    status        ENUM('ACTIVE', 'INACTIVE', 'ON_LEAVE', 'RESIGNED') NOT NULL DEFAULT 'ACTIVE',
-    created_by    VARCHAR(50),
-    created_when  DATETIME     DEFAULT CURRENT_TIMESTAMP,
-    updated_by    VARCHAR(50),
-    updated_when  DATETIME     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+CREATE TABLE employees (
+       emp_id               BIGINT AUTO_INCREMENT PRIMARY KEY,
+       first_name          VARCHAR(255),
+       last_name            VARCHAR(255) NOT NULL,
+       email                    VARCHAR(255) NOT NULL,
+       phone_number     VARCHAR(15) NOT NULL,
+       department           VARCHAR(255) NOT NULL,
+       designation           VARCHAR(255) NOT NULL,
+       hire_date            DATE NOT NULL,
+       employee_status ENUM('ACTIVE', 'INACTIVE', 'ON_LEAVE', 'RESIGNED'), -- ACTIVE, INACTIVE,ON_LEAVE,RESIGNED
+       created_by           VARCHAR(255) NOT NULL,
+       created_when       DATETIME      NOT NULL    DEFAULT CURRENT_TIMESTAMP,
+       updated_by           VARCHAR(255),
+       updated_when        DATETIME     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+       user_id                  BIGINT      NOT NULL UNIQUE,
+       supervisor_id        BIGINT,
+       CONSTRAINT fk_employee_user
+           FOREIGN KEY (user_id) REFERENCES users(user_id),
 
-    CONSTRAINT fk_employee_user
-        FOREIGN KEY (user_id) REFERENCES user(user_id)
-        ON DELETE RESTRICT ON UPDATE CASCADE,
-
-    CONSTRAINT fk_employee_supervisor
-        FOREIGN KEY (supervisor_id) REFERENCES employee(emp_id)
-        ON DELETE SET NULL ON UPDATE CASCADE
+       CONSTRAINT fk_employee_supervisor
+           FOREIGN KEY (supervisor_id) REFERENCES employees(emp_id)
 );
 
 -- ============================================================
 -- Table: leave_balance
 -- ============================================================
-CREATE TABLE leave_balance (
+CREATE TABLE leave_balances (
     leavebalance_id  BIGINT AUTO_INCREMENT PRIMARY KEY,
-    emp_id           BIGINT NOT NULL,
-    leavetype_id     BIGINT NOT NULL,
-    total_days       DOUBLE NOT NULL DEFAULT 0,
-    used_days        DOUBLE NOT NULL DEFAULT 0,
+    total_days          DOUBLE NOT NULL DEFAULT 0,
+    used_days           DOUBLE NOT NULL DEFAULT 0,
+    leavetype_id        BIGINT NOT NULL,
+    emp_id                  BIGINT NOT NULL,
+    CONSTRAINT fk_balance_leavetype
+        FOREIGN KEY (leavetype_id) REFERENCES leave_types(leavetype_id),
 
-    CONSTRAINT fk_leavebalance_employee
-        FOREIGN KEY (emp_id) REFERENCES employee(emp_id)
-        ON DELETE CASCADE ON UPDATE CASCADE,
-
-    CONSTRAINT fk_leavebalance_leavetype
-        FOREIGN KEY (leavetype_id) REFERENCES leave_type(leavetype_id)
-        ON DELETE RESTRICT ON UPDATE CASCADE,
-
-    CONSTRAINT uq_leavebalance_emp_type
-        UNIQUE (emp_id, leavetype_id)
+    CONSTRAINT fk_balance_employee
+        FOREIGN KEY (emp_id) REFERENCES employees(emp_id)
 );
 
 -- ============================================================
@@ -100,31 +102,37 @@ CREATE TABLE leave_balance (
 -- ============================================================
 CREATE TABLE leave_application (
     leaveapplication_id  BIGINT AUTO_INCREMENT PRIMARY KEY,
-    emp_id               BIGINT       NOT NULL,
-    leavetype_id         BIGINT       NOT NULL,
-    start_date           DATE         NOT NULL,
-    end_date             DATE         NOT NULL,
-    duration_days        DOUBLE       NOT NULL,
-    reason               TEXT         NOT NULL,
-    status               ENUM('PENDING', 'APPROVED', 'REJECTED', 'CANCELLED') NOT NULL DEFAULT 'PENDING',
-    approved_by          BIGINT,
-    created_by           VARCHAR(50),
-    created_when         DATETIME     DEFAULT CURRENT_TIMESTAMP,
-    updated_by           VARCHAR(50),
-    updated_when         DATETIME     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-
-    CONSTRAINT fk_leaveapp_employee
-        FOREIGN KEY (emp_id) REFERENCES employee(emp_id)
+    emp_id                            BIGINT       NOT NULL,
+    leavetype_id                    BIGINT       NOT NULL,
+    start_date                       DATE         NOT NULL,
+    end_date                          DATE         NOT NULL,
+    duration_days                  DOUBLE       NOT NULL,
+    reason                              TEXT         NOT NULL,
+    work_dissemination         TEXT,
+    is_overseas                     BOOLEAN NOT NULL DEFAULT FALSE,
+    contact_details             TEXT,
+    status                          ENUM('APPLIED','UPDATED','APPROVED','REJECTED','CANCELLED','DELETED') NOT NULL DEFAULT 'APPLIED',
+    approved_by                BIGINT DEFAULT NULL,
+    manager_comment         TEXT,
+    is_half_day                 BOOLEAN     NOT NULL    DEFAULT FALSE,
+    half_day_period         ENUM('MORNING', 'AFTERNOON') DEFAULT NULL,
+    created_by                  VARCHAR(50),
+    created_when            DATETIME     DEFAULT CURRENT_TIMESTAMP,
+    updated_by                 VARCHAR(50),
+    updated_when            DATETIME     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_leave_employee
+        FOREIGN KEY (emp_id) REFERENCES employees(emp_id)
         ON DELETE RESTRICT ON UPDATE CASCADE,
 
-    CONSTRAINT fk_leaveapp_leavetype
-        FOREIGN KEY (leavetype_id) REFERENCES leave_type(leavetype_id)
+    CONSTRAINT fk_leave_type
+        FOREIGN KEY (leavetype_id) REFERENCES leave_types(leavetype_id)
         ON DELETE RESTRICT ON UPDATE CASCADE,
 
-    CONSTRAINT fk_leaveapp_approvedby
-        FOREIGN KEY (approved_by) REFERENCES employee(emp_id)
+    CONSTRAINT fk_leave_approver
+        FOREIGN KEY (approved_by) REFERENCES employees(emp_id)
         ON DELETE SET NULL ON UPDATE CASCADE,
+    CHECK (start_date <= end_date),
+    CHECK (duration_days > 0)
 
-    CONSTRAINT chk_dates
-        CHECK (end_date >= start_date)
 );
+

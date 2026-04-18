@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+<nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+    <div class="container">
+
+        <!-- Brand -->
+        <a class="navbar-brand fw-bold" th:href="@{/}">📋 LAPS</a>
+
+        <!-- Mobile toggle -->
+        <button class="navbar-toggler" type="button"
+                data-bs-toggle="collapse" data-bs-target="#navbarMain">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarMain">
+
+            <!-- Left nav links — shown when logged in -->
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0" th:if="${session.userId != null}">
+                <!-- MANAGER-specific links -->
+                <li class="nav-item" th:if="${session.role != null and session.role.name() == ROLE_MANAGER}">
+                    <a class="nav-link" th:href="@{__${ROUTE_MANAGER_PENDING}__}">⏳ Pending Approvals</a>
+                </li>
+                <li class="nav-item" th:if="${session.role != null and session.role.name() == ROLE_MANAGER}">
+                    <a class="nav-link" th:href="@{__${ROUTE_MANAGER_ALL}__}">Team History</a>
+                </li>
+
+                <!-- Common Links (Employee or Manager) -->
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{__${ROUTE_LEAVE_APPLY}__}" th:unless="${session.role != null and session.role.name() == ROLE_ADMIN}">Apply for Leave</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{__${ROUTE_LEAVE_HISTORY}__}" th:unless="${session.role != null and session.role.name() == ROLE_ADMIN}">My Leave History</a>
+                </li>
+
+                <!-- Movement Register (All logged-in users) -->
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/movement/register}">Movement Register</a>
+                </li>
+
+                <!-- Reports link only for MANAGER role (not for ADMIN, as per requirements)-->
+                <li class="nav-item" th:if="${session.role != null and session.role.name() == ROLE_MANAGER}">
+                    <a class="nav-link" th:href="@{/report}">📊 Reports</a>
+                </li>
+
+                <!-- ADMIN-specific links -->
+                <li class="nav-item" th:if="${session.role != null and session.role.name() == ROLE_ADMIN}">
+                    <a class="nav-link" th:href="@{__${ROUTE_ADMIN_HIERARCHY}__}">Manage Approval Hierarchy</a>
+                </li>
+				
+				<!-- ADMIN links -->
+                <li class="nav-item" th:if="${session.role != null and session.role.name() == 'ADMIN'}">
+                    <a class="nav-link" th:href="@{/admin/employee/hierarchy}">
+                        Manage Approval Hierarchy
+                    </a>
+                </li>
+                <li class="nav-item" th:if="${session.role != null and session.role.name() == 'ADMIN'}">
+                    <a class="nav-link" th:href="@{__${ROUTE_ADMIN_EMPLOYEE_LIST}__}">Manage Staff</a>
+                </li>
+				<li class="nav-item" th:if="${session.role != null and session.role.name() == 'ADMIN'}">
+				    <a class="nav-link" th:href="@{__${ROUTE_ADMIN_LEAVETYPE}__}">
+				        Manage Leave Types
+				    </a>
+				</li>
+				<!-- ADMIN links -->
+				<li class="nav-item" th:if="${session.role != null and session.role.name() == 'ADMIN'}">
+				    <a class="nav-link" th:href="@{/leave-balances}">
+				         Manage Leave Balance
+				    </a>
+				</li>
+            </ul>
+
+            <!-- Right side: username + role badge + logout -->
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0" th:if="${session.userId != null}">
+                <li class="nav-item d-flex align-items-center me-3">
+                    <span class="badge rounded-pill"
+                          th:classappend="${session.role != null and session.role.name() == ROLE_MANAGER} ? 'bg-warning text-dark' : 'bg-light text-dark'"
+                          th:text="${session.role != null ? session.role.name() : ''}">ROLE</span>
+                    <span class="text-white ms-2 small"
+                          th:text="${session.username}">username</span>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white-50" th:href="@{/logout}" onclick="return confirm('Are you sure you want to log out?');">Logout</a>
+                </li>
+            </ul>
+
+        </div>
+    </div>
+</nav>
+
+<nav th:fragment="pagination(baseUrl, currentPage, totalPages, totalItems)"
+     th:if="${totalPages > 1}"
+     aria-label="Page navigation" class="mt-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <div class="text-muted small">
+            Showing page <span th:text="${currentPage + 1}">1</span> of <span th:text="${totalPages}">1</span>
+            (<span th:text="${totalItems}">0</span> total items)
+        </div>
+        <ul class="pagination pagination-sm mb-0">
+            <!-- Previous Button -->
+            <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                <a class="page-link"
+                   th:href="@{__${baseUrl}__(page=${currentPage - 1}, size=${size != null ? size : defaultPageSize}, status=${selectedStatus}, leaveTypeId=${selectedLeaveTypeId})}"
+                   aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+
+            <!-- Page Numbers -->
+            <li th:each="pageNum : ${#numbers.sequence(0, totalPages - 1)}"
+                class="page-item"
+                th:classappend="${pageNum == currentPage} ? 'active'">
+                <a class="page-link"
+                   th:href="@{__${baseUrl}__(page=${pageNum}, size=${size != null ? size : defaultPageSize}, status=${selectedStatus}, leaveTypeId=${selectedLeaveTypeId})}"
+                   th:text="${pageNum + 1}">1</a>
+            </li>
+
+            <!-- Next Button -->
+            <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
+                <a class="page-link"
+                   th:href="@{__${baseUrl}__(page=${currentPage + 1}, size=${size != null ? size : defaultPageSize}, status=${selectedStatus}, leaveTypeId=${selectedLeaveTypeId})}"
+                   aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+</body>
+</html>

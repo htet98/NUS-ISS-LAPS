@@ -1,5 +1,6 @@
 package nus_iss.LAPS.validators;
 
+import nus_iss.LAPS.model.Designation;
 import nus_iss.LAPS.model.LeaveBalance;
 import nus_iss.LAPS.model.NameTypeEnum;
 import nus_iss.LAPS.repository.LeaveBalanceRepository;
@@ -58,10 +59,34 @@ public class LeaveBalanceValidator implements Validator {
 			errors.rejectValue("usedDays", "error.used.exceed",
 					"Total days cannot be less than used days.");
 		}
-		
+
 		// 3. Leave type rules
 		NameTypeEnum type = balance.getLeaveType().getName();
+		if (type == NameTypeEnum.MEDICAL) {
+			if (totalDays > 60) {
+				errors.rejectValue("totalDays", "error.total.day",
+						balance.getLeaveType().getName() + " leave : maximum 60 days ");
+			}
+		}
 
+		Designation designation = balance.getEmployee().getDesignation();
+
+		if (type == NameTypeEnum.ANNUAL) {
+			if (designation == Designation.ADMINISTRATIVE) {
+				if (totalDays > 14) {
+					errors.rejectValue("totalDays", "error.total.day",
+							balance.getLeaveType().getName() + " leave for " + designation
+									+ " staff : maximum 14 days.");
+				}
+			}
+			if (designation == Designation.PROFESSIONAL) {
+				if (totalDays > 18) {
+					errors.rejectValue("totalDays", "error.total.day",
+							balance.getLeaveType().getName() + " leave for " + designation
+									+ " staff : maximum 18 days.");
+				}
+			}
+		}
 		if (type == NameTypeEnum.COMPENSATION) {
 			if ((totalDays * 2) % 1 != 0) {
 				errors.rejectValue("totalDays", "error.total.half",
@@ -80,6 +105,7 @@ public class LeaveBalanceValidator implements Validator {
 				errors.rejectValue("usedDays", "error.used.whole",
 						balance.getLeaveType().getName() + " leave must be whole days.");
 			}
+
 		}
 
 		// 4. Duplicate check

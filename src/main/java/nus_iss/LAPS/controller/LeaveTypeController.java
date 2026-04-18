@@ -35,7 +35,7 @@ public class LeaveTypeController {
 	}
 
 	private boolean isLoggedIn(HttpSession session) {
-		return (session.getAttribute("user") != null);
+		return (session.getAttribute("userId") != null);
 	}
 
 	private boolean isAdmin(HttpSession session) {

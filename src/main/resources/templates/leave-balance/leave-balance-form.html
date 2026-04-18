@@ -234,18 +234,11 @@
 				totalDaysElement.min = "0";
 			}
 
-			//totalDaysElement.value = totalDays;
-
 			if (totalDays % 1 === 0) {
 				totalDaysElement.value = totalDays | 0;
 			} else {
 				totalDaysElement.value = totalDays;
 			}
-
-			console.log("designation:", designation);
-			console.log("leaveType:", leaveType);
-			console.log("defaultDays:", defaultDays);
-			console.log("totalDays:", totalDays);
 		}
 
 		if (employeeSelect && leaveTypeSelect && totalDaysElement) {
@@ -253,11 +246,6 @@
 			leaveTypeSelect.addEventListener("change", updateTotalDays);
 		}
 
-
-		if (employeeSelect && leaveTypeSelect && totalDaysElement) {
-			employeeSelect.addEventListener("change", updateTotalDays);
-			leaveTypeSelect.addEventListener("change", updateTotalDays);
-		}
 
 		if (leaveTypeElement) {
 			if (leaveTypeElement.value === "COMPENSATION") {

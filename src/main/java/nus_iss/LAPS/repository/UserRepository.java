@@ -17,4 +17,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
 //Loh Si Hua - 18/04/2026 - CRUD
 Page<User> findByUsernameContaining(String keyword, Pageable pageable);
+
+    @Query("SELECT u FROM User u WHERE u.employee IS NULL and u.role <> 'ADMIN'") // Junior
+    List<User> findUnassignedUsers();
 }

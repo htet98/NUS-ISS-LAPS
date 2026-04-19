@@ -13,45 +13,39 @@ import java.util.List;
 /**
 	* Author: Junior
  	* Created on: 13/04/2026
- 	* Updated on 15/04/2026 (LOMBOK, Designation change to ENUM)
 **/
 
 @Entity
 @Table(name = "employees")
 public class Employee {
-	
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name= "emp_id")
 	private Long emp_id;
-	
-	@Column(name = "first_name")
+
+	@Column(name = "first_name", nullable=false)
 	private String first_name;
-	
-	@NotNull(message = "Last_name is required")
-	@Column(name= "last_name")
+
+	@Column(name= "last_name", nullable=false)
 	private String last_name;
-	
-	@NotNull(message = "Email Address is required")
-	@Column(name = "email")
-	@Email
+
+	@Column(name = "email", nullable=false)
 	private String email;
 
-	@NotNull(message = "Phone Number is required")
-	@Column(name = "phone_number", length = 15)
-	@Pattern(regexp = "\\d{7,15}", message = "Phone number must be between 7 and 15 digits")
+	@Column(name = "phone_number", length = 15, nullable=false)
 	private String phoneNumber;
-	
+
 	@Column(name="department", nullable=false)
 	private String department;
-	
+
 	@Enumerated(EnumType.STRING)
 	@Column(name="designation", nullable=false, length = 20)
 	private Designation designation;
-	
+
 	@Column(name="hire_date", nullable=false)
 	private LocalDate hire_date;
-	
+
 	@Enumerated(EnumType.STRING)
 	@Column(name="employee_status")
 	private EmployeeStatus employeeStatus;
@@ -221,13 +215,10 @@ public class Employee {
 		this.subordinates = subordinates;
 	}
 
-	public Employee(Long emp_id, String first_name, @NotNull(message = "Last_name is required") String last_name,
-			@NotNull(message = "Email Address is required") @Email String email,
-			@NotNull(message = "Phone Number is required") String phoneNumber, String department,
-			Designation designation, LocalDate hire_date,
-			EmployeeStatus employeeStatus, String createdBy, LocalDateTime createdWhen, String updatedBy,
-			LocalDateTime updatedWhen, User user, List<LeaveBalance> leaveBalances, Employee supervisor,
-			List<Employee> subordinates) {
+	public Employee(Long emp_id, String first_name, String last_name, @Email String email, String phoneNumber,
+					String department, Designation designation, LocalDate hire_date, EmployeeStatus employeeStatus,
+					String createdBy, LocalDateTime createdWhen, String updatedBy, LocalDateTime updatedWhen, User user,
+					List<LeaveBalance> leaveBalances, Employee supervisor, List<Employee> subordinates) {
 		super();
 		this.emp_id = emp_id;
 		this.first_name = first_name;
@@ -243,10 +234,11 @@ public class Employee {
 		this.updatedBy = updatedBy;
 		this.updatedWhen = updatedWhen;
 		this.user = user;
-		this.LeaveBalances = leaveBalances;
+		LeaveBalances = leaveBalances;
 		this.supervisor = supervisor;
 		this.subordinates = subordinates;
 	}
+
 
 	public Employee() {
 	}

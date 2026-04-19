@@ -14,7 +14,6 @@ import java.util.Optional;
 /**
 	* Author: Junior
  	* Created on: 13/04/2026
- 	* Updated on: 15/04/2026
 **/
 
 public interface EmployeeRepository extends JpaRepository<Employee, Long> {

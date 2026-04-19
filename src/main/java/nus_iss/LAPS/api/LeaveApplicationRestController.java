@@ -1,22 +1,24 @@
 package nus_iss.LAPS.api;
 
-import nus_iss.LAPS.dto.*;
-import nus_iss.LAPS.model.Employee;
-import nus_iss.LAPS.model.LeaveApplication;
-import nus_iss.LAPS.model.HalfDayPeriod;
-import nus_iss.LAPS.model.LeaveStatus;
-import nus_iss.LAPS.model.LeaveType;
+import nus_iss.LAPS.dto.ApiResponse;
+import nus_iss.LAPS.dto.LeaveRequest;
+import nus_iss.LAPS.dto.LeaveResponse;
+import nus_iss.LAPS.dto.ManagerActionRequest;
+import nus_iss.LAPS.model.*;
 import nus_iss.LAPS.repository.EmployeeRepository;
 import nus_iss.LAPS.repository.LeaveTypeRepository;
 import nus_iss.LAPS.service.LeaveApplicationService;
 import nus_iss.LAPS.util.ApiRoutes;
-import nus_iss.LAPS.util.GlobalConstants;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -75,6 +77,102 @@ public class LeaveApplicationRestController {
                     .map(la -> ResponseEntity.ok((Object) LeaveResponse.fromEntity(la)))
                     .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
                             .body(new ApiResponse(false, "Leave application not found", null)));
+        } catch (Exception e) {
+            return err(e);
+        }
+    }
+
+    // ── EMPLOYEE: Get personal leave history with pagination ──────────────────
+    @GetMapping(ApiRoutes.LEAVE_EMPLOYEE + "/paginated")
+    public ResponseEntity<?> getEmployeeLeavePaginated(
+            @PathVariable Long employeeId,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Long leaveTypeId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        try {
+            Employee emp = findEmployee(employeeId);
+            Pageable pageable = PageRequest.of(page, size, Sort.by("startDate").descending());
+
+            Page<LeaveApplication> applicationPage;
+            if (status != null && !status.isBlank() && leaveTypeId != null) {
+                LeaveStatus leaveStatus = LeaveStatus.valueOf(status);
+                applicationPage = leaveApplicationService
+                        .getPersonalLeaveHistoryByStatusAndTypePaginated(emp, leaveStatus, leaveTypeId, pageable);
+            } else if (status != null && !status.isBlank()) {
+                LeaveStatus leaveStatus = LeaveStatus.valueOf(status);
+                applicationPage = leaveApplicationService
+                        .getPersonalLeaveHistoryByStatusPaginated(emp, leaveStatus, pageable);
+            } else if (leaveTypeId != null) {
+                applicationPage = leaveApplicationService
+                        .getPersonalLeaveHistoryByTypePaginated(emp, leaveTypeId, pageable);
+            } else {
+                applicationPage = leaveApplicationService.getPersonalLeaveHistoryPaginated(emp, pageable);
+            }
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("content", applicationPage.getContent().stream()
+                    .map(LeaveResponse::fromEntity).collect(Collectors.toList()));
+            response.put("currentPage", page);
+            response.put("size", size);
+            response.put("totalPages", applicationPage.getTotalPages());
+            response.put("totalItems", applicationPage.getTotalElements());
+            
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(new ApiResponse(false, "Invalid status: " + e.getMessage(), null));
+        } catch (Exception e) {
+            return err(e);
+        }
+    }
+
+    // ── MANAGER: Pending applications with pagination ───────────────────────────
+    @GetMapping(ApiRoutes.MANAGER_PENDING + "/paginated")
+    public ResponseEntity<?> getPendingForManagerPaginated(
+            @PathVariable Long managerId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        try {
+            Employee mgr = findEmployee(managerId);
+            Pageable pageable = PageRequest.of(page, size, Sort.by("startDate").descending());
+            Page<LeaveApplication> applicationPage = leaveApplicationService
+                    .getPendingApplicationsForManagerPaginated(mgr, pageable);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("content", applicationPage.getContent().stream()
+                    .map(LeaveResponse::fromEntity).collect(Collectors.toList()));
+            response.put("currentPage", page);
+            response.put("size", size);
+            response.put("totalPages", applicationPage.getTotalPages());
+            response.put("totalItems", applicationPage.getTotalElements());
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return err(e);
+        }
+    }
+
+    // ── MANAGER: All subordinate history with pagination ────────────────────────
+    @GetMapping(ApiRoutes.MANAGER_SUBORDINATES + "/paginated")
+    public ResponseEntity<?> getSubordinateHistoryPaginated(
+            @PathVariable Long managerId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        try {
+            Employee mgr = findEmployee(managerId);
+            Pageable pageable = PageRequest.of(page, size, Sort.by("startDate").descending());
+            Page<LeaveApplication> applicationPage = leaveApplicationService
+                    .getAllApplicationsForManagerPaginated(mgr, pageable);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("content", applicationPage.getContent().stream()
+                    .map(LeaveResponse::fromEntity).collect(Collectors.toList()));
+            response.put("currentPage", page);
+            response.put("size", size);
+            response.put("totalPages", applicationPage.getTotalPages());
+            response.put("totalItems", applicationPage.getTotalElements());
+            
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             return err(e);
         }

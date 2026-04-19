@@ -1,24 +1,18 @@
 package nus_iss.LAPS.controller;
 
+import jakarta.servlet.http.HttpSession;
+import lombok.extern.slf4j.Slf4j;
 import nus_iss.LAPS.api.LeaveApplicationRestController;
-import nus_iss.LAPS.dto.*;
-import nus_iss.LAPS.model.Employee;
-import nus_iss.LAPS.model.HalfDayPeriod;
-import nus_iss.LAPS.model.LeaveApplication;
-import nus_iss.LAPS.model.LeaveStatus;
-import nus_iss.LAPS.model.LeaveType;
+import nus_iss.LAPS.dto.ApiResponse;
+import nus_iss.LAPS.dto.LeaveRequest;
+import nus_iss.LAPS.dto.LeaveResponse;
+import nus_iss.LAPS.dto.ManagerActionRequest;
+import nus_iss.LAPS.model.*;
 import nus_iss.LAPS.repository.LeaveTypeRepository;
-import nus_iss.LAPS.service.LeaveApplicationService;
 import nus_iss.LAPS.service.LeaveBalanceService;
 import nus_iss.LAPS.util.BreadcrumbItem;
 import nus_iss.LAPS.util.GlobalConstants;
-import jakarta.servlet.http.HttpSession;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -27,14 +21,12 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Controller
 @RequestMapping(GlobalConstants.ROUTE_LEAVE)
 public class LeaveApplicationController {
 
-    @Autowired private LeaveApplicationService leaveApplicationService;
     @Autowired private LeaveBalanceService     leaveBalanceService;
     @Autowired private LeaveTypeRepository     leaveTypeRepo;
     @Autowired private LeaveApplicationRestController restController;
@@ -148,31 +140,32 @@ public class LeaveApplicationController {
         if (!isLoggedIn(session)) return GlobalConstants.REDIRECT_LOGIN;
         Employee emp = getSessionEmployee(session);
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by("startDate").descending());
-
-        // Apply filters if provided
-        Page<LeaveApplication> applicationPage;
-        if (status != null && !status.isBlank() && leaveTypeId != null) {
-            LeaveStatus leaveStatus = LeaveStatus.valueOf(status);
-            applicationPage = leaveApplicationService
-                    .getPersonalLeaveHistoryByStatusAndTypePaginated(emp, leaveStatus, leaveTypeId, pageable);
-        } else if (status != null && !status.isBlank()) {
-            LeaveStatus leaveStatus = LeaveStatus.valueOf(status);
-            applicationPage = leaveApplicationService
-                    .getPersonalLeaveHistoryByStatusPaginated(emp, leaveStatus, pageable);
-        } else if (leaveTypeId != null) {
-            applicationPage = leaveApplicationService
-                    .getPersonalLeaveHistoryByTypePaginated(emp, leaveTypeId, pageable);
-        } else {
-            applicationPage = leaveApplicationService.getPersonalLeaveHistoryPaginated(emp, pageable);
+        try {
+            // Call REST controller for paginated data
+            ResponseEntity<?> response = restController.getEmployeeLeavePaginated(
+                    emp.getEmp_id(), status, leaveTypeId, page, size);
+            
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() instanceof java.util.Map pageData) {
+                model.addAttribute("applications", (List<?>) pageData.get("content"));
+                model.addAttribute("currentPage", pageData.get("currentPage"));
+                model.addAttribute("size", pageData.get("size"));
+                model.addAttribute("totalPages", pageData.get("totalPages"));
+                model.addAttribute("totalItems", pageData.get("totalItems"));
+            } else {
+                model.addAttribute("applications", List.of());
+                model.addAttribute("currentPage", page);
+                model.addAttribute("size", size);
+                model.addAttribute("totalPages", 0);
+                model.addAttribute("totalItems", 0L);
+            }
+        } catch (Exception e) {
+            log.error("Error fetching leave history for employee {}: {}", emp.getEmp_id(), e.getMessage());
+            model.addAttribute("applications", List.of());
+            model.addAttribute("currentPage", page);
+            model.addAttribute("size", size);
+            model.addAttribute("totalPages", 0);
+            model.addAttribute("totalItems", 0L);
         }
-
-        model.addAttribute("applications", applicationPage.getContent().stream()
-                .map(LeaveResponse::fromEntity).collect(Collectors.toList()));
-        model.addAttribute("currentPage", page);
-        model.addAttribute("size", size);
-        model.addAttribute("totalPages", applicationPage.getTotalPages());
-        model.addAttribute("totalItems", applicationPage.getTotalElements());
 
         model.addAttribute("leaveBalances",
                 leaveBalanceService.getLeaveBalancesByEmployeeId(emp.getEmp_id()));
@@ -200,22 +193,29 @@ public class LeaveApplicationController {
         if (!isLoggedIn(session)) return GlobalConstants.REDIRECT_LOGIN;
 
         Employee emp = getSessionEmployee(session);
-        return leaveApplicationService.findById(id).map(leaveApplication -> {
-            model.addAttribute("leaveApp", LeaveResponse.fromEntity(leaveApplication));
-            model.addAttribute("employee", emp);
-            
-            // Add breadcrumbs
-            List<BreadcrumbItem> breadcrumbs = Arrays.asList(
-                new BreadcrumbItem("Leave", GlobalConstants.ROUTE_LEAVE + GlobalConstants.ROUTE_LEAVE_HISTORY),
-                new BreadcrumbItem("Details", null)
-            );
-            model.addAttribute("breadcrumbs", breadcrumbs);
-            
-            return GlobalConstants.VIEW_LEAVE_DETAIL;
-        }).orElseGet(() -> {
+        try {
+            ResponseEntity<?> response = restController.getById(id);
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() instanceof LeaveResponse leaveResp) {
+                model.addAttribute("leaveApp", leaveResp);
+                model.addAttribute("employee", emp);
+                
+                // Add breadcrumbs
+                List<BreadcrumbItem> breadcrumbs = Arrays.asList(
+                    new BreadcrumbItem("Leave", GlobalConstants.ROUTE_LEAVE + GlobalConstants.ROUTE_LEAVE_HISTORY),
+                    new BreadcrumbItem("Details", null)
+                );
+                model.addAttribute("breadcrumbs", breadcrumbs);
+                
+                return GlobalConstants.VIEW_LEAVE_DETAIL;
+            } else {
+                ra.addFlashAttribute(GlobalConstants.FLASH_ERROR, "Leave application not found.");
+                return GlobalConstants.REDIRECT_LEAVE_HISTORY;
+            }
+        } catch (Exception e) {
+            log.error("Error fetching leave application {} for employee {}: {}", id, emp.getEmp_id(), e.getMessage());
             ra.addFlashAttribute(GlobalConstants.FLASH_ERROR, "Leave application not found.");
             return GlobalConstants.REDIRECT_LEAVE_HISTORY;
-        });
+        }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -228,17 +228,56 @@ public class LeaveApplicationController {
         if (!isLoggedIn(session)) return GlobalConstants.REDIRECT_LOGIN;
         Employee emp = getSessionEmployee(session);
 
-        return leaveApplicationService.findById(id).map(la -> {
+        try {
+            ResponseEntity<?> response = restController.getById(id);
+            if (!response.getStatusCode().is2xxSuccessful() || !(response.getBody() instanceof LeaveResponse leaveResp)) {
+                ra.addFlashAttribute(GlobalConstants.FLASH_ERROR, "Leave application not found.");
+                return GlobalConstants.REDIRECT_LEAVE_HISTORY;
+            }
+
+            // Convert response back to entity for editable checks
+            LeaveApplication la = new LeaveApplication();
+            la.setLeaveApplicationId(leaveResp.leaveApplicationId());
+            la.setStatus(LeaveStatus.valueOf(leaveResp.status()));
+
             if (!la.isEditable()) {
                 ra.addFlashAttribute(GlobalConstants.FLASH_ERROR,
                         "This application cannot be edited (status: " + la.getStatus() + ").");
                 return GlobalConstants.REDIRECT_LEAVE_HISTORY;
             }
-            if (!la.getEmployee().getEmp_id().equals(emp.getEmp_id())) {
+
+            // Security check: verify employee ownership
+            if (leaveResp.employeeId() != null && !leaveResp.employeeId().equals(emp.getEmp_id())) {
                 ra.addFlashAttribute(GlobalConstants.FLASH_ERROR, "Not authorised.");
                 return GlobalConstants.REDIRECT_LEAVE_HISTORY;
             }
-            model.addAttribute("leaveApplication", la);
+
+            // Reconstruct LeaveApplication for the form
+            LeaveApplication formApp = new LeaveApplication();
+            formApp.setLeaveApplicationId(leaveResp.leaveApplicationId());
+            formApp.setStartDate(leaveResp.startDate());
+            formApp.setEndDate(leaveResp.endDate());
+            formApp.setReason(leaveResp.reason());
+            formApp.setWorkDissemination(leaveResp.workDissemination());
+            formApp.setIsOverseas(leaveResp.isOverseas());
+            formApp.setContactDetails(leaveResp.contactDetails());
+            formApp.setIsHalfDay(leaveResp.isHalfDay());
+            
+            // Fetch and set LeaveType by name from the response
+            if (leaveResp.leaveType() != null) {
+                try {
+                    NameTypeEnum nameEnum = NameTypeEnum.valueOf(leaveResp.leaveType());
+                    leaveTypeRepo.findByName(nameEnum).ifPresent(formApp::setLeaveType);
+                } catch (IllegalArgumentException e) {
+                    log.warn("Invalid leave type name in response: {}", leaveResp.leaveType());
+                }
+            }
+            
+            if (leaveResp.halfDayPeriod() != null) {
+                formApp.setHalfDayPeriod(HalfDayPeriod.valueOf(leaveResp.halfDayPeriod()));
+            }
+
+            model.addAttribute("leaveApplication", formApp);
             model.addAttribute("leaveTypes", leaveTypeRepo.findAll());
             model.addAttribute("leaveBalances",
                     leaveBalanceService.getLeaveBalancesByEmployeeId(emp.getEmp_id()));
@@ -251,10 +290,11 @@ public class LeaveApplicationController {
             model.addAttribute("breadcrumbs", breadcrumbs);
             
             return GlobalConstants.VIEW_LEAVE_EDIT;
-        }).orElseGet(() -> {
+        } catch (Exception e) {
+            log.error("Error fetching leave application {} for employee {}: {}", id, emp.getEmp_id(), e.getMessage());
             ra.addFlashAttribute(GlobalConstants.FLASH_ERROR, "Leave application not found.");
             return GlobalConstants.REDIRECT_LEAVE_HISTORY;
-        });
+        }
     }
 
     @PostMapping(GlobalConstants.ROUTE_LEAVE_EDIT)
@@ -375,15 +415,31 @@ public class LeaveApplicationController {
         if (!isLoggedIn(session)) return GlobalConstants.REDIRECT_LOGIN;
         Employee mgr = getSessionEmployee(session);
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by("startDate").descending());
-        Page<LeaveApplication> applicationPage = leaveApplicationService.getPendingApplicationsForManagerPaginated(mgr, pageable);
-
-        model.addAttribute("applications",
-                applicationPage.getContent().stream().map(LeaveResponse::fromEntity).collect(Collectors.toList()));
-        model.addAttribute("currentPage", page);
-        model.addAttribute("size", size);
-        model.addAttribute("totalPages", applicationPage.getTotalPages());
-        model.addAttribute("totalItems", applicationPage.getTotalElements());
+        try {
+            // Call REST controller for paginated data
+            ResponseEntity<?> response = restController.getPendingForManagerPaginated(mgr.getEmp_id(), page, size);
+            
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() instanceof java.util.Map pageData) {
+                model.addAttribute("applications", (List<?>) pageData.get("content"));
+                model.addAttribute("currentPage", pageData.get("currentPage"));
+                model.addAttribute("size", pageData.get("size"));
+                model.addAttribute("totalPages", pageData.get("totalPages"));
+                model.addAttribute("totalItems", pageData.get("totalItems"));
+            } else {
+                model.addAttribute("applications", List.of());
+                model.addAttribute("currentPage", page);
+                model.addAttribute("size", size);
+                model.addAttribute("totalPages", 0);
+                model.addAttribute("totalItems", 0L);
+            }
+        } catch (Exception e) {
+            log.error("Error fetching pending applications for manager {}: {}", mgr.getEmp_id(), e.getMessage());
+            model.addAttribute("applications", List.of());
+            model.addAttribute("currentPage", page);
+            model.addAttribute("size", size);
+            model.addAttribute("totalPages", 0);
+            model.addAttribute("totalItems", 0L);
+        }
 
         model.addAttribute("leaveBalances",
                 leaveBalanceService.getLeaveBalancesByEmployeeId(mgr.getEmp_id()));
@@ -410,15 +466,31 @@ public class LeaveApplicationController {
         if (!isLoggedIn(session)) return GlobalConstants.REDIRECT_LOGIN;
         Employee mgr = getSessionEmployee(session);
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by("startDate").descending());
-        Page<LeaveApplication> applicationPage = leaveApplicationService.getAllApplicationsForManagerPaginated(mgr, pageable);
-
-        model.addAttribute("applications",
-                applicationPage.getContent().stream().map(LeaveResponse::fromEntity).collect(Collectors.toList()));
-        model.addAttribute("currentPage", page);
-        model.addAttribute("size", size);
-        model.addAttribute("totalPages", applicationPage.getTotalPages());
-        model.addAttribute("totalItems", applicationPage.getTotalElements());
+        try {
+            // Call REST controller for paginated data
+            ResponseEntity<?> response = restController.getSubordinateHistoryPaginated(mgr.getEmp_id(), page, size);
+            
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() instanceof java.util.Map pageData) {
+                model.addAttribute("applications", (List<?>) pageData.get("content"));
+                model.addAttribute("currentPage", pageData.get("currentPage"));
+                model.addAttribute("size", pageData.get("size"));
+                model.addAttribute("totalPages", pageData.get("totalPages"));
+                model.addAttribute("totalItems", pageData.get("totalItems"));
+            } else {
+                model.addAttribute("applications", List.of());
+                model.addAttribute("currentPage", page);
+                model.addAttribute("size", size);
+                model.addAttribute("totalPages", 0);
+                model.addAttribute("totalItems", 0L);
+            }
+        } catch (Exception e) {
+            log.error("Error fetching all applications for manager {}: {}", mgr.getEmp_id(), e.getMessage());
+            model.addAttribute("applications", List.of());
+            model.addAttribute("currentPage", page);
+            model.addAttribute("size", size);
+            model.addAttribute("totalPages", 0);
+            model.addAttribute("totalItems", 0L);
+        }
 
         model.addAttribute("leaveBalances",
                 leaveBalanceService.getLeaveBalancesByEmployeeId(mgr.getEmp_id()));

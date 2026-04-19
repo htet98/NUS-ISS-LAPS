@@ -185,8 +185,188 @@ INSERT INTO leave_application (
     emp_id, leavetype_id, start_date, end_date,
     duration_days, reason, is_overseas, is_half_day, half_day_period, status, approved_by, created_by, created_when
 ) VALUES (
-             3, 3, '2026-04-20', '2026-04-20',
-             0.5, 'Personal errands', false, true,  'MORNING','APPROVED', 1, 'bob', '2026-04-17 10:00:00'
-         );
+         3, 3, '2026-04-20', '2026-04-20',
+         0.5, 'Personal errands', false, true,  'MORNING','APPROVED', 1, 'bob', '2026-04-17 10:00:00'
+     );
+
+-- ============================================================
+-- Additional FUTURE leave applications for emp_id 1 (James Tan)
+-- ============================================================
+
+-- James Tan (emp_id 1) applied for Annual Leave - May 2026
+-- Status: APPLIED (Pending approval)
+INSERT INTO leave_application (
+    emp_id, leavetype_id, start_date, end_date,
+    duration_days, reason, work_dissemination, is_overseas,
+    status, created_by, created_when
+) VALUES (
+         1, 1, '2026-05-10', '2026-05-15',
+         5.0, 'Team building vacation to Bali', 'Deputy manager will handle critical approvals', true,
+         'APPLIED', 'manager1', '2026-04-19 10:00:00'
+     );
+
+-- James Tan (emp_id 1) applied for Annual Leave - June 2026
+-- Status: APPLIED (Pending approval)
+INSERT INTO leave_application (
+    emp_id, leavetype_id, start_date, end_date,
+    duration_days, reason, work_dissemination, is_overseas,
+    status, created_by, created_when
+) VALUES (
+         1, 1, '2026-06-08', '2026-06-12',
+         4.0, 'Summer holidays with family', 'Tasks delegated to senior staff', false,
+         'APPLIED', 'manager1', '2026-04-19 11:00:00'
+     );
+
+-- James Tan (emp_id 1) applied for Medical Leave - May 2026
+-- Status: APPLIED (Pending approval)
+INSERT INTO leave_application (
+    emp_id, leavetype_id, start_date, end_date,
+    duration_days, reason, work_dissemination, is_overseas,
+    status, created_by, created_when
+) VALUES (
+         1, 2, '2026-05-25', '2026-05-26',
+         2.0, 'Dental surgery and recovery', 'Emergency decisions delegated to team lead', false,
+         'APPLIED', 'manager1', '2026-04-19 12:00:00'
+     );
+
+-- James Tan (emp_id 1) applied for Compensation Leave - July 2026 (Half day)
+-- Status: APPLIED (Pending approval)
+INSERT INTO leave_application (
+    emp_id, leavetype_id, start_date, end_date,
+    duration_days, reason, is_overseas, is_half_day, half_day_period, status,
+    created_by, created_when
+) VALUES (
+         1, 3, '2026-07-15', '2026-07-15',
+         0.5, 'Personal appointment in morning', false, true, 'MORNING', 'APPLIED',
+         'manager1', '2026-04-19 13:00:00'
+     );
+
+-- James Tan (emp_id 1) applied for Annual Leave - August 2026
+-- Status: APPLIED (Pending approval)
+INSERT INTO leave_application (
+    emp_id, leavetype_id, start_date, end_date,
+    duration_days, reason, work_dissemination, is_overseas,
+    status, created_by, created_when
+) VALUES (
+         1, 1, '2026-08-02', '2026-08-07',
+         5.0, 'National Day holidays and family visit', 'Team will run independently', false,
+         'APPLIED', 'manager1', '2026-04-19 14:00:00'
+     );
+
+-- ============================================================
+-- Additional FUTURE leave applications for emp_id 2 (Alice Lim)
+-- ============================================================
+
+-- Alice (emp_id 2) applied for Annual Leave - May 2026
+-- Status: APPLIED (Pending approval from James Tan)
+INSERT INTO leave_application (
+    emp_id, leavetype_id, start_date, end_date,
+    duration_days, reason, work_dissemination, is_overseas,
+    status, created_by, created_when
+) VALUES (
+         2, 1, '2026-05-18', '2026-05-22',
+         4.0, 'Travel to Japan for holiday', 'Work delegated to Bob Ng', true,
+         'APPLIED', 'alice', '2026-04-19 09:30:00'
+     );
+
+-- Alice (emp_id 2) applied for Medical Leave - June 2026
+-- Status: APPLIED (Pending approval from James Tan)
+INSERT INTO leave_application (
+    emp_id, leavetype_id, start_date, end_date,
+    duration_days, reason, work_dissemination, is_overseas,
+    status, created_by, created_when
+) VALUES (
+         2, 2, '2026-06-03', '2026-06-04',
+         2.0, 'Eye examination and follow-up', 'Emergency contact via email', false,
+         'APPLIED', 'alice', '2026-04-19 10:00:00'
+     );
+
+-- Alice (emp_id 2) applied for Annual Leave - July 2026
+-- Status: APPLIED (Pending approval from James Tan)
+INSERT INTO leave_application (
+    emp_id, leavetype_id, start_date, end_date,
+    duration_days, reason, work_dissemination, is_overseas, contact_details,
+    status, created_by, created_when
+) VALUES (
+         2, 1, '2026-07-20', '2026-07-24',
+         4.0, 'Holiday in Thailand with friends', 'Tasks handed over to team', true,
+         'Bangkok, Thailand. Contact: +66 8-1234-5678', 'APPLIED', 'alice', '2026-04-19 11:00:00'
+     );
+
+-- Alice (emp_id 2) applied for Compensation Leave - May 2026 (Half day)
+-- Status: APPLIED (Pending approval from James Tan)
+INSERT INTO leave_application (
+    emp_id, leavetype_id, start_date, end_date,
+    duration_days, reason, is_overseas, is_half_day, half_day_period, status,
+    created_by, created_when
+) VALUES (
+         2, 3, '2026-05-28', '2026-05-28',
+         0.5, 'Personal matters in afternoon', false, true, 'AFTERNOON', 'APPLIED',
+         'alice', '2026-04-19 12:00:00'
+     );
+
+-- Alice (emp_id 2) applied for Annual Leave - September 2026
+-- Status: APPLIED (Pending approval from James Tan)
+INSERT INTO leave_application (
+    emp_id, leavetype_id, start_date, end_date,
+    duration_days, reason, work_dissemination, is_overseas,
+    status, created_by, created_when
+) VALUES (
+         2, 1, '2026-09-05', '2026-09-11',
+         6.0, 'Extended holiday - South Korea trip', 'Complete handover to backup team', true,
+         'APPLIED', 'alice', '2026-04-19 13:00:00'
+     );
+
+-- Alice (emp_id 2) applied for Medical Leave - August 2026
+-- Status: APPLIED (Pending approval from James Tan)
+INSERT INTO leave_application (
+    emp_id, leavetype_id, start_date, end_date,
+    duration_days, reason, work_dissemination, is_overseas,
+    status, created_by, created_when
+) VALUES (
+         2, 2, '2026-08-17', '2026-08-18',
+         2.0, 'Planned surgery and recovery', 'Projects delegated to team members', false,
+         'APPLIED', 'alice', '2026-04-19 14:00:00'
+     );
+
+-- ============================================================
+-- Additional 2 MORE leave applications
+-- ============================================================
+
+-- James Tan (emp_id 1) applied for Annual Leave - October 2026
+-- Status: APPLIED (Pending approval)
+INSERT INTO leave_application (
+    emp_id, leavetype_id, start_date, end_date,
+    duration_days, reason, work_dissemination, is_overseas, contact_details,
+    status, created_by, created_when
+) VALUES (
+         1, 1, '2026-10-12', '2026-10-16',
+         4.0, 'Diwali holidays and family gathering', 'Team lead will manage operations', false,
+         'Home in Singapore', 'APPLIED', 'manager1', '2026-04-19 15:00:00'
+     );
+
+-- Alice (emp_id 2) applied for Compensation Leave - June 2026 (Half day)
+-- Status: APPLIED (Pending approval from James Tan)
+INSERT INTO leave_application (
+    emp_id, leavetype_id, start_date, end_date,
+    duration_days, reason, is_overseas, is_half_day, half_day_period, status,
+    created_by, created_when
+) VALUES (
+         2, 3, '2026-06-15', '2026-06-15',
+         0.5, 'Doctor appointment in the morning', false, true, 'MORNING', 'APPLIED',
+         'alice', '2026-04-19 15:30:00'
+     );
+
+-- Alice (emp_id 2) applied for Annual Leave - November 2026
+-- Status: APPLIED (Pending approval from James Tan)
+INSERT INTO leave_application (
+    emp_id, leavetype_id, start_date, end_date,
+    duration_days, reason, work_dissemination, is_overseas, contact_details,
+    status, created_by, created_when
+) VALUES (
+         2, 1, '2026-11-02', '2026-11-06',
+         4.0, 'Year-end vacation and shopping', 'Team will handle ongoing projects', false,
+         'Shopping malls and home', 'APPLIED', 'alice', '2026-04-19 16:00:00'
+     );
 
 

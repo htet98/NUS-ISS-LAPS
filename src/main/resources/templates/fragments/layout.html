@@ -33,11 +33,6 @@
                     <a class="nav-link" th:href="@{__${ROUTE_LEAVE_HISTORY}__}" th:unless="${session.role != null and session.role.name() == ROLE_ADMIN}">My Leave History</a>
                 </li>
 
-                <!-- Movement Register (All logged-in users) -->
-                <li class="nav-item">
-                    <a class="nav-link" th:href="@{/movement/register}">Movement Register</a>
-                </li>
-
                 <!-- Reports link only for MANAGER role (not for ADMIN, as per requirements)-->
                 <li class="nav-item" th:if="${session.role != null and session.role.name() == ROLE_MANAGER}">
                     <a class="nav-link" th:href="@{/report}">📊 Reports</a>
@@ -46,6 +41,10 @@
                 <!-- ADMIN-specific links -->
                 <li class="nav-item" th:if="${session.role != null and session.role.name() == ROLE_ADMIN}">
                     <a class="nav-link" th:href="@{__${ROUTE_ADMIN_HIERARCHY}__}">Manage Approval Hierarchy</a>
+                </li>
+                <!-- Movement Register (All logged-in users) -->
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/movement/register}">Movement Register</a>
                 </li>
 				<!-- ADMIN links -->
 				<li class="nav-item" th:if="${session.role != null and session.role.name() == 'ADMIN'}">
@@ -67,6 +66,8 @@
 				        Manage Leave Types
 				    </a>
 				</li>
+
+
 
             </ul>
 

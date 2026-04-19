@@ -30,7 +30,7 @@
 
                <div class="mb-3">
                    <label class="form-label font-weight-bold"><span th:text="#{fieldLabel.name}">Name</span></label>
-                   <select class="form-select" th:field="*{name}">
+                   <select class="form-select" th:field="*{name}" id="leaveName">
 						<option value="#">--Select Leave Type--</option>
                        <option value="ANNUAL">Annual</option>
                        <option value="MEDICAL">Medical</option>
@@ -90,29 +90,32 @@
 
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
 <script>
-   document.addEventListener("DOMContentLoaded", function() {
-       const nameSelect = document.getElementById('leaveName');
-       const daysInput = document.getElementById('leaveDays');
+    document.addEventListener("DOMContentLoaded", function() {
+        const nameSelect = document.getElementById('leaveName');
+        const daysInput = document.getElementById('leaveDays');
 
+        function enforceStepRules() {
+            if (nameSelect.value === 'COMPENSATION') {
+                // For Compensation: Allow 0.5 increments starting from 0.5
+                daysInput.step = '0.5';
+                daysInput.min = '0.5';
+            } else {
+                // For Annual/Medical: Force whole numbers starting from 1
+                daysInput.step = '1';
+                daysInput.min = '1';
 
-       function enforceStepRules() {
-           if (nameSelect.value === 'COMPENSATION') {
-               daysInput.step = '0.5';
-           } else {
-               daysInput.step = '1';
+                // If they had 1.5 typed in, round it down so the browser doesn't block it
+                if (daysInput.value % 1 !== 0) {
+                    daysInput.value = Math.floor(daysInput.value);
+                }
+            }
+        }
 
-
-               if (daysInput.value % 1 !== 0) {
-                   daysInput.value = Math.floor(daysInput.value);
-               }
-           }
-       }
-
-
-       nameSelect.addEventListener('change', enforceStepRules);
-       enforceStepRules();
-   });
+        nameSelect.addEventListener('change', enforceStepRules);
+        enforceStepRules();
+    });
 </script>
 
 

@@ -38,9 +38,9 @@ CREATE TABLE users (
 -- ============================================================
 CREATE TABLE leave_types (
      leavetype_id       BIGINT AUTO_INCREMENT PRIMARY KEY,
-     name                   ENUM('ANNUAL', 'MEDICAL', 'COMPENSATION') NOT NULL DEFAULT 'ANNUAL', -- NameTypeEnum: ANNUAL, MEDICAL, COMPENSATION
+     name                   ENUM('ANNUAL', 'MEDICAL', 'COMPENSATION', 'PERSONAL', 'MATERNITY' ) NOT NULL DEFAULT 'ANNUAL', -- NameTypeEnum: ANNUAL, MEDICAL, COMPENSATION
      description          VARCHAR(255),
-     default_days       INT     NOT NULL    DEFAULT 0,
+     default_days       DOUBLE     NOT NULL    DEFAULT 0,
      is_paid                BOOLEAN     NOT NULL    DEFAULT TRUE
 );
 

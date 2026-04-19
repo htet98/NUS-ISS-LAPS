@@ -88,6 +88,7 @@ public class EmployeeController {
             // For edit form: show all users (so user can see current selection)
             // For new form: show unassigned users only (handled in views)
             mav.addObject("userList", uService.getAllUsers());
+            mav.addObject("unassignedUsers", uService.getUnassignedUsers());
         }
 
         @GetMapping(GlobalConstants.ROUTE_ADMIN_EMPLOYEE_NEW)

@@ -81,13 +81,6 @@ INSERT INTO employees (first_name, last_name, email, phone_number, department, d
 VALUES ('Bob', 'Ng', 'bob@laps.com', '63456789', 'Engineering', 'ADMINISTRATIVE',
         '2023-06-01', 'ACTIVE', 'system', NOW(), 'system', NOW(), 3, 1);
 
--- Admin (no supervisor)
-INSERT INTO employees (first_name, last_name, email, phone_number, department, designation,
-                       hire_date, employee_status, created_by, created_when, updated_by, updated_when,
-                       user_id, supervisor_id)
-VALUES ('Admin', 'User', 'admin@laps.com', '00000000', 'Management', 'PROFESSIONAL',
-        '2020-01-01', 'ACTIVE', 'system', NOW(), 'system', NOW(), 4, NULL);
-
 -- ============================================================
 -- 5. leave_balances
 --    Each employee gets a balance row per leave type.

@@ -1,6 +1,5 @@
 package nus_iss.LAPS.controller;
 
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import nus_iss.LAPS.model.Employee;
 import nus_iss.LAPS.model.Role;
@@ -8,7 +7,6 @@ import nus_iss.LAPS.model.User;
 import nus_iss.LAPS.repository.EmployeeRepository;
 import nus_iss.LAPS.service.UserService;
 import nus_iss.LAPS.util.GlobalConstants;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -55,28 +53,37 @@ public class AuthController {
 
         User user = userOpt.get();
 
+        // ADMIN users don't need employee record
+        if (Role.ADMIN.equals(user.getRole())) {
+            // Store session for admin
+            session.setAttribute("userId", user.getUser_id());
+            session.setAttribute("username", user.getUsername());
+            session.setAttribute("role", user.getRole());
+            
+            System.out.println("Logged in admin user: " + user.getUsername());
+            return GlobalConstants.REDIRECT_ADMIN_HIERARCHY;
+        }
+
+        // EMPLOYEE and MANAGER users require employee record
         Optional<Employee> empOpt = employeeRepo.findByUser(user);
         if (empOpt.isEmpty()) {
-            ra.addFlashAttribute("error", "No employee profile found.");
+            ra.addFlashAttribute("error", "No employee profile found. Please contact administrator.");
             return GlobalConstants.REDIRECT_LOGIN;
         }
 
         Employee emp = empOpt.get();
 
-        // Store session
+        // Store session for employee/manager
         session.setAttribute("userId", user.getUser_id());
         session.setAttribute("username", user.getUsername());
         session.setAttribute("role", user.getRole());
         session.setAttribute("empId", emp.getEmp_id());
         session.setAttribute("employee", emp);
         
-     // Inside your login POST method, after setting session attributes:
         System.out.println("Logged in user role: " + session.getAttribute("role"));
         
-        // ✅ IMPORTANT: redirect based on role
-        if (Role.ADMIN.equals(user.getRole())) {
-            return GlobalConstants.REDIRECT_ADMIN_HIERARCHY;
-        } else if (Role.MANAGER.equals(user.getRole())) {
+        // Redirect based on role
+        if (Role.MANAGER.equals(user.getRole())) {
             return "redirect:/leave/manager/history/pending";
         } else {
             return "redirect:/leave/history";

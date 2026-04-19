@@ -30,9 +30,12 @@
                <div class="mb-3">
                    <label class="form-label fw-bold"><span th:text="#{fieldLabel.name}">Name</span></label>
                    <select class="form-select" th:field="*{name}">
+						<option value="#">--Select Leave Type--</option>
                        <option value="ANNUAL">Annual</option>
                        <option value="MEDICAL">Medical</option>
                        <option value="COMPENSATION">Compensation</option>
+					   <option value="PERSONAL">Personal</option>
+					   <option value="MATERNITY">Maternity</option>
                    </select>
                    <div th:if="${#fields.hasErrors('name')}" class="text-danger small mt-1" th:errors="*{name}"></div>
                </div>

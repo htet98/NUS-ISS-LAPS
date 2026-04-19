@@ -40,7 +40,7 @@ public class EmployeeValidator implements Validator{
 
 		// Validate Last_name
 		ValidationUtils.rejectIfEmptyOrWhitespace(errors, "last_name", "last_name.empty", "Last name cannot be empty");
-		if (employee.getFirst_name() != null && employee.getLast_name().length() > 50) {
+		if (employee.getLast_name() != null && employee.getLast_name().length() > 50) {
 			errors.rejectValue("last_name", "last_name.tooLong", "Last name cannot exceed 50 characters");
 		}
 
@@ -72,7 +72,7 @@ public class EmployeeValidator implements Validator{
 		if (employee.getHire_date() == null) {
 			errors.rejectValue("hire_date", "hire_date.empty", "Hire date is required");
 		}
-		if (employee.getHire_date().isAfter(LocalDate.now())) {
+		if (employee.getHire_date() != null && employee.getHire_date().isAfter(LocalDate.now())) {
 			errors.rejectValue("hire_date", "error.hire_date.future", "Hire date must not be in future");
 			return;
 		}

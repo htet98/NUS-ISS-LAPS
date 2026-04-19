@@ -1,15 +1,13 @@
 package nus_iss.LAPS.service;
 
-import nus_iss.LAPS.model.LeaveApplication;
+import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
+import nus_iss.LAPS.model.LeaveApplication;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
-
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
 
 /**
  * Service responsible for sending email notifications to employees when their
@@ -27,8 +25,7 @@ public class EmailService {
     @Autowired(required = false)
     private JavaMailSender mailSender;
 
-    @Value("${app.base-url:http://localhost:8080}")
-    //app.base-url=http://localhost:8080
+    @Value("${app.base-url}")
     private String baseUrl;
 
     @Value("${spring.mail.from:noreply@laps.app}")

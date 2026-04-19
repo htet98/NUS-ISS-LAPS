@@ -107,15 +107,15 @@
 		                th:text="${r}">
 		        </option>
 		    </select>
-
+			
 		    <!-- Optional fields -->
 		    <input type="hidden" th:field="*{createdby}" value="admin"/>
 		    <input type="hidden" th:field="*{updatedby}" value="admin"/>
-
-		    <button type="submit">Create</button>
+			<br></br>
+		    <button type="submit" class="btn btn-primary w-100">Create</button>
 		</form>
 
-		<form th:action="@{/create-user}" method="get">
+		<form th:action="@{/users/manage-user}" method="get">
 		    <div class="d-grid gap-2 mt-2">
 		        <button class="btn btn-secondary" type="submit">Back</button>
 		    </div>

@@ -107,8 +107,11 @@
 		                th:text="${r}">
 		        </option>
 		    </select>
-
-		    <button type="submit">Update</button>
+			<!-- Optional fields -->
+					    <input type="hidden" th:field="*{createdby}" value="admin"/>
+					    <input type="hidden" th:field="*{updatedby}" value="admin"/>
+			<br></br>
+		    <button type="submit" class="btn btn-primary w-100">Update</button>
 		</form>
 
 		<form th:action="@{/users/manage-user}" method="get">

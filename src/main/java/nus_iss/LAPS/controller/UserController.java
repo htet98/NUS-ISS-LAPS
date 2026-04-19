@@ -24,71 +24,6 @@ import java.util.List; //CRUD
 
 import java.util.Optional;
 
-
-//    // ── Show login form ───────────────────────────────────────────────────────
-//    @GetMapping("/login")
-//    public String loginForm() {
-//        return GlobalConstants.VIEW_LOGIN;
-//    }
-//
-//    // ── Process login ─────────────────────────────────────────────────────────
-//    @PostMapping("/login")
-//    public String login(@RequestParam String username,
-//                        @RequestParam String password,
-//                        HttpSession session,
-//                        RedirectAttributes ra) {
-//
-//        Optional<User> userOpt = userService.login(username, password);
-//
-//        if (userOpt.isEmpty()) {
-//            ra.addFlashAttribute("error", "Invalid username or password.");
-//            return GlobalConstants.REDIRECT_LOGIN;
-//        }
-//
-//        User user = userOpt.get();
-//
-//        // Look up the Employee linked to this User
-//        Optional<Employee> empOpt = employeeRepo.findByUser(user);
-//        if (empOpt.isEmpty()) {
-//            ra.addFlashAttribute("error", "No employee profile found for this account.");
-//            return "redirect:/login";
-//        }
-//
-//        Employee emp = empOpt.get();
-//
-//        // Store key session attributes
-//        session.setAttribute("userId",   user.getUser_id());
-//        session.setAttribute("username", user.getUsername());
-//        session.setAttribute("role",     user.getRole());
-//        session.setAttribute("empId",    emp.getEmp_id());
-//        session.setAttribute("employee", emp);
-//
-//        return GlobalConstants.REDIRECT_HOME;//return "redirect:/";
-//    }
-//
-//    // ── Home / dashboard redirect ─────────────────────────────────────────────
-//    @GetMapping("/")
-//    public String home(HttpSession session) {
-//        if (session.getAttribute("userId") == null) {
-//            return GlobalConstants.REDIRECT_LOGIN;
-//        }
-//        Role role = (Role) session.getAttribute("role");
-//        if (Role.MANAGER.equals(role)) {
-//            return "redirect:/" + GlobalConstants.VIEW_MANAGER_PENDING;
-//        }
-//        if (Role.ADMIN.equals(role)) {
-//            return GlobalConstants.REDIRECT_ADMIN_HIERARCHY;
-//        }
-//        return "redirect:/" + GlobalConstants.VIEW_LEAVE_HISTORY;
-//    }
-//
-//    // ── Logout ────────────────────────────────────────────────────────────────
-//    @GetMapping("/logout")
-//    public String logout(HttpSession session, HttpServletResponse response) {
-//        session.invalidate();
-//        return GlobalConstants.REDIRECT_LOGIN;
-//    }
-    
     //Loh Si Hua - 18 Apr 2026 - CRUD
     
     @Controller
@@ -126,11 +61,12 @@ import java.util.Optional;
             model.addAttribute("roles", Role.values());
             return "users/create-user";   // ✅ FIXED
         }
-
+//Loh Si Hua - 19/4/2026
         // SAVE USER
         @PostMapping("/save")
         public String saveUser(@ModelAttribute User user,
                                RedirectAttributes ra,
+                               Model model,
                                HttpSession session) {
 
             Role role = (Role) session.getAttribute("role");
@@ -139,12 +75,25 @@ import java.util.Optional;
                 return GlobalConstants.REDIRECT_LOGIN;
             }
 
-            userService.saveUser(user);
+            try {
+                userService.saveUser(user);
 
-            ra.addFlashAttribute("success", "User saved successfully!");
-            return "redirect:/users/manage-user";
+                ra.addFlashAttribute("success", "User saved successfully!");
+                return "redirect:/users/manage-user";
+
+            } catch (Exception e) {
+                model.addAttribute("error", "Username or email already exists!");
+                model.addAttribute("roles", Role.values());
+
+                // IMPORTANT: return correct page based on create/edit
+                if (user.getUser_id() == null) {
+                    return "users/create-user";
+                } else {
+                    return "users/edit-user";
+                }
+            }
         }
-
+       
         // EDIT PAGE
         @GetMapping("/edit/{id}")
         public String editUser(@PathVariable Long id, Model model, HttpSession session) {

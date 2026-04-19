@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -43,6 +44,7 @@ public class Employee {
 	@Column(name="designation", nullable=false, length = 20)
 	private Designation designation;
 
+	@DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
 	@Column(name="hire_date", nullable=false)
 	private LocalDate hire_date;
 

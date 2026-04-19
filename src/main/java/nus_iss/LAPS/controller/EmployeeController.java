@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.beans.PropertyEditorSupport;
 import java.time.LocalDateTime;
 
 @Controller
@@ -39,6 +40,24 @@ public class EmployeeController {
 		@InitBinder("employee")
 		private void initEmployeeBinder(WebDataBinder binder) {
 			binder.addValidators(eValidator);
+			
+			// Custom converter for userId (from form) to User object
+			binder.registerCustomEditor(User.class, "user", new PropertyEditorSupport() {
+				@Override
+				public void setAsText(String text) throws IllegalArgumentException {
+					if (text == null || text.trim().isEmpty()) {
+						setValue(null);
+					} else {
+						try {
+							Long userId = Long.parseLong(text);
+							User user = uService.findById(userId).orElse(null);
+							setValue(user);
+						} catch (Exception e) {
+							setValue(null);
+						}
+					}
+				}
+			});
 		}
 
 		//session
@@ -66,6 +85,8 @@ public class EmployeeController {
         private void populateForm(ModelAndView mav) {
             mav.addObject("eidlist", eService.findAllEmployeeIDs());
             mav.addObject("supervisorList", eService.findAllSupervisors());
+            // For edit form: show all users (so user can see current selection)
+            // For new form: show unassigned users only (handled in views)
             mav.addObject("userList", uService.getAllUsers());
         }
 
@@ -196,12 +217,25 @@ public class EmployeeController {
 
             if (!isAdmin(session)) return denyAccess(redirect);
 
-            eService.findEmployee(id).ifPresent(emp -> {
-                eService.removeEmployee(emp);
-                log.info("Employee {} deleted.", id);
-            });
-
-            redirect.addFlashAttribute(GlobalConstants.FLASH_SUCCESS, "Employee deleted successfully.");
+            try {
+                eService.findEmployee(id).ifPresent(emp -> {
+                    eService.removeEmployee(emp);
+                    log.info("Employee {} deleted.", id);
+                });
+                redirect.addFlashAttribute(GlobalConstants.FLASH_SUCCESS, "Employee deleted successfully.");
+            } catch (Exception ex) {
+                log.error("Error deleting employee {}", id, ex);
+                
+                // Check if it's a foreign key constraint error
+                if (ex.getMessage() != null && ex.getMessage().contains("foreign key constraint")) {
+                    redirect.addFlashAttribute(GlobalConstants.FLASH_ERROR, 
+                            "Cannot delete employee. This employee is referenced by other records.");
+                } else {
+                    redirect.addFlashAttribute(GlobalConstants.FLASH_ERROR, 
+                            "Cannot delete employee.");
+                }
+            }
+            
             return new ModelAndView(GlobalConstants.REDIRECT_ADMIN_EMPLOYEE_LIST);
         }
 	}

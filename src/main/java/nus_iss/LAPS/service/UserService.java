@@ -80,4 +80,9 @@ public class UserService {
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
+
+    @Transactional(readOnly = true)
+    public List<User> getUnassignedUsers() {
+        return userRepository.findUnassignedUsers();
+    }
 }

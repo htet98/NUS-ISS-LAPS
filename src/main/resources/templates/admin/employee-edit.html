@@ -74,10 +74,11 @@
                         <option value="">-- Select User --</option>
                         <option th:each="user : ${userList}"
                                 th:value="${user.user_id}"
-                                th:text="${user.username} + ' (' + ${user.role} + ')'">
+                                th:text="${user.username} + ' (' + ${user.role} + ')'"
+                                th:selected="${employee.user != null and employee.user.user_id == user.user_id}">
                         </option>
                     </select>
-                    <div class="text-danger small" th:errors="*{user}"></div>
+                    <div class="text-danger small" th:if="${#fields.hasErrors('user')}" th:errors="*{user}"></div>
                 </div>
 
                 <div class="col-12 pt-3">

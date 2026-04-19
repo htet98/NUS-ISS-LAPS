@@ -25,22 +25,22 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 @Slf4j
 public class EmployeeController {
-			
+
 		/**
 		 * Author: Junior
 		 * Created on: 14/04/2026
 		 * Updated on 15/04/2026
 		 **/
-	
+
 	private final EmployeeService eService;
 	private final EmployeeValidator eValidator;
 	private final UserService uService;
-		
+
 		@InitBinder("employee")
 		private void initEmployeeBinder(WebDataBinder binder) {
 			binder.addValidators(eValidator);
 		}
-		
+
 		//session
 		private boolean isLoggedIn(HttpSession session) {
 	        return session.getAttribute("user") != null;
@@ -79,35 +79,48 @@ public class EmployeeController {
             return mav;
         }
 
-        @PostMapping(GlobalConstants.ROUTE_ADMIN_EMPLOYEE_NEW)
-        public ModelAndView createNewEmployee(
-                @ModelAttribute @Valid Employee employee,
-                BindingResult result,
-                HttpSession session,
-                RedirectAttributes redirect) {
+    @PostMapping(GlobalConstants.ROUTE_ADMIN_EMPLOYEE_NEW)
+    public ModelAndView createNewEmployee(
+            @ModelAttribute @Valid Employee employee,
+            BindingResult result,
+            HttpSession session,
+            RedirectAttributes redirect) {
 
-            if (!isAdmin(session)) return denyAccess(redirect);
+        if (!isAdmin(session)) return denyAccess(redirect);
 
-            eValidator.validate(employee, result);
+        if (result.hasErrors()) {
+            ModelAndView mav = new ModelAndView(GlobalConstants.VIEW_ADMIN_EMPLOYEE_NEW);
+            mav.addObject("employee", employee);
+            populateForm(mav);
+            return mav;
+        }
 
-            if (result.hasErrors()) {
-                ModelAndView mav = new ModelAndView(GlobalConstants.VIEW_ADMIN_EMPLOYEE_NEW);
-                mav.addObject("employee", employee);
-                populateForm(mav);
-                return mav;
-            }
-
+        try {
             employee.setCreatedBy(getActor(session));
             employee.setCreatedWhen(LocalDateTime.now());
 
             eService.createEmployee(employee);
-            log.info("Employee {} created.", employee.getEmp_id());
 
+            log.info("Employee {} created.", employee.getEmp_id());
             redirect.addFlashAttribute(GlobalConstants.FLASH_SUCCESS, "Employee created successfully.");
             return new ModelAndView(GlobalConstants.REDIRECT_ADMIN_EMPLOYEE_LIST);
-        }
 
-        @GetMapping(GlobalConstants.ROUTE_ADMIN_EMPLOYEE_LIST)
+        } catch (Exception ex) {
+
+            log.error("Error creating employee", ex);
+
+            ModelAndView mav = new ModelAndView(GlobalConstants.VIEW_ADMIN_EMPLOYEE_NEW);
+
+            result.rejectValue("user", "user.duplicate", "Selected user is already assigned to another employee");
+
+            mav.addObject("employee", employee);
+            populateForm(mav);
+            return mav;
+        }
+    }
+
+
+    @GetMapping(GlobalConstants.ROUTE_ADMIN_EMPLOYEE_LIST)
         public ModelAndView listEmployeePage(HttpSession session, RedirectAttributes redirect) {
             if (!isAdmin(session)) return denyAccess(redirect);
 
@@ -135,37 +148,47 @@ public class EmployeeController {
             return mav;
         }
 
-        @PostMapping("/edit/{id}")
-        public ModelAndView editEmployee(
-                @ModelAttribute @Valid Employee employee,
-                BindingResult result,
-                @PathVariable Long id,
-                HttpSession session,
-                RedirectAttributes redirect) {
+    @PostMapping("/edit/{id}")
+    public ModelAndView editEmployee(
+            @ModelAttribute @Valid Employee formEmployee,
+            BindingResult result,
+            @PathVariable Long id,
+            HttpSession session,
+            RedirectAttributes redirect) {
 
-            if (!isAdmin(session)) return denyAccess(redirect);
+        if (!isAdmin(session)) return denyAccess(redirect);
 
-            eValidator.validate(employee, result);
-
-            if (result.hasErrors()) {
-                ModelAndView mav = new ModelAndView(GlobalConstants.VIEW_ADMIN_EMPLOYEE_EDIT);
-                mav.addObject("employee", employee);
-                populateForm(mav);
-                return mav;
-            }
-
-            employee.setEmp_id(id);
-            employee.setUpdatedBy(getActor(session));
-            employee.setUpdatedWhen(LocalDateTime.now());
-
-            eService.changeEmployee(employee);
-            log.info("Employee {} updated.", id);
-
-            redirect.addFlashAttribute(GlobalConstants.FLASH_SUCCESS, "Employee updated successfully.");
-            return new ModelAndView(GlobalConstants.REDIRECT_ADMIN_EMPLOYEE_LIST);
+        if (result.hasErrors()) {
+            ModelAndView mav = new ModelAndView(GlobalConstants.VIEW_ADMIN_EMPLOYEE_EDIT);
+            mav.addObject("employee", formEmployee);
+            populateForm(mav);
+            return mav;
         }
 
-        @GetMapping("/delete/{id}")
+        try {
+            eService.updateEmployee(id, formEmployee, getActor(session));
+
+            redirect.addFlashAttribute(GlobalConstants.FLASH_SUCCESS,
+                    "Employee updated successfully.");
+
+            return new ModelAndView(GlobalConstants.REDIRECT_ADMIN_EMPLOYEE_LIST);
+
+        } catch (Exception ex) {
+
+            log.error("Error updating employee {}", id, ex);
+
+            ModelAndView mav = new ModelAndView(GlobalConstants.VIEW_ADMIN_EMPLOYEE_EDIT);
+            mav.addObject("employee", formEmployee);
+            populateForm(mav);
+
+            result.reject("update.failed", ex.getMessage());
+
+            return mav;
+        }
+    }
+
+
+    @GetMapping("/delete/{id}")
         public ModelAndView deleteEmployee(
                 @PathVariable Long id,
                 HttpSession session,

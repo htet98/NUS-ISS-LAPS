@@ -3,19 +3,16 @@ package nus_iss.LAPS.service;
 import nus_iss.LAPS.model.User;
 import nus_iss.LAPS.repository.UserRepository;
 import nus_iss.LAPS.util.GlobalConstants;
-
-import org.hibernate.sql.Delete;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page; //CRUD-User
-import org.springframework.data.domain.PageRequest; //CRUD-User
-import org.springframework.data.domain.Pageable;//CRUD-User
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime; //CRUD
-import java.util.List; //CRUD
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -76,5 +73,11 @@ public class UserService {
     //Delete USER
     public void deleteUser(Long id) {
         userRepository.deleteById(id);
+    }
+
+    // Get all users (for employee dropdown)
+    @Transactional(readOnly = true)
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
     }
 }

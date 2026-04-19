@@ -76,6 +76,18 @@
                         <div class="text-danger small" th:errors="*{employeeStatus}"></div>
                     </div>
 
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">User Account</label>
+                        <select class="form-select" th:field="*{user}" required>
+                            <option value="">-- Select User --</option>
+                            <option th:each="user : ${userList}"
+                                    th:value="${user.user_id}"
+                                    th:text="${user.username} + ' (' + ${user.role} + ')'">
+                            </option>
+                        </select>
+                        <div class="text-danger small" th:errors="*{user}"></div>
+                    </div>
+
                     <div class="col-12 pt-3">
                         <button type="submit" class="btn btn-primary px-4 me-2">Update Employee</button>
                         <a th:href="@{${ROUTE_ADMIN_EMPLOYEE_LIST}}" class="btn btn-outline-secondary px-4">

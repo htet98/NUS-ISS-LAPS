@@ -1,22 +1,5 @@
 package nus_iss.LAPS.controller;
 
-import java.time.LocalDateTime;
-import java.util.List;
-
-import nus_iss.LAPS.util.GlobalConstants;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.WebDataBinder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.InitBinder;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +8,17 @@ import nus_iss.LAPS.model.Employee;
 import nus_iss.LAPS.model.Role;
 import nus_iss.LAPS.model.User;
 import nus_iss.LAPS.service.EmployeeService;
+import nus_iss.LAPS.service.UserService;
+import nus_iss.LAPS.util.GlobalConstants;
 import nus_iss.LAPS.validators.EmployeeValidator;
+import org.springframework.stereotype.Controller;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.time.LocalDateTime;
 
 @Controller
 @RequestMapping(GlobalConstants.ROUTE_ADMIN + GlobalConstants.ROUTE_ADMIN_EMPLOYEE)
@@ -39,8 +32,9 @@ public class EmployeeController {
 		 * Updated on 15/04/2026
 		 **/
 	
-		private final EmployeeService eService;
-		private final EmployeeValidator eValidator;
+	private final EmployeeService eService;
+	private final EmployeeValidator eValidator;
+	private final UserService uService;
 		
 		@InitBinder("employee")
 		private void initEmployeeBinder(WebDataBinder binder) {
@@ -72,6 +66,7 @@ public class EmployeeController {
         private void populateForm(ModelAndView mav) {
             mav.addObject("eidlist", eService.findAllEmployeeIDs());
             mav.addObject("supervisorList", eService.findAllSupervisors());
+            mav.addObject("userList", uService.getAllUsers());
         }
 
         @GetMapping(GlobalConstants.ROUTE_ADMIN_EMPLOYEE_NEW)

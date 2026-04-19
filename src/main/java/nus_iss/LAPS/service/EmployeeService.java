@@ -6,6 +6,7 @@ import nus_iss.LAPS.repository.EmployeeRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -66,4 +67,28 @@ public class EmployeeService {
     public List<Long> findAllEmployeeIDs() {
         return employeeRepo.findAllEmployeeIDs();
     }
-}
+        @Transactional
+        public void updateEmployee(Long id, Employee form, String actor) {
+
+            Employee existing = employeeRepo.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Employee not found"));
+
+            existing.setFirst_name(form.getFirst_name());
+            existing.setLast_name(form.getLast_name());
+            existing.setEmail(form.getEmail());
+            existing.setPhoneNumber(form.getPhoneNumber());
+            existing.setDepartment(form.getDepartment());
+            existing.setDesignation(form.getDesignation());
+            existing.setHire_date(form.getHire_date());
+            existing.setEmployeeStatus(form.getEmployeeStatus());
+
+            existing.setSupervisor(form.getSupervisor());
+            existing.setUser(form.getUser());
+
+            existing.setUpdatedBy(actor);
+            existing.setUpdatedWhen(LocalDateTime.now());
+
+            employeeRepo.save(existing);
+        }
+
+    }

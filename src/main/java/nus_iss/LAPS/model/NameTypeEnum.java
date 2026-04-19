@@ -4,5 +4,7 @@ public enum NameTypeEnum {
 
         ANNUAL,
         MEDICAL,
-        COMPENSATION
+        COMPENSATION,
+        PERSONAL,
+        MATERNITY
 }

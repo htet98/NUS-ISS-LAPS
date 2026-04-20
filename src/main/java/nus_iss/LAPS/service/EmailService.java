@@ -69,6 +69,24 @@ public class EmailService {
         sendHtml(to, subject, body);
     }
 
+    /**
+     * Sends an application submitted notification to the employee's manager.
+     * Silently logs any error; never throws.
+     */
+    public void sendApplicationNotification(LeaveApplication application) {
+        if (mailSender == null) {
+            log.warn("Email not configured — skipping application notification for application {}",
+                    application.getLeaveApplicationId());
+            return;
+        }
+        String managerEmail = resolveManagerEmail(application);
+        if (managerEmail == null) return;
+
+        String subject = "📋 New Leave Application to Review – LAPS";
+        String body = buildApplicationBody(application);
+        sendHtml(managerEmail, subject, body);
+    }
+
     // ── Internals ─────────────────────────────────────────────────────────────
 
     private void sendHtml(String to, String subject, String htmlBody) {
@@ -94,6 +112,16 @@ public class EmailService {
             return null;
         }
         return app.getEmployee().getEmail();
+    }
+
+    private String resolveManagerEmail(LeaveApplication app) {
+        // Get manager from employee's supervisor (not from approvedBy, which is null when first submitted)
+        if (app.getEmployee() == null || app.getEmployee().getSupervisor() == null 
+                || app.getEmployee().getSupervisor().getEmail() == null) {
+            log.warn("Cannot send email: no manager email address for application {}", app.getLeaveApplicationId());
+            return null;
+        }
+        return app.getEmployee().getSupervisor().getEmail();
     }
 
     private String buildApprovalBody(LeaveApplication app) {
@@ -169,5 +197,40 @@ public class EmailService {
                   <p style="color:#888;font-size:12px;">LAPS – Leave Application Processing System | NUS-ISS</p>
                 </div></body></html>
                 """.formatted(empName, appId, manager, leaveType, start, end, comment, loginUrl);
+    }
+
+    private String buildApplicationBody(LeaveApplication app) {
+        String loginUrl = baseUrl + "/login";
+        String appId    = String.valueOf(app.getLeaveApplicationId());
+        String empName  = app.getEmployee().getFirst_name() + " " + app.getEmployee().getLast_name();
+        String leaveType = app.getLeaveType() != null ? app.getLeaveType().getName().toString() : "Leave";
+        String start    = app.getStartDate() != null ? app.getStartDate().toString() : "–";
+        String end      = app.getEndDate()   != null ? app.getEndDate().toString()   : "–";
+        String duration = app.getDurationDisplay();
+        String employeeEmail = app.getEmployee().getEmail();
+
+        return """
+                <html><body style="font-family:Arial,sans-serif;color:#333;max-width:600px;margin:auto;">
+                <div style="background:#0d6efd;padding:20px;border-radius:8px 8px 0 0;">
+                  <h2 style="color:white;margin:0;">📋 New Leave Application Submitted</h2>
+                </div>
+                <div style="padding:24px;border:1px solid #ddd;border-top:none;border-radius:0 0 8px 8px;">
+                  <p>Dear %s,</p>
+                  <p>Employee <strong>%s</strong> has submitted a new leave application <strong>#%s</strong> for your approval.</p>
+                  <table style="width:100%%;border-collapse:collapse;margin:16px 0;">
+                    <tr><td style="padding:8px;background:#f8f9fa;font-weight:bold;width:35%%;">Leave Type</td><td style="padding:8px;">%s</td></tr>
+                    <tr><td style="padding:8px;font-weight:bold;">Start Date</td><td style="padding:8px;">%s</td></tr>
+                    <tr><td style="padding:8px;background:#f8f9fa;font-weight:bold;">End Date</td><td style="padding:8px;background:#f8f9fa;">%s</td></tr>
+                    <tr><td style="padding:8px;font-weight:bold;">Duration</td><td style="padding:8px;">%s</td></tr>
+                  </table>
+                  <p>Please review the application and provide your feedback.</p>
+                  <p style="text-align:center;">
+                    <a href="%s" style="background:#198754;color:white;padding:12px 24px;border-radius:4px;text-decoration:none;display:inline-block;">Approve or Reject in LAPS →</a>
+                  </p>
+                  <hr style="margin:24px 0;border:none;border-top:1px solid #eee;">
+                  <p style="color:#888;font-size:12px;">LAPS – Leave Application Processing System | NUS-ISS</p>
+                </div></body></html>
+                """.formatted(app.getApprovedBy() != null ? app.getApprovedBy().getFirst_name() + " " + app.getApprovedBy().getLast_name() : "Manager",
+                        empName, appId, leaveType, start, end, duration, loginUrl);
     }
 }

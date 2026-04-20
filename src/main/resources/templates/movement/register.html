@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head th:replace="~{fragments/header :: head('Movement Register – LAPS')}"></head>
+<body>
+
+<div th:replace="~{fragments/layout :: navbar}"></div>
+
+<main class="container py-4">
+    <!-- Breadcrumb -->
+    <div th:replace="~{fragments/breadcrumb :: breadcrumbList(${breadcrumbs})}"></div>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">Movement Register</h2>
+            <p class="text-muted small mb-0">
+                Employees on approved leave during
+                <strong th:text="${#temporals.format(monthStart, 'MMMM yyyy')}">Month Year</strong>
+            </p>
+        </div>
+
+        <!-- Month navigation form -->
+        <form th:action="@{/movement/register}" method="get" class="d-flex align-items-center gap-2">
+            <select name="year" class="form-select form-select-sm" style="width:auto;" onchange="this.form.submit()">
+                <option th:each="ym : ${monthOptions}"
+                        th:value="${ym.year}"
+                        th:text="${ym.year}"
+                        th:if="${ym.monthValue == 1}"
+                        th:selected="${ym.year == selectedYear}"
+                        th:id="${'yr_' + ym.year}"></option>
+            </select>
+            <select name="month" class="form-select form-select-sm" style="width:auto;" onchange="this.form.submit()">
+                <option th:each="ym : ${monthOptions}"
+                        th:if="${ym.year == selectedYear}"
+                        th:value="${ym.monthValue}"
+                        th:text="${#temporals.format(ym.atDay(1), 'MMMM')}"
+                        th:selected="${ym.monthValue == selectedMonth}">Month</option>
+            </select>
+            <noscript><button type="submit" class="btn btn-sm btn-primary">Go</button></noscript>
+        </form>
+    </div>
+
+    <!-- Quick-nav: prev / next month -->
+    <div class="d-flex gap-2 mb-4">
+        <a class="btn btn-outline-secondary btn-sm"
+           th:href="@{/movement/register(year=${selectedMonth == 1 ? selectedYear - 1 : selectedYear},
+                                         month=${selectedMonth == 1 ? 12 : selectedMonth - 1})}">
+            ‹ Previous Month
+        </a>
+        <a class="btn btn-outline-secondary btn-sm"
+           th:href="@{/movement/register(year=${selectedMonth == 12 ? selectedYear + 1 : selectedYear},
+                                         month=${selectedMonth == 12 ? 1 : selectedMonth + 1})}">
+            Next Month ›
+        </a>
+        <a class="btn btn-outline-primary btn-sm ms-auto"
+           th:href="@{/movement/register}">Today's Month</a>
+    </div>
+
+    <!-- Summary -->
+    <div class="mb-3">
+        <span class="badge bg-secondary fs-6 px-3 py-2"
+              th:text="${#lists.size(applications)} + ' employee(s) on leave this month'">0</span>
+    </div>
+
+    <!-- Movement table -->
+    <div class="card">
+        <div class="card-body p-0">
+            <div th:if="${#lists.isEmpty(applications)}" class="text-center text-muted py-5">
+                <p class="fs-5">No employees on approved leave during this month.</p>
+            </div>
+
+            <div class="table-responsive" th:unless="${#lists.isEmpty(applications)}">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Employee</th>
+                            <th>Department</th>
+                            <th>Leave Type</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Duration</th>
+                            <th>Overseas</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="la : ${applications}">
+                            <td>
+                                <div class="fw-semibold"
+                                     th:text="${la.employee.first_name + ' ' + la.employee.last_name}">–</div>
+                                <div class="text-muted small" th:text="${la.employee.designation}">–</div>
+                            </td>
+                            <td th:text="${la.employee.department}">–</td>
+                            <td>
+                                <span class="badge"
+                                      th:classappend="${la.leaveType != null and la.leaveType.name.toString() == 'ANNUAL'} ? 'bg-primary'
+                                                   : (${la.leaveType != null and la.leaveType.name.toString() == 'MEDICAL'} ? 'bg-danger'
+                                                   : (${la.leaveType != null and la.leaveType.name.toString() == 'COMPENSATION'} ? 'bg-success'
+                                                   : 'bg-secondary'))"
+                                      th:text="${la.leaveType != null ? la.leaveType.name : '–'}">–</span>
+                            </td>
+                            <td th:text="${#temporals.format(la.startDate, 'dd MMM yyyy')}">–</td>
+                            <td th:text="${#temporals.format(la.endDate, 'dd MMM yyyy')}">–</td>
+                            <td th:text="${la.durationDisplay}">–</td>
+                            <td>
+                                <span th:if="${la.isOverseas}" class="badge bg-info text-dark">✈ Overseas</span>
+                                <span th:unless="${la.isOverseas}" class="text-muted small">–</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>

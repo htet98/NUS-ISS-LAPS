@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/header :: head('Edit leave type - LAPS')}"></head>
+<body>
+
+
+<div th:replace="~{fragments/layout :: navbar}"></div>
+
+
+<div class="container mt-5 mb-5" style="max-width: 600px;">
+
+
+   <h2 class="mb-4 text-center">Edit Leave Type</h2>
+
+
+   <div class="card shadow-sm">
+       <div class="card-body p-4">
+
+
+           <form action="#" th:action="@{/admin/leave-type/edit/{id}(id=${leaveType.leaveTypeId})}" th:object="${leaveType}" method="post">
+
+
+               <div class="mb-3">
+                   <label class="form-label fw-bold"><span th:text="#{fieldLabel.leaveTypeId}">Leave Type ID</span></label>
+                   <input type="text" class="form-control bg-light" th:field="*{leaveTypeId}" readonly="readonly"/>
+                   <div th:if="${#fields.hasErrors('leaveTypeId')}" class="text-danger small mt-1" th:errors="*{leaveTypeId}"></div>
+               </div>
+
+
+               <div class="mb-3">
+                   <label class="form-label fw-bold"><span th:text="#{fieldLabel.name}">Name</span></label>
+                   <select class="form-select" th:field="*{name}" id="leaveName">
+						<option value="#">--Select Leave Type--</option>
+                       <option value="ANNUAL">Annual</option>
+                       <option value="MEDICAL">Medical</option>
+                       <option value="COMPENSATION">Compensation</option>
+					   <option value="PERSONAL">Personal</option>
+					   <option value="MATERNITY">Maternity</option>
+                   </select>
+                   <div th:if="${#fields.hasErrors('name')}" class="text-danger small mt-1" th:errors="*{name}"></div>
+               </div>
+
+
+               <div class="mb-3">
+                   <label class="form-label fw-bold"><span th:text="#{fieldLabel.description}">Description</span></label>
+                   <input type="text" class="form-control" th:field="*{description}"/>
+                   <div th:if="${#fields.hasErrors('description')}" class="text-danger small mt-1" th:errors="*{description}"></div>
+               </div>
+
+
+               <div class="mb-3">
+                   <label class="form-label fw-bold"><span th:text="#{fieldLabel.defaultDays}">Default Days</span></label>
+                   <input type="number" step="0.5" class="form-control" th:field="*{defaultDays}" id="leaveDays"/>
+                   <div th:if="${#fields.hasErrors('defaultDays')}" class="text-danger small mt-1" th:errors="*{defaultDays}"></div>
+               </div>
+
+
+               <div class="mb-4 form-check">
+                   <input type="checkbox" class="form-check-input" th:field="*{isPaid}" id="isPaidCheck"/>
+                   <label class="form-check-label fw-bold" for="isPaidCheck">
+                       <span th:text="#{fieldLabel.isPaid}">Is Paid Leave?</span>
+                   </label>
+               </div>
+
+
+               <div class="d-flex gap-3 mt-4">
+                   <a th:href="@{/admin/leave-type/list}" class="btn btn-outline-secondary w-50">Cancel</a>
+                   <button type="submit" class="btn btn-primary w-50" value="update">Update Leave Type</button>
+               </div>
+
+
+           </form>
+
+
+       </div>
+   </div>
+</div>
+
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const nameSelect = document.getElementById('leaveName');
+        const daysInput = document.getElementById('leaveDays');
+
+        function enforceStepRules() {
+            if (nameSelect.value === 'COMPENSATION') {
+                // For Compensation: Allow 0.5 increments starting from 0.5
+                daysInput.step = '0.5';
+                daysInput.min = '0.5';
+            } else {
+                // For Annual/Medical: Force whole numbers starting from 1
+                daysInput.step = '1';
+                daysInput.min = '1';
+
+                // If they had 1.5 typed in, round it down so the browser doesn't block it
+                if (daysInput.value % 1 !== 0) {
+                    daysInput.value = Math.floor(daysInput.value);
+                }
+            }
+        }
+
+        nameSelect.addEventListener('change', enforceStepRules);
+        enforceStepRules();
+    });
+</script>
+</body>
+</html>
